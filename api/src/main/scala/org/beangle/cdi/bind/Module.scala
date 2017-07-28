@@ -35,7 +35,7 @@ trait Module {
   def configure(binder: Binder): Unit
 }
 object Module {
-  final val profileProperty = "cdi.profiles"
+  final val profileProperty = "beangle.cdi.profiles"
 }
 /**
  * Abstract BindModule class.
