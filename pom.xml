@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.beangle</groupId>
     <artifactId>beangle-scala</artifactId>
-    <version>24.1</version>
+    <version>24.2</version>
   </parent>
   <groupId>org.beangle.cdi</groupId>
   <artifactId>beangle-cdi-parent_2.12</artifactId>
@@ -35,7 +35,7 @@
   </scm>
 
   <properties>
-    <commons.version>5.0.0.M4</commons.version>
+    <commons.version>5.0.0.M5</commons.version>
     <spring.version>4.3.8.RELEASE</spring.version>
   </properties>
 
