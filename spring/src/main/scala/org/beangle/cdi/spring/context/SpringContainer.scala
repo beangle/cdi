@@ -18,14 +18,16 @@
  */
 package org.beangle.cdi.spring.context
 
-import org.beangle.commons.event.EventListener
+import scala.collection.JavaConverters
+
 import org.beangle.cdi.{ Container, ContainerListener }
-import org.beangle.commons.lang.annotation.description
-import org.beangle.commons.event.Event
 import org.beangle.cdi.spring.config.BindModuleProcessor
+import org.beangle.commons.collection.Collections
+import org.beangle.commons.event.{ Event, EventListener }
+import org.beangle.commons.lang.annotation.description
 import org.springframework.beans.factory.{ BeanFactory, BeanFactoryAware, InitializingBean, NoSuchBeanDefinitionException }
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
-import collection.JavaConverters
+
 /**
  * Spring based IOC Container
  *
@@ -75,8 +77,15 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
     }
   }
 
-  override def getBeans[T](clazz: Class[T]): Map[Any, T] = {
-    JavaConverters.mapAsScalaMap(context.getBeansOfType(clazz)).toMap
+  override def getBeans[T](clazz: Class[T]): Map[String, T] = {
+    if (null == parent) {
+      JavaConverters.mapAsScalaMap(context.getBeansOfType(clazz)).toMap
+    } else {
+      val beans = Collections.newMap[String, T]
+      beans ++= parent.getBeans[T](clazz)
+      beans ++= JavaConverters.mapAsScalaMap(context.getBeansOfType(clazz))
+      beans.toMap
+    }
   }
 
   override def keys: Set[_] = {
