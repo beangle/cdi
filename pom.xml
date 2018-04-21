@@ -35,7 +35,7 @@
   </scm>
 
   <properties>
-    <commons.version>5.1.0.M2</commons.version>
+    <commons.version>5.1.0.M3</commons.version>
     <spring.version>4.3.14.RELEASE</spring.version>
   </properties>
 
