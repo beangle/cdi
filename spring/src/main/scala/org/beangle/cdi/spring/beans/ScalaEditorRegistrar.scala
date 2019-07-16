@@ -20,15 +20,15 @@ package org.beangle.cdi.spring.beans
 
 import scala.util.matching.Regex
 
-import org.springframework.beans.{ PropertyEditorRegistry, PropertyEditorRegistrar }
+import org.springframework.beans.{PropertyEditorRegistry, PropertyEditorRegistrar}
 
 /**
- * Property editor registrar for Scala property editors.
- *
- */
+  * Property editor registrar for Scala property editors.
+  *
+  */
 class ScalaEditorRegistrar extends PropertyEditorRegistrar {
 
-  def registerCustomEditors(registry: PropertyEditorRegistry) {
+  def registerCustomEditors(registry: PropertyEditorRegistry): Unit = {
     // Types
     registry.registerCustomEditor(classOf[Regex], new RegexEditor())
 
@@ -41,14 +41,9 @@ class ScalaEditorRegistrar extends PropertyEditorRegistrar {
     registry.registerCustomEditor(classOf[collection.IndexedSeq[Any]], new ScalaCollectionEditor(collection.IndexedSeq.newBuilder[Any] _))
     registry.registerCustomEditor(classOf[collection.immutable.IndexedSeq[Any]], new ScalaCollectionEditor(collection.immutable.IndexedSeq.newBuilder[Any] _))
     registry.registerCustomEditor(classOf[collection.mutable.IndexedSeq[Any]], new ScalaCollectionEditor(collection.mutable.IndexedSeq.newBuilder[Any] _))
-
-    // ResizableArray
-    registry.registerCustomEditor(classOf[collection.mutable.ResizableArray[Any]], new ScalaCollectionEditor(collection.mutable.ResizableArray.newBuilder[Any] _))
-
     // LinearSeq
     registry.registerCustomEditor(classOf[collection.LinearSeq[Any]], new ScalaCollectionEditor(collection.LinearSeq.newBuilder[Any] _))
     registry.registerCustomEditor(classOf[collection.immutable.LinearSeq[Any]], new ScalaCollectionEditor(collection.immutable.LinearSeq.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.mutable.LinearSeq[Any]], new ScalaCollectionEditor(collection.mutable.LinearSeq.newBuilder[Any] _))
 
     // Buffer
     registry.registerCustomEditor(classOf[collection.mutable.Buffer[Any]], new ScalaCollectionEditor(collection.mutable.Buffer.newBuilder[Any] _))
@@ -65,4 +60,5 @@ class ScalaEditorRegistrar extends PropertyEditorRegistrar {
     registry.registerCustomEditor(classOf[collection.mutable.Map[Any, Any]], new ScalaCollectionEditor(collection.mutable.Map.newBuilder[Any, Any] _))
     registry.registerCustomEditor(classOf[collection.mutable.HashMap[Any, Any]], new ScalaCollectionEditor(collection.mutable.HashMap.newBuilder[Any, Any] _))
   }
+
 }

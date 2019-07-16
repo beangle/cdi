@@ -19,17 +19,18 @@
 package org.beangle.cdi.spring.config
 
 import org.beangle.commons.logging.Logging
-import org.scalatest.{FunSpec, Matchers}
-import org.springframework.core.io.ClassPathResource
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatestplus.junit.JUnitRunner
+import org.springframework.core.io.ClassPathResource
 
 @RunWith(classOf[JUnitRunner])
-class SpringXmlParserTest extends FunSpec with Matchers with Logging {
+class SpringXmlParserTest extends AnyFunSpec with Matchers with Logging {
 
   describe("BeanDefinitionReader") {
     it("parse xml") {
-      val holders = new BeanDefinitionReader().load(new ClassPathResource("org/beangle/cdi/spring/context.xml"))
+      val holders = ReconfigReader.load(new ClassPathResource("org/beangle/cdi/spring/context.xml"))
       for (holder <- holders) logger.info(holder.toString)
     }
   }

@@ -19,13 +19,12 @@
 package org.beangle.cdi.spring.config
 
 import org.junit.runner.RunWith
-import org.scalatest.{ FunSpec, Matchers }
-import org.scalatest.junit.JUnitRunner
-import org.beangle.commons.lang.Strings
-import org.beangle.commons.lang.Chars
+import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class ProfileMatcherTest extends FunSpec with Matchers {
+class ProfileMatcherTest extends AnyFunSpec with Matchers {
 
   describe("Profile Matcher") {
     it("match success") {
@@ -36,7 +35,7 @@ class ProfileMatcherTest extends FunSpec with Matchers {
       assert(!matcher.matches("school1, test"))
       assert(matcher.matches("school1, test, d2"))
 
-      val matcher2= new ProfileMatcher("production,dev")
+      val matcher2 = new ProfileMatcher("production,dev")
       assert(matcher2.matches("dev"))
       assert(!matcher2.matches("productor"))
     }

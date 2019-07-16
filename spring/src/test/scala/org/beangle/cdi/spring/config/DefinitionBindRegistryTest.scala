@@ -18,17 +18,17 @@
  */
 package org.beangle.cdi.spring.config
 
-import org.beangle.cdi.bind.BindRegistry
-import org.beangle.cdi.spring.bean.{ProxyFactoryBean, TestDao, TestEntityDao}
-import org.scalatest.{FunSpec, Matchers}
+import org.beangle.cdi.spring.bean.{ProxyFactoryBean, TestDao}
+import org.junit.runner.RunWith
+import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatestplus.junit.JUnitRunner
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader
 import org.springframework.core.io.ClassPathResource
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class DefinitionBindRegistryTest extends FunSpec with Matchers {
+class DefinitionBindRegistryTest extends AnyFunSpec with Matchers {
 
   describe("Spring XmlBeanDefinitionReader") {
     it("parse xml") {

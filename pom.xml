@@ -3,12 +3,12 @@
   <parent>
     <groupId>org.beangle</groupId>
     <artifactId>beangle-scala</artifactId>
-    <version>25.2</version>
+    <version>26.0-SNAPSHOT</version>
   </parent>
   <groupId>org.beangle.cdi</groupId>
-  <artifactId>beangle-cdi-parent_2.12</artifactId>
+  <artifactId>beangle-cdi-parent_2.13</artifactId>
   <packaging>pom</packaging>
-  <version>0.0.19-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <name>Beangle CDI Parent</name>
 
   <modules>
@@ -35,15 +35,16 @@
   </scm>
 
   <properties>
-    <commons.version>5.1.5</commons.version>
-    <spring.version>4.3.22.RELEASE</spring.version>
+    <commons.version>5.1.8-SNAPSHOT</commons.version>
+    <spring.version>5.1.8.RELEASE</spring.version>
   </properties>
+
 
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>org.beangle.commons</groupId>
-        <artifactId>beangle-commons-core_2.12</artifactId>
+        <artifactId>beangle-commons-core_2.13</artifactId>
         <version>${commons.version}</version>
       </dependency>
     </dependencies>
@@ -52,7 +53,7 @@
   <dependencies>
     <dependency>
       <groupId>org.beangle.commons</groupId>
-      <artifactId>beangle-commons-core_2.12</artifactId>
+      <artifactId>beangle-commons-core_2.13</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -67,4 +68,5 @@
       <artifactId>logback-classic</artifactId>
     </dependency>
  </dependencies>
+
 </project>

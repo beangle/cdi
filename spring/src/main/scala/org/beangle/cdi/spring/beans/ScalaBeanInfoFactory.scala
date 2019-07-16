@@ -24,11 +24,16 @@ import java.beans.BeanInfo
 import org.beangle.commons.lang.reflect.BeanInfos
 
 object ScalaBeanInfoFactory {
-  val BeanInfos = new BeanInfos();
+  val BeanInfos = new BeanInfos()
 }
 
 class ScalaBeanInfoFactory extends BeanInfoFactory {
   def getBeanInfo(beanClass: Class[_]): BeanInfo = {
-    new ScalaBeanInfo(beanClass)
+    val className = beanClass.getName
+    if (className.startsWith("java.") || className.startsWith("scala.")) {
+      null
+    } else {
+      new ScalaBeanInfo(beanClass)
+    }
   }
 }
