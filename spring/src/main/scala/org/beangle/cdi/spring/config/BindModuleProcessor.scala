@@ -28,9 +28,9 @@ import org.beangle.cdi.{BeanNamesEventMulticaster, ContainerListener, PropertySo
 import org.beangle.commons.bean.{Disposable, Factory, Initializing}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.config.Resources
-import org.beangle.commons.event.EventListener
 import org.beangle.commons.io.IOs
 import org.beangle.commons.lang.annotation.description
+import org.beangle.commons.lang.reflect.Reflections.{getGenericParamType, newInstance}
 import org.beangle.commons.lang.reflect._
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.lang.{ClassLoaders, Strings, SystemInfo}
@@ -121,7 +121,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
         for (holder <- holders) {
           val beanName = holder.getBeanName
           if (beanName == "properties") {
-            val value = holder.getBeanDefinition().getPropertyValues().getPropertyValue("value").getValue
+            val value = holder.getBeanDefinition().getPropertyValues.getPropertyValue("value").getValue
             this.properties ++= Strings.split(value.toString.trim, '\n').map { line =>
               val eqIndex = line.indexOf("=")
               (line.substring(0, eqIndex).trim() -> line.substring(eqIndex + 1).trim())
@@ -177,7 +177,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
       }
     }
     if (moduleClass.getConstructors.length > 0) {
-      ClassLoaders.newInstance(moduleClass)
+      newInstance(moduleClass.asInstanceOf[Class[Module]])
     } else {
       moduleClass.getDeclaredField("MODULE$").get(null).asInstanceOf[Module]
     }
@@ -211,7 +211,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
         }
       }
     }
-    if (!beanNames.isEmpty) logger.info(s"Reconfig $beanNames in $watch")
+    if (beanNames.nonEmpty) logger.info(s"Reconfig $beanNames in $watch")
   }
 
   /**
@@ -230,7 +230,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
           proxy.setScope(defn.getScope)
           proxy.setPrimary(defn.isPrimary)
           registry.register(name + "#proxy", clazz, defn)
-          val objectTypes = Reflections.getGenericParamType(clazz, classOf[Factory[_]])
+          val objectTypes = getGenericParamType(clazz, classOf[Factory[_]])
           if (objectTypes.isEmpty) throw new RuntimeException(s"Cannot find factory object type of class ${clazz.getName}")
           val objectType = objectTypes.values.head
           proxy.getPropertyValues.add("target", new RuntimeBeanReference(name + "#proxy"))
@@ -284,7 +284,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   /** 合并bean定义
     */
   private def mergeDefinition(target: BeanDefinition, source: ReconfigBeanDefinitionHolder): String = {
-    if (null == target.getBeanClassName()) {
+    if (null == target.getBeanClassName) {
       logger.warn(s"ingore bean definition ${source.getBeanName} for without class")
       return null
     }
@@ -293,14 +293,14 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     if (null != sourceDefn.getBeanClassName && sourceDefn.getBeanClassName != target.getBeanClassName) {
       target.setBeanClassName(sourceDefn.getBeanClassName)
       target.asInstanceOf[GenericBeanDefinition].setDescription(getClassDescription(ClassLoaders.load(sourceDefn.getBeanClassName)))
-      for (pv <- target.getPropertyValues().getPropertyValues) {
-        target.getPropertyValues().removePropertyValue(pv)
+      for (pv <- target.getPropertyValues.getPropertyValues) {
+        target.getPropertyValues.removePropertyValue(pv)
       }
     }
     val pvs = sourceDefn.getPropertyValues
     for (pv <- CollectionConverters.asScala(pvs.getPropertyValueList)) {
-      val name = pv.getName()
-      target.getPropertyValues().addPropertyValue(name, pv.getValue)
+      val name = pv.getName
+      target.getPropertyValues.addPropertyValue(name, pv.getValue)
       logger.debug(s"config ${source.getBeanName}.$name = ${pv.getValue}")
     }
     if (!sourceDefn.getConstructorArgumentValues.isEmpty) {
@@ -322,7 +322,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
       logger.info(s"Binding ${module.getClass.getName}")
       val binder = new Binder(module.getClass.getName)
       module.configure(binder)
-      val profile = module.getClass().getAnnotation(classOf[profile])
+      val profile = module.getClass.getAnnotation(classOf[profile])
 
       binder.singletons foreach { e =>
         val beanName = e._1
@@ -458,7 +458,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     if (classOf[FactoryBean[_]].isAssignableFrom(defn.clazz)) {
       var target = defn.targetClass
       if (null == target && !defn.isAbstract) {
-        target = ClassLoaders.newInstance[FactoryBean[_]](defn.clazz).getObjectType
+        target = newInstance(defn.clazz.asInstanceOf[Class[FactoryBean[_]]]).getObjectType
       }
       registry.register(defn.beanName, target, bd)
       // register concrete factory bean

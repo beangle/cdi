@@ -19,15 +19,13 @@
 package org.beangle.cdi.spring.config
 
 import org.beangle.cdi.bind.BindRegistry
-import org.beangle.commons.lang.ClassLoaders
-import org.beangle.commons.lang.reflect.Reflections
-import org.beangle.commons.logging.Logging
-import org.springframework.beans.factory.FactoryBean
-import org.springframework.beans.factory.config.{BeanDefinition, BeanDefinitionHolder, RuntimeBeanReference}
-import org.springframework.beans.factory.support.{AbstractBeanDefinition, BeanDefinitionRegistry}
 import org.beangle.commons.bean.Factory
-import org.springframework.beans.factory.HierarchicalBeanFactory
-import org.springframework.beans.factory.config.SingletonBeanRegistry
+import org.beangle.commons.lang.ClassLoaders
+import org.beangle.commons.lang.reflect.Reflections.{getGenericParamType, newInstance}
+import org.beangle.commons.logging.Logging
+import org.springframework.beans.factory.{FactoryBean, HierarchicalBeanFactory}
+import org.springframework.beans.factory.config.{BeanDefinition, BeanDefinitionHolder, RuntimeBeanReference, SingletonBeanRegistry}
+import org.springframework.beans.factory.support.{AbstractBeanDefinition, BeanDefinitionRegistry}
 
 object SpringBindRegistry {
 
@@ -48,9 +46,9 @@ object SpringBindRegistry {
       if (null != factoryBeanName && null != factoryMethodName) {
         var factoryClass = getBeanClass(registry, factoryBeanName)
         if (classOf[FactoryBean[_]].isAssignableFrom(factoryClass)) {
-          factoryClass = ClassLoaders.newInstance[FactoryBean[_]](factoryClass).getObjectType
+          factoryClass = newInstance(factoryClass.asInstanceOf[Class[FactoryBean[_]]]).getObjectType
         } else if (classOf[Factory[_]].isAssignableFrom(factoryClass)) {
-          factoryClass = Reflections.getGenericParamType(factoryClass, classOf[Factory[_]]).values.head
+          factoryClass = getGenericParamType(factoryClass, classOf[Factory[_]]).values.head
         }
         clazz = factoryClass.getMethod(factoryMethodName).getReturnType
       }
@@ -133,7 +131,7 @@ class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegis
               objectClass = bd.getPropertyValues.getPropertyValue("target") match {
                 case null =>
                   try {
-                    ClassLoaders.newInstance[FactoryBean[_]](beanClass).getObjectType
+                    newInstance(beanClass.asInstanceOf[Class[FactoryBean[_]]]).getObjectType
                   } catch {
                     case e: Throwable => null
                   }
@@ -150,7 +148,7 @@ class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegis
           } else if (classOf[Factory[_]].isAssignableFrom(beanClass)) {
             nameTypes.put("&" + name, beanClass)
             if (bd.isPrimary) primaries += ("&" + name)
-            val objectClass = Reflections.getGenericParamType(beanClass, classOf[Factory[_]]).values.head.asInstanceOf[Class[_]]
+            val objectClass = getGenericParamType(beanClass, classOf[Factory[_]]).values.head.asInstanceOf[Class[_]]
             nameTypes.put(name, objectClass)
           } else {
             nameTypes.put(name, beanClass)
@@ -166,11 +164,14 @@ class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegis
     * Get bean name list according given type
     */
   def getBeanNames(clazz: Class[_]): List[String] = {
-    if (typeNames.contains(clazz)) return typeNames(clazz)
-    val names = for ((name, ty) <- nameTypes if (clazz.isAssignableFrom(ty) && !name.contains("#"))) yield name
-    val rs = names.toList
-    typeNames.put(clazz, rs)
-    rs
+    if (typeNames.contains(clazz)) {
+      typeNames(clazz)
+    } else {
+      val names = for ((name, ty) <- nameTypes if clazz.isAssignableFrom(ty) && !name.contains("#")) yield name
+      val rs = names.toList
+      typeNames.put(clazz, rs)
+      rs
+    }
   }
 
   def getBeanType(beanName: String): Class[_] = {
