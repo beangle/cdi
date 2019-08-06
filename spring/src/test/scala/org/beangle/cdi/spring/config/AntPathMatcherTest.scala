@@ -21,13 +21,14 @@ package org.beangle.cdi.spring.config
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.logging.Logging
 import org.beangle.commons.regex.AntPathPattern
-import org.scalatest.{ FunSpec, Matchers }
-import org.springframework.util.AntPathMatcher
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatestplus.junit.JUnitRunner
+import org.springframework.util.AntPathMatcher
 
 @RunWith(classOf[JUnitRunner])
-class AntPathMatcherTest extends FunSpec with Matchers with Logging {
+class AntPathMatcherTest extends AnyFunSpec with Matchers with Logging {
 
   describe("Beangle Ant Path Matcher") {
     it("match regex pattern") {
@@ -49,7 +50,7 @@ class AntPathMatcherTest extends FunSpec with Matchers with Logging {
   }
 
   describe("Pattern match benchmark") {
-    val n=100
+    val n = 100
     it("Spring performance") {
       val matcher = new AntPathMatcher()
       val sw = new Stopwatch(true)

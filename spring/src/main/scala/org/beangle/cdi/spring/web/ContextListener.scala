@@ -19,21 +19,21 @@
 package org.beangle.cdi.spring.web
 
 import org.beangle.commons.collection.Collections
-import org.beangle.commons.lang.ClassLoaders.{ getResources, load }
-import org.beangle.commons.lang.Strings.{ substringAfter, substringBefore, isNotEmpty }
+import org.beangle.commons.lang.ClassLoaders.{getResources, load}
+import org.beangle.commons.lang.Strings.{substringAfter, substringBefore, isNotEmpty}
 import org.beangle.commons.lang.reflect.Reflections.newInstance
 import org.beangle.commons.logging.Logging
-import org.beangle.cdi.spring.context.{ BeanFactoryLoader, ContextLoader }
+import org.beangle.cdi.spring.context.{BeanFactoryLoader, ContextLoader}
 
-import javax.servlet.{ ServletContextEvent, ServletContextListener }
+import javax.servlet.{ServletContextEvent, ServletContextListener}
 import org.beangle.commons.lang.Strings
 import org.beangle.cdi.Container
 
 /**
- * 1. Disable Definition Overriding
- * 2. Default config location(spring-context.xml)
- * 3. Load children context
- */
+  * 1. Disable Definition Overriding
+  * 2. Default config location(spring-context.xml)
+  * 3. Load children context
+  */
 class ContextListener extends ServletContextListener with Logging {
 
   var contextConfigLocation = "classpath:spring-context.xml"
@@ -54,7 +54,7 @@ class ContextListener extends ServletContextListener with Logging {
     }
     Container.containers.find { c => c.parent == Container.ROOT && c.parent != null } match {
       case Some(c) => c
-      case None    => throw new RuntimeException("Cannot find container from Containers")
+      case None => throw new RuntimeException("Cannot find container from Containers")
     }
   }
 
@@ -62,7 +62,7 @@ class ContextListener extends ServletContextListener with Logging {
     if (loaders.isEmpty) loadContainer()
   }
 
-  override def contextDestroyed(sce: ServletContextEvent) {
+  override def contextDestroyed(sce: ServletContextEvent): Unit = {
     loaders.foreach { loader => loader.close() }
   }
 

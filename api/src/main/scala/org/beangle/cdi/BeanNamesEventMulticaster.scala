@@ -28,7 +28,7 @@ class BeanNamesEventMulticaster(listenerNames: Seq[String]) extends DefaultEvent
 
   var container: Container = _
 
-  override def init() {
+  override def init(): Unit = {
     listenerNames foreach { beanName =>
       if (container.contains(beanName)) addListener(container.getBean[EventListener[_]](beanName).get)
     }

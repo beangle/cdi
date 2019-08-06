@@ -93,7 +93,7 @@ class BeanFactoryLoader extends DefaultResourceLoader with ResourcePatternResolv
    * such as the context's ClassLoader and post-processors.
    * @param beanFactory the BeanFactory to configure
    */
-  protected def prepareBeanFactory(beanFactory: ConfigurableListableBeanFactory) {
+  protected def prepareBeanFactory(beanFactory: ConfigurableListableBeanFactory): Unit = {
     beanFactory.setBeanClassLoader(classLoader)
     beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, environment))
 
@@ -127,7 +127,7 @@ class BeanFactoryLoader extends DefaultResourceLoader with ResourcePatternResolv
    * Finish the initialization of this context's bean factory,
    * initializing all remaining singleton beans.
    */
-  protected def finishBeanFactoryInitialization(beanFactory: ConfigurableListableBeanFactory) {
+  protected def finishBeanFactoryInitialization(beanFactory: ConfigurableListableBeanFactory): Unit = {
     val conversionServiceBeanName = "conversionService"
     if (beanFactory.containsBean(conversionServiceBeanName) &&
       beanFactory.isTypeMatch(conversionServiceBeanName, classOf[ConversionService])) {

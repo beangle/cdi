@@ -18,23 +18,23 @@
  */
 package org.beangle.cdi.spring.config
 
+import org.beangle.cdi.Container
+import org.beangle.cdi.spring.bean._
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.logging.Logging
-import org.beangle.cdi.spring.bean.{ ResourcesConsumer, SomeAction, TestService, UserDaoProvider, UserLdapProvider }
-import org.scalatest.{ FunSpec, Matchers }
+import org.junit.runner.RunWith
+import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatestplus.junit.JUnitRunner
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.beangle.cdi.Container
 
 /**
- * Test Bean definition in Java config
- *
- * @author chaostone
- */
+  * Test Bean definition in Java config
+  * @author chaostone
+  */
 @RunWith(classOf[JUnitRunner])
-class AutoConfigProcessorTest extends FunSpec with Matchers with Logging {
+class AutoConfigProcessorTest extends AnyFunSpec with Matchers with Logging {
 
   describe("AutoConfigProcessor") {
     it("Test get normal and factory bean") {
@@ -60,14 +60,14 @@ class AutoConfigProcessorTest extends FunSpec with Matchers with Logging {
 
   }
 
-  private def testFactoryBean(factory: ApplicationContext) {
+  private def testFactoryBean(factory: ApplicationContext): Unit = {
     val testService = factory.getBean("testService", classOf[TestService])
     testService should not be (null)
     testService.entityDao should not be (null)
     testService.noneDao should be(null)
   }
 
-  private def testBean(factory: ApplicationContext) {
+  private def testBean(factory: ApplicationContext): Unit = {
     // two user provider
     val daoProvider = factory.getBean("userDaoProvider").asInstanceOf[UserDaoProvider]
     daoProvider should not be (null)

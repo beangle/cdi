@@ -47,57 +47,57 @@ import org.w3c.dom.NodeList
 import scala.collection.mutable
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder
 import org.beangle.cdi.bind.Binder.InjectPlaceHolder
+
 /**
- * BeanDefinitionParser class.
- *
- * @author chaostone
- */
+  * BeanDefinitionParser class.
+  * @author chaostone
+  */
 class BeanDefinitionParser extends Logging {
 
   private val parseState = new ParseState
 
   /**
-   * Stores all used bean names so we can enforce uniqueness on a per file
-   * basis.
-   */
+    * Stores all used bean names so we can enforce uniqueness on a per file
+    * basis.
+    */
   private val usedNames = new mutable.HashSet[String]
 
   /**
-   * extractSource.
-   */
+    * extractSource.
+    */
   protected def extractSource(ele: Element): Object = null
 
   /**
-   * Report an error with the given message for the given source element.
-   */
-  protected def error(message: String, source: Node) {
+    * Report an error with the given message for the given source element.
+    */
+  protected def error(message: String, source: Node): Unit = {
     logger.error(message)
   }
 
   /**
-   * Report an error with the given message for the given source element.
-   */
-  protected def error(message: String, source: Element) {
+    * Report an error with the given message for the given source element.
+    */
+  protected def error(message: String, source: Element): Unit = {
     logger.error(message)
   }
 
   /**
-   * Report an error with the given message for the given source element.
-   */
-  protected def error(message: String, source: Element, cause: Throwable) {
+    * Report an error with the given message for the given source element.
+    */
+  protected def error(message: String, source: Element, cause: Throwable): Unit = {
     logger.error(message)
   }
 
   /**
-   * Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
-   * were errors during parse.
-   */
+    * Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
+    * were errors during parse.
+    */
   def parseBeanDefinitionElement(ele: Element): ReconfigBeanDefinitionHolder = parseBeanDefinitionElement(ele, null)
 
   /**
-   * Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
-   * were errors during parse.
-   */
+    * Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
+    * were errors during parse.
+    */
   private def parseBeanDefinitionElement(ele: Element, containingBean: BeanDefinition): ReconfigBeanDefinitionHolder = {
     val id = ele.getAttribute(ID_ATTRIBUTE)
     val nameAttr = ele.getAttribute(NAME_ATTRIBUTE)
@@ -129,10 +129,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Validate that the specified bean name and aliases have not been used
-   * already.
-   */
-  protected def checkNameUniqueness(beanName: String, aliases: Seq[String], beanElement: Element) {
+    * Validate that the specified bean name and aliases have not been used
+    * already.
+    */
+  protected def checkNameUniqueness(beanName: String, aliases: collection.Seq[String], beanElement: Element): Unit = {
     var foundName: String = null
 
     if (StringUtils.hasText(beanName) && this.usedNames.contains(beanName)) foundName = beanName
@@ -146,10 +146,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse the bean definition itself, without regard to name or aliases. May
-   * return <code>null</code> if problems occured during the parse of the bean
-   * definition.
-   */
+    * Parse the bean definition itself, without regard to name or aliases. May
+    * return <code>null</code> if problems occured during the parse of the bean
+    * definition.
+    */
   private def parseBeanDefinitionElement(ele: Element, beanName: String, containingBean: BeanDefinition): AbstractBeanDefinition = {
 
     this.parseState.push(new BeanEntry(beanName))
@@ -177,8 +177,8 @@ class BeanDefinitionParser extends Logging {
       return bd
     } catch {
       case ex: ClassNotFoundException => error("Bean class [" + className + "] not found", ele, ex)
-      case err: NoClassDefFoundError  => error("Class that bean class [" + className + "] depends on not found", ele, err)
-      case exr: Throwable             => error("Unexpected failure during bean definition parsing", ele, exr)
+      case err: NoClassDefFoundError => error("Class that bean class [" + className + "] depends on not found", ele, err)
+      case exr: Throwable => error("Unexpected failure during bean definition parsing", ele, exr)
     } finally {
       this.parseState.pop()
     }
@@ -187,9 +187,9 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Apply the attributes of the given bean element to the given bean *
-   * definition.
-   */
+    * Apply the attributes of the given bean element to the given bean *
+    * definition.
+    */
   private def parseBeanDefinitionAttributes(ele: Element, beanName: String,
                                             containingBean: BeanDefinition, bd: AbstractBeanDefinition): AbstractBeanDefinition = {
 
@@ -212,7 +212,7 @@ class BeanDefinitionParser extends Logging {
     bd.setAutowireMode(getAutowireMode(ele.getAttribute(AUTOWIRE_ATTRIBUTE)))
 
     if (ele.hasAttribute(DEPENDS_ON_ATTRIBUTE)) {
-      bd.setDependsOn(StringUtils.tokenizeToStringArray(ele.getAttribute(DEPENDS_ON_ATTRIBUTE), MULTI_VALUE_ATTRIBUTE_DELIMITERS):_*)
+      bd.setDependsOn(StringUtils.tokenizeToStringArray(ele.getAttribute(DEPENDS_ON_ATTRIBUTE), MULTI_VALUE_ATTRIBUTE_DELIMITERS): _*)
     }
 
     if (ele.hasAttribute(PRIMARY_ATTRIBUTE))
@@ -237,15 +237,17 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Create a bean definition for the given class name and parent name.
-   *
-   */
-  protected def createBeanDefinition(className: String, parentName: String): AbstractBeanDefinition = BeanDefinitionReaderUtils.createBeanDefinition(parentName, className, null)
+    * Create a bean definition for the given class name and parent name.
+    *
+    */
+  protected def createBeanDefinition(className: String, parentName: String): AbstractBeanDefinition = {
+    BeanDefinitionReaderUtils.createBeanDefinition(parentName, className, null)
+  }
 
   /**
-   * parseMetaElements.
-   */
-  private def parseMetaElements(ele: Element, attributeAccessor: BeanMetadataAttributeAccessor) {
+    * parseMetaElements.
+    */
+  private def parseMetaElements(ele: Element, attributeAccessor: BeanMetadataAttributeAccessor): Unit = {
     val nl = ele.getChildNodes()
     for (i <- 0 until nl.getLength) {
       val node = nl.item(i)
@@ -259,8 +261,8 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * getAutowireMode.
-   */
+    * getAutowireMode.
+    */
   private def getAutowireMode(att: String): Int = {
     if (AUTOWIRE_BY_NAME_VALUE == att) {
       AbstractBeanDefinition.AUTOWIRE_BY_NAME
@@ -272,9 +274,9 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse constructor-arg sub-elements of the given bean element.
-   */
-  private def parseConstructorArgElements(beanEle: Element, bd: BeanDefinition) {
+    * Parse constructor-arg sub-elements of the given bean element.
+    */
+  private def parseConstructorArgElements(beanEle: Element, bd: BeanDefinition): Unit = {
     val nl = beanEle.getChildNodes()
     for (i <- 0 until nl.getLength) {
       val node = nl.item(i)
@@ -284,10 +286,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse property sub-elements of the given bean element.
-   *
-   */
-  private def parsePropertyElements(beanEle: Element, bd: BeanDefinition) {
+    * Parse property sub-elements of the given bean element.
+    *
+    */
+  private def parsePropertyElements(beanEle: Element, bd: BeanDefinition): Unit = {
     val nl = beanEle.getChildNodes()
     for (i <- 0 until nl.getLength) {
       val node = nl.item(i)
@@ -297,10 +299,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse qualifier sub-elements of the given bean element.
-   *
-   */
-  private def parseQualifierElements(beanEle: Element, bd: AbstractBeanDefinition) {
+    * Parse qualifier sub-elements of the given bean element.
+    *
+    */
+  private def parseQualifierElements(beanEle: Element, bd: AbstractBeanDefinition): Unit = {
     val nl = beanEle.getChildNodes()
     for (i <- 0 until nl.getLength) {
       val node = nl.item(i)
@@ -310,10 +312,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse lookup-override sub-elements of the given bean element.
-   *
-   */
-  private def parseLookupOverrideSubElements(beanEle: Element, overrides: MethodOverrides) {
+    * Parse lookup-override sub-elements of the given bean element.
+    *
+    */
+  private def parseLookupOverrideSubElements(beanEle: Element, overrides: MethodOverrides): Unit = {
     val nl = beanEle.getChildNodes()
     for (i <- 0 until nl.getLength) {
       val node = nl.item(i)
@@ -327,10 +329,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse replaced-method sub-elements of the given bean element.
-   *
-   */
-  private def parseReplacedMethodSubElements(beanEle: Element, overrides: MethodOverrides) {
+    * Parse replaced-method sub-elements of the given bean element.
+    *
+    */
+  private def parseReplacedMethodSubElements(beanEle: Element, overrides: MethodOverrides): Unit = {
     val nl = beanEle.getChildNodes
     for (i <- 0 until nl.getLength) {
       val node = nl.item(i)
@@ -351,10 +353,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse a constructor-arg element.
-   *
-   */
-  private def parseConstructorArgElement(ele: Element, bd: BeanDefinition) {
+    * Parse a constructor-arg element.
+    *
+    */
+  private def parseConstructorArgElement(ele: Element, bd: BeanDefinition): Unit = {
     val indexAttr = ele.getAttribute(INDEX_ATTRIBUTE)
     val typeAttr = ele.getAttribute(TYPE_ATTRIBUTE)
     val nameAttr = ele.getAttribute(NAME_ATTRIBUTE)
@@ -399,10 +401,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse a property element.
-   *
-   */
-  private def parsePropertyElement(ele: Element, bd: BeanDefinition) {
+    * Parse a property element.
+    *
+    */
+  private def parsePropertyElement(ele: Element, bd: BeanDefinition): Unit = {
     val propertyName = ele.getAttribute(NAME_ATTRIBUTE)
     if (Strings.isEmpty(propertyName)) {
       error("Tag 'property' must have a 'name' attribute", ele)
@@ -425,10 +427,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse a qualifier element.
-   *
-   */
-  private def parseQualifierElement(ele: Element, bd: AbstractBeanDefinition) {
+    * Parse a qualifier element.
+    *
+    */
+  private def parseQualifierElement(ele: Element, bd: AbstractBeanDefinition): Unit = {
     val typeName = ele.getAttribute(TYPE_ATTRIBUTE)
     if (Strings.isEmpty(typeName)) {
       error("Tag 'qualifier' must have a 'type' attribute", ele)
@@ -466,9 +468,9 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Get the value of a property element. May be a list etc. Also used for
-   * constructor arguments, "propertyName" being null in this case.
-   */
+    * Get the value of a property element. May be a list etc. Also used for
+    * constructor arguments, "propertyName" being null in this case.
+    */
   private def parsePropertyValue(ele: Element, bd: BeanDefinition, propertyName: String): Object = {
     val elementName = if (propertyName != null) "<property> element for property '" + propertyName + "'"
     else "<constructor-arg> element"
@@ -521,17 +523,17 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * <p>
-   * parsePropertySubElement.
-   * </p>
-   *
-   */
+    * <p>
+    * parsePropertySubElement.
+    * </p>
+    *
+    */
   private def parsePropertySubElement(ele: Element, bd: BeanDefinition): Object = parsePropertySubElement(ele, bd, null)
 
   /**
-   * Parse a value, ref or collection sub-element of a property or
-   * constructor-arg element.
-   */
+    * Parse a value, ref or collection sub-element of a property or
+    * constructor-arg element.
+    */
   private def parsePropertySubElement(ele: Element, bd: BeanDefinition, defaultValueType: String): Object = {
     if (!isDefaultNamespace(getNamespaceURI(ele))) {
       error("Cannot support nested element .", ele)
@@ -545,16 +547,12 @@ class BeanDefinitionParser extends Logging {
       var refName = ele.getAttribute(BEAN_REF_ATTRIBUTE)
       var toParent = false
       if (Strings.isEmpty(refName)) {
-        // A reference to the id of another bean in the same XML file.
-        refName = ele.getAttribute(LOCAL_REF_ATTRIBUTE)
+        // A reference to the id of another bean in a parent context.
+        refName = ele.getAttribute(PARENT_REF_ATTRIBUTE)
+        toParent = true
         if (Strings.isEmpty(refName)) {
-          // A reference to the id of another bean in a parent context.
-          refName = ele.getAttribute(PARENT_REF_ATTRIBUTE)
-          toParent = true
-          if (Strings.isEmpty(refName)) {
-            error("'bean', 'local' or 'parent' is required for <ref> element", ele)
-            return null
-          }
+          error("'bean', 'parent' is required for <ref> element", ele)
+          return null
         }
       }
       if (!StringUtils.hasText(refName)) {
@@ -592,18 +590,14 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Return a typed String value Object for the given 'idref' element.
-   */
+    * Return a typed String value Object for the given 'idref' element.
+    */
   private def parseIdRefElement(ele: Element): Object = {
     // A generic reference to any name of any bean.
     var refName = ele.getAttribute(BEAN_REF_ATTRIBUTE)
     if (Strings.isEmpty(refName)) {
-      // A reference to the id of another bean in the same XML file.
-      refName = ele.getAttribute(LOCAL_REF_ATTRIBUTE)
-      if (Strings.isEmpty(refName)) {
-        error("Either 'bean' or 'local' is required for <idref> element", ele)
-        return null
-      }
+      error("'bean'  is required for <idref> element", ele)
+      return null
     }
     if (!StringUtils.hasText(refName)) {
       error("<idref> element contains empty target attribute", ele)
@@ -615,8 +609,8 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Return a typed String value Object for the given value element.
-   */
+    * Return a typed String value Object for the given value element.
+    */
   private def parseValueElement(ele: Element, defaultTypeName: String): Object = {
     // It's a literal value.
     val value = DomUtils.getTextValue(ele)
@@ -636,16 +630,16 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Build a typed String value Object for the given raw value.
-   */
+    * Build a typed String value Object for the given raw value.
+    */
   protected def buildTypedStringValue(value: String, targetTypeName: String): TypedStringValue = {
     if (!StringUtils.hasText(targetTypeName)) new TypedStringValue(value)
     else new TypedStringValue(value, targetTypeName)
   }
 
   /**
-   * Parse an array element.
-   */
+    * Parse an array element.
+    */
   private def parseArrayElement(arrayEle: Element, bd: BeanDefinition): Object = {
     val elementType = arrayEle.getAttribute(VALUE_TYPE_ATTRIBUTE)
     val nl = arrayEle.getChildNodes()
@@ -658,8 +652,8 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse a list element.
-   */
+    * Parse a list element.
+    */
   private def parseListElement(collectionEle: Element, bd: BeanDefinition): java.util.List[Object] = {
     val defaultElementType = collectionEle.getAttribute(VALUE_TYPE_ATTRIBUTE)
     val nl = collectionEle.getChildNodes()
@@ -672,8 +666,8 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse a set element.
-   */
+    * Parse a set element.
+    */
   private def parseSetElement(collectionEle: Element, bd: BeanDefinition): java.util.Set[Object] = {
     val defaultElementType = collectionEle.getAttribute(VALUE_TYPE_ATTRIBUTE)
     val nl = collectionEle.getChildNodes()
@@ -686,10 +680,10 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * parseCollectionElements.
-   */
+    * parseCollectionElements.
+    */
   protected def parseCollectionElements(elementNodes: NodeList, target: java.util.Collection[Object], bd: BeanDefinition,
-                                        defaultElementType: String) {
+                                        defaultElementType: String): Unit = {
     for (i <- 0 until elementNodes.getLength) {
       val node = elementNodes.item(i)
       if (node.isInstanceOf[Element] && !nodeNameEquals(node, DESCRIPTION_ELEMENT))
@@ -698,8 +692,8 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse a map element.
-   */
+    * Parse a map element.
+    */
   private def parseMapElement(mapEle: Element, bd: BeanDefinition): java.util.Map[Object, Object] = {
     val defaultKeyType = mapEle.getAttribute(KEY_TYPE_ATTRIBUTE)
     val defaultValueType = mapEle.getAttribute(VALUE_TYPE_ATTRIBUTE)
@@ -792,8 +786,8 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Build a typed String value Object for the given raw value.
-   */
+    * Build a typed String value Object for the given raw value.
+    */
   protected final def buildTypedStringValueForMap(value: String, defaultTypeName: String, entryEle: Element): Object = {
     try {
       val typedValue = buildTypedStringValue(value, defaultTypeName)
@@ -807,8 +801,8 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse a key sub-element of a map element.
-   */
+    * Parse a key sub-element of a map element.
+    */
   protected def parseKeyElement(keyEle: Element, bd: BeanDefinition, defaultKeyTypeName: String): Object = {
     val nl = keyEle.getChildNodes()
     var subElement: Element = null
@@ -825,8 +819,8 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse a props element.
-   */
+    * Parse a props element.
+    */
   private def parsePropsElement(propsEle: Element): java.util.Properties = {
     val props = new ManagedProperties()
     props.setSource(extractSource(propsEle))
@@ -849,9 +843,9 @@ class BeanDefinitionParser extends Logging {
   }
 
   /**
-   * Parse the merge attribute of a collection element, if any.
-   *
-   */
+    * Parse the merge attribute of a collection element, if any.
+    *
+    */
   private def parseMergeAttribute(collectionElement: Element) = collectionElement.getAttribute(MERGE_ATTRIBUTE) == TRUE_VALUE
 
   private def decorateBeanDefinitionIfRequired(ele: Element, holder: BeanDefinitionHolder): BeanDefinitionHolder = decorateBeanDefinitionIfRequired(ele, holder, null)

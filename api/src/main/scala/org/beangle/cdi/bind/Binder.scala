@@ -28,13 +28,16 @@ import org.beangle.commons.collection.Collections
 object Binder {
 
   case class ReferenceValue(ref: String)
+
   case class Injection[T](clazz: Class[T])
+
   object InjectPlaceHolder
+
   case class PropertyPlaceHolder(name: String, defaultValue: String)
 
   /**
-   * Bean Definition
-   */
+    * Bean Definition
+    */
   class Definition(var beanName: String, val clazz: Class[_], scopeName: String) {
 
     var scope: String = if (null == scopeName) "Singleton" else scopeName
@@ -100,6 +103,7 @@ object Binder {
       }
       this
     }
+
     def lazyInit(lazyInit: Boolean = true): this.type = {
       for (definition <- beans) definition.lazyInit = lazyInit
       this
@@ -195,13 +199,13 @@ object Binder {
 
     def head: Definition = beans.head
   }
+
 }
 
 /**
- * Binder class.
- *
- * @author chaostone
- */
+  * Binder class.
+  * @author chaostone
+  */
 class Binder(val module: String) {
 
   val definitions = new ListBuffer[Definition]
@@ -213,28 +217,30 @@ class Binder(val module: String) {
   }
 
   /**
-   * bind class with a name.
-   */
+    * bind class with a name.
+    */
   def bind(beanName: String, clazz: Class[_]): DefinitionBinder = {
     new DefinitionBinder(this).bind(beanName, clazz)
   }
 
   /**
-   * bind object with a name.
-   */
+    * bind object with a name.
+    */
   def bind(beanName: String, singleton: AnyRef): Unit = {
     singletons += (beanName -> singleton)
   }
+
   /**
-   * bind.
-   */
+    * bind.
+    */
   def bind(classes: Class[_]*): DefinitionBinder = {
     new DefinitionBinder(this, classes: _*)
   }
+
   /**
-   * add.
-   */
-  protected[bind] def add(definition: Definition) {
+    * add.
+    */
+  protected[bind] def add(definition: Definition): Unit = {
     definitions += definition
   }
 }

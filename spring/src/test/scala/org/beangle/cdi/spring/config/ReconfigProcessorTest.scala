@@ -18,16 +18,15 @@
  */
 package org.beangle.cdi.spring.config
 
-import org.beangle.cdi.spring.bean.{ AdvancedUserLdapProvider, UserDaoProvider, UserLdapProvider, UserService }
-import org.scalatest.{ FunSpec, Matchers }
-import org.springframework.context.support.ClassPathXmlApplicationContext
+import org.beangle.cdi.spring.bean._
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.beangle.cdi.spring.bean.NoneDao
-import org.beangle.cdi.spring.bean.ProviderManager
+import org.scalatest.Matchers
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatestplus.junit.JUnitRunner
+import org.springframework.context.support.ClassPathXmlApplicationContext
 
 @RunWith(classOf[JUnitRunner])
-class ReconfigProcessorTest extends FunSpec with Matchers {
+class ReconfigProcessorTest extends AnyFunSpec with Matchers {
 
   describe("ReconfigProcessor") {
     it("testGetDefinition") {

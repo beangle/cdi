@@ -18,39 +18,29 @@
  */
 package org.beangle.cdi.spring.config
 
-import java.io.InputStream
-
-import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
-
 import org.springframework.core.io.Resource
-import org.w3c.dom.Document
 import org.w3c.dom.Element
-import org.w3c.dom.Node
-import org.w3c.dom.NodeList
 import org.xml.sax.InputSource
 
-/**
- * BeanDefinitionReader class.
- *
- * @author chaostone
- */
-class BeanDefinitionReader {
+/** BeanDefinitionReader
+  * @author chaostone
+  */
+object ReconfigReader {
 
-  /**
-   * load.
-   */
+  /** load spring-config.xml
+    */
   def load(resource: Resource): List[ReconfigBeanDefinitionHolder] = {
     val holders = new collection.mutable.ListBuffer[ReconfigBeanDefinitionHolder]
     try {
-      val inputStream = resource.getInputStream()
+      val inputStream = resource.getInputStream
       try {
         val inputSource = new InputSource(inputStream)
         val factory = DocumentBuilderFactory.newInstance()
         val docBuilder = factory.newDocumentBuilder()
         val doc = docBuilder.parse(inputSource)
-        val root = doc.getDocumentElement()
-        val nl = root.getChildNodes()
+        val root = doc.getDocumentElement
+        val nl = root.getChildNodes
         val parser = new BeanDefinitionParser()
         for (i <- 0 until nl.getLength) {
           val node = nl.item(i)

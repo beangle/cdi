@@ -18,25 +18,23 @@
  */
 package org.beangle.cdi.spring.context
 
-import scala.collection.JavaConverters
-
-import org.beangle.cdi.{ Container, ContainerListener }
 import org.beangle.cdi.spring.config.BindModuleProcessor
+import org.beangle.cdi.{Container, ContainerListener}
 import org.beangle.commons.collection.Collections
-import org.beangle.commons.event.{ Event, EventListener }
+import org.beangle.commons.event.{Event, EventListener}
 import org.beangle.commons.lang.annotation.description
-import org.springframework.beans.factory.{ BeanFactory, BeanFactoryAware, InitializingBean, NoSuchBeanDefinitionException }
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
+import org.springframework.beans.factory.{BeanFactory, BeanFactoryAware, InitializingBean, NoSuchBeanDefinitionException}
 
-/**
- * Spring based IOC Container
- *
- * @author chaostone
- * @since 3.1.0
- */
+import scala.jdk.javaapi.CollectionConverters.asScala
+
+/** Spring based IOC Container
+  * @author chaostone
+  * @since 3.1.0
+  */
 @description("Spring提供的Bean容器")
 class SpringContainer extends BindModuleProcessor with Container with InitializingBean
-    with BeanFactoryAware with EventListener[BeanFactoryEvent] {
+  with BeanFactoryAware with EventListener[BeanFactoryEvent] {
 
   var parent: Container = _
 
@@ -79,11 +77,11 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
 
   override def getBeans[T](clazz: Class[T]): Map[String, T] = {
     if (null == parent) {
-      JavaConverters.mapAsScalaMap(context.getBeansOfType(clazz)).toMap
+      asScala(context.getBeansOfType(clazz)).toMap
     } else {
       val beans = Collections.newMap[String, T]
       beans ++= parent.getBeans[T](clazz)
-      beans ++= JavaConverters.mapAsScalaMap(context.getBeansOfType(clazz))
+      beans ++= asScala(context.getBeansOfType(clazz))
       beans.toMap
     }
   }
@@ -96,11 +94,11 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
     context = beanFactory.asInstanceOf[ConfigurableListableBeanFactory]
   }
 
-  /**
-   * Move temporary hooks into myself
-   * PS. for SpringContainer is a BeanDefinitionRegistryPostProcessor, so when context initializing, the bean
-   *     is inited before others,so using spring native InitializingBean,not beangle's Initializing interface.
-   */
+  /** Move temporary hooks into myself
+    *
+    * PS. for SpringContainer is a BeanDefinitionRegistryPostProcessor, so when context initializing, the bean
+    * is inited before others,so using spring native InitializingBean,not beangle's Initializing interface.
+    */
   override def afterPropertiesSet(): Unit = {
     if (null == context.getParentBeanFactory) {
       if (null == Container.ROOT) Container.ROOT = this
@@ -113,8 +111,8 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
   }
 
   /**
-   * Handle an application event.
-   */
+    * Handle an application event.
+    */
   def onEvent(event: BeanFactoryEvent): Unit = {
     val c = event.getSource.asInstanceOf[ConfigurableListableBeanFactory]
     //for child application context issue a event to parent,so we should take a look.
@@ -134,19 +132,20 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
   private def getListeners(factory: ConfigurableListableBeanFactory): Iterable[ContainerListener] = {
     val listenerSet = new collection.mutable.HashSet[ContainerListener]
     listenerSet ++= listeners
-    listenerSet ++= JavaConverters.collectionAsScalaIterable(factory.getBeansOfType(classOf[ContainerListener]).values())
+    listenerSet ++= asScala(factory.getBeansOfType(classOf[ContainerListener]).values())
     listenerSet
   }
+
   /**
-   * Determine whether this listener actually supports the given event type.
-   */
+    * Determine whether this listener actually supports the given event type.
+    */
   def supportsEventType(eventType: Class[_ <: Event]): Boolean = {
     classOf[BeanFactoryRefreshedEvent] == eventType
   }
 
   /**
-   * Determine whether this listener actually supports the given source type.
-   */
+    * Determine whether this listener actually supports the given source type.
+    */
   def supportsSourceType(sourceType: Class[_]): Boolean = {
     true
   }
