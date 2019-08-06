@@ -35,7 +35,7 @@
   </scm>
 
   <properties>
-    <commons.version>5.1.8-SNAPSHOT</commons.version>
+    <commons.version>5.1.8</commons.version>
     <spring.version>5.1.9.RELEASE</spring.version>
   </properties>
 
