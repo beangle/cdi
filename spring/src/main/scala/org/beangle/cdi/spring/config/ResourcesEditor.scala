@@ -43,7 +43,7 @@ class ResourcesEditor extends PropertyEditorSupport {
     resourceResolver.getResources(locationPattern)
   }
 
-  override def setAsText(text: String) {
+  override def setAsText(text: String): Unit = {
     if (Strings.isNotBlank(text)) {
       val paths = text.split(";")
       var global: Option[URL] = None

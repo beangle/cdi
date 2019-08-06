@@ -20,11 +20,11 @@ package org.beangle.cdi.bind
 
 import org.junit.runner.RunWith
 import org.scalatest.Matchers
-import org.scalatest.FunSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class ModuleTest extends FunSpec with Matchers {
+class ModuleTest extends AnyFunSpec with Matchers {
 
   describe("BindModule") {
     it("has corrent dev model detected.") {

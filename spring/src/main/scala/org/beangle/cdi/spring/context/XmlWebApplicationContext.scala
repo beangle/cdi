@@ -19,13 +19,13 @@
 package org.beangle.cdi.spring.context
 
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
-import org.springframework.beans.factory.xml.{ ResourceEntityResolver, XmlBeanDefinitionReader }
+import org.springframework.beans.factory.xml.{ResourceEntityResolver, XmlBeanDefinitionReader}
 import org.springframework.context.support.AbstractRefreshableConfigApplicationContext
 import org.beangle.commons.event.EventMulticaster
 
 class XmlWebApplicationContext extends AbstractRefreshableConfigApplicationContext {
 
-  protected override def loadBeanDefinitions(beanFactory: DefaultListableBeanFactory) {
+  protected override def loadBeanDefinitions(beanFactory: DefaultListableBeanFactory): Unit = {
     // Create a new XmlBeanDefinitionReader for the given BeanFactory.
     val reader = new XmlBeanDefinitionReader(beanFactory)
     // Configure the bean definition reader with this context's resource loading environment.
@@ -38,8 +38,8 @@ class XmlWebApplicationContext extends AbstractRefreshableConfigApplicationConte
   }
 
   /**
-   * publish beangle BeanFactoryRefreshedEvent
-   */
+    * publish beangle BeanFactoryRefreshedEvent
+    */
   protected override def finishRefresh(): Unit = {
     super.finishRefresh()
     val eventMulticasterIter = this.getBeansOfType(classOf[EventMulticaster]).values.iterator()

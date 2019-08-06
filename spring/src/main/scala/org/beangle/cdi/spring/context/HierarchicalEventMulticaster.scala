@@ -18,27 +18,27 @@
  */
 package org.beangle.cdi.spring.context
 
-import org.beangle.commons.event.{ DefaultEventMulticaster, Event, EventMulticaster, EventListener }
-import org.beangle.cdi.{ Container, ContainerListener }
+import org.beangle.commons.event.{DefaultEventMulticaster, Event, EventMulticaster, EventListener}
+import org.beangle.cdi.{Container, ContainerListener}
 import org.beangle.commons.bean.Initializing
 
 /**
- * @author chaostone
- *
- */
+  * @author chaostone
+  *
+  */
 class HierarchicalEventMulticaster extends DefaultEventMulticaster with Initializing {
 
   var parent: EventMulticaster = _
   var container: Container = _
 
-  override def init() {
+  override def init(): Unit = {
 
     container.getBeans(classOf[EventListener[_]]) foreach { e =>
       addListener(e._2)
     }
   }
 
-  override def multicast(e: Event) {
+  override def multicast(e: Event): Unit = {
     super.multicast(e)
     if (null != parent) parent.multicast(e)
   }
