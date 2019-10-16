@@ -35,6 +35,8 @@ object TestModule extends BindModule {
 
     bind("noneDao", NoneDao)
 
+    bind(classOf[OptionDao])
+
   }
 
 }

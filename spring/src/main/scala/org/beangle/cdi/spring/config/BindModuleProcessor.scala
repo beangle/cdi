@@ -394,7 +394,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     defn.setDescription(definition.description)
     if (null != definition.constructorArgs) {
       val cav = defn.getConstructorArgumentValues
-      definition.constructorArgs.map(arg => cav.addGenericArgumentValue(convertValue(arg)))
+      definition.constructorArgs.foreach(arg => cav.addGenericArgumentValue(convertValue(arg)))
     }
     defn.setPropertyValues(mpv)
     defn
@@ -404,11 +404,9 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     v match {
       case value: List[_] =>
         val list = new ManagedList[Any]
-        value foreach { item =>
-          item match {
-            case rv: ReferenceValue => list.add(new RuntimeBeanReference(rv.ref))
-            case _ => list.add(item)
-          }
+        value foreach {
+          case rv: ReferenceValue => list.add(new RuntimeBeanReference(rv.ref))
+          case item => list.add(item)
         }
         list
       case value: Set[_] =>
@@ -618,8 +616,12 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
             }
           }
           if (!binded) {
-            if (beanNames.isEmpty) logger.debug(s"$beanName's $propertyName cannot found candidate beans.")
-            else logger.warn(s"$beanName's $propertyName expected single bean but found ${beanNames.size} : $beanNames")
+            if (optional) {
+              if (beanNames.isEmpty) logger.debug(s"$beanName's $propertyName cannot found candidate beans.")
+              else logger.warn(s"$beanName's $propertyName expected single bean but found ${beanNames.size} : $beanNames")
+            } else {
+              throw new RuntimeException(s"Binding failure. $beanName's $propertyName,found ${beanNames.size}:$beanNames")
+            }
           }
         case _ =>
           val v = convertInjectValue(propertyType, registry, beanName)
@@ -641,7 +643,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     val clazz = SpringBindRegistry.getBeanClass(bd)
     if (!mbd.isAbstract) {
       val pvs = mbd.getPropertyValues
-      val nowireProperties = nowires.get(beanName).getOrElse(Set.empty[String])
+      val nowireProperties = nowires.getOrElse(beanName, Set.empty[String])
       for ((name, m) <- ScalaBeanInfoFactory.BeanInfos.get(clazz).properties) {
         if (m.writable && !nowireProperties.contains(name)) {
           val method = m.setter.get

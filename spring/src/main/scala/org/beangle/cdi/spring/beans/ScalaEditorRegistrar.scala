@@ -29,6 +29,8 @@ import org.springframework.beans.{PropertyEditorRegistry, PropertyEditorRegistra
 class ScalaEditorRegistrar extends PropertyEditorRegistrar {
 
   def registerCustomEditors(registry: PropertyEditorRegistry): Unit = {
+    // Options
+    registry.registerCustomEditor(classOf[Option[Any]], new OptionEditor())
     // Types
     registry.registerCustomEditor(classOf[Regex], new RegexEditor())
 
