@@ -16,22 +16,21 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.beangle.cdi
-import scala.language.implicitConversions
+package org.beangle.cdi.spring.beans
 
-object Scope extends Enumeration {
+import java.beans.PropertyEditorSupport
 
-  val Singleton = new Val("")
+class OptionEditor extends PropertyEditorSupport {
 
-  val Prototype = new Val("prototype")
-
-  val Request = new Val("request")
-
-  val Session = new Val("session")
-
-  class Val(var name: String) extends super.Val {
-    override def toString: String = name
+  override def setAsText(text: String): Unit = {
+    setValue(text)
   }
 
-  implicit def convertValue(v: Value): Val = v.asInstanceOf[Val]
+  override def setValue(value: AnyRef): Unit = {
+    value match {
+      case s@Some(v) => super.setValue(s)
+      case None => super.setValue(None)
+      case _ => super.setValue(Option(value))
+    }
+  }
 }

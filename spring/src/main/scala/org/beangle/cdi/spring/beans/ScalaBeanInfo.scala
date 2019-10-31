@@ -18,8 +18,7 @@
  */
 package org.beangle.cdi.spring.beans
 
-import java.beans.{ BeanDescriptor, EventSetDescriptor, Introspector, PropertyDescriptor }
-import org.beangle.commons.lang.reflect.BeanInfos
+import java.beans._
 
 class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
 
@@ -27,7 +26,7 @@ class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
     Introspector.getBeanInfo(beanClass)
   }
 
-  val propertyDescriptors = buildProperties(beanClass)
+  private val propertyDescriptors = buildProperties(beanClass)
 
   private def buildProperties(beanClass: Class[_]): Array[PropertyDescriptor] = {
     val descriptors = new collection.mutable.HashMap[String, PropertyDescriptor]
@@ -38,14 +37,14 @@ class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
     descriptors.values.toArray
   }
 
-  override def getPropertyDescriptors() = propertyDescriptors;
+  override def getPropertyDescriptors: Array[PropertyDescriptor] = propertyDescriptors
 
-  override def getAdditionalBeanInfo(): Array[java.beans.BeanInfo] = {
+  override def getAdditionalBeanInfo: Array[java.beans.BeanInfo] = {
     Array.empty
   }
 
   override def getBeanDescriptor: BeanDescriptor = {
-    delegate.getBeanDescriptor()
+    delegate.getBeanDescriptor
   }
 
   override def getDefaultEventIndex: Int = {
@@ -64,8 +63,8 @@ class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
     null
   }
 
-  override def getMethodDescriptors = {
-    delegate.getMethodDescriptors()
+  override def getMethodDescriptors: Array[MethodDescriptor] = {
+    delegate.getMethodDescriptors
   }
 
 }

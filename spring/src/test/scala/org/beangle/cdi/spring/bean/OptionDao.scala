@@ -16,22 +16,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.beangle.cdi
-import scala.language.implicitConversions
+package org.beangle.cdi.spring.bean
 
-object Scope extends Enumeration {
+class OptionDao {
 
-  val Singleton = new Val("")
-
-  val Prototype = new Val("prototype")
-
-  val Request = new Val("request")
-
-  val Session = new Val("session")
-
-  class Val(var name: String) extends super.Val {
-    override def toString: String = name
-  }
-
-  implicit def convertValue(v: Value): Val = v.asInstanceOf[Val]
 }

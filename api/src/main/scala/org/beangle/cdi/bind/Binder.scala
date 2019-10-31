@@ -18,12 +18,13 @@
  */
 package org.beangle.cdi.bind
 
-import org.beangle.commons.lang.Strings
-import Binder._
-import scala.collection.mutable.ListBuffer
 import org.beangle.cdi.Scope
-import org.beangle.commons.lang.annotation.description
+import org.beangle.cdi.bind.Binder._
 import org.beangle.commons.collection.Collections
+import org.beangle.commons.lang.Strings
+import org.beangle.commons.lang.annotation.description
+
+import scala.collection.mutable.ListBuffer
 
 object Binder {
 
@@ -62,6 +63,10 @@ object Binder {
 
     val nowires = Collections.newSet[String]
 
+    val optionals = Collections.newSet[String]
+
+    var wiredEagerly: Boolean = _
+
     def isAbstract: Boolean = abstractFlag
 
     def property(property: String, value: AnyRef): Definition = {
@@ -76,6 +81,16 @@ object Binder {
 
     def nowire(properties: String*): this.type = {
       nowires ++= properties
+      this
+    }
+
+    def optional(properties: String*): this.type = {
+      optionals ++= properties
+      this
+    }
+
+    def wiredEagerly(newvalue:Boolean): this.type = {
+      this.wiredEagerly=newvalue
       this
     }
   }
@@ -138,6 +153,20 @@ object Binder {
 
     def primary(): this.type = {
       for (definition <- beans) definition.primary = true
+      this
+    }
+
+    def optional(properties: String*): this.type = {
+      for (definition <- beans) {
+        definition.optionals ++= properties
+      }
+      this
+    }
+
+    def wiredEagerly(newvalue:Boolean): this.type = {
+      for (definition <- beans) {
+        definition.wiredEagerly=newvalue
+      }
       this
     }
 

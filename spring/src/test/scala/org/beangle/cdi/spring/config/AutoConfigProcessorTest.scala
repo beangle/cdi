@@ -65,6 +65,7 @@ class AutoConfigProcessorTest extends AnyFunSpec with Matchers with Logging {
     testService should not be (null)
     testService.entityDao should not be (null)
     testService.noneDao should be(null)
+    assert(testService.optionDao.isDefined)
   }
 
   private def testBean(factory: ApplicationContext): Unit = {

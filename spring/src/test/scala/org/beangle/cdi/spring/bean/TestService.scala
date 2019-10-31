@@ -22,5 +22,7 @@ class TestService {
 
   var entityDao: TestDao = _
 
-  var noneDao: TestDao = _
+  var noneDao: TestDao = null
+
+  var optionDao: Option[OptionDao] = None
 }
