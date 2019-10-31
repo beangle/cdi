@@ -27,6 +27,10 @@ class OptionEditor extends PropertyEditorSupport {
   }
 
   override def setValue(value: AnyRef): Unit = {
-    super.setValue(Option(value))
+    value match {
+      case s@Some(v) => super.setValue(s)
+      case None => super.setValue(None)
+      case _ => super.setValue(Option(value))
+    }
   }
 }

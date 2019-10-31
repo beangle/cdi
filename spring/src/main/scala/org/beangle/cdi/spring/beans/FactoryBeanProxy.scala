@@ -27,9 +27,9 @@ class FactoryBeanProxy[T] extends FactoryBean[T] {
 
   var objectType: Class[T] = _
 
-  override def getObject = target.result
+  override def getObject: T = target.result
 
   override def isSingleton: Boolean = target.singleton
 
-  override def getObjectType = objectType
+  override def getObjectType: Class[T] = objectType
 }

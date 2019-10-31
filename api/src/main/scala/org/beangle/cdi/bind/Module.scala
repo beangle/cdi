@@ -18,64 +18,74 @@
  */
 package org.beangle.cdi.bind
 
-import java.{ util => ju }
+import java.{util => ju}
 
 import org.beangle.cdi.Scope
-import org.beangle.cdi.bind.Binder.{ Definition, DefinitionBinder, InjectPlaceHolder, Injection, PropertyPlaceHolder, ReferenceValue }
+import org.beangle.cdi.bind.Binder._
 import org.beangle.commons.lang.Strings
 
 /**
- * Module interface.
- */
+  * Module interface.
+  */
 trait Module {
 
   /**
-   * binding process
-   */
+    * binding process
+    */
   def configure(binder: Binder): Unit
 }
+
 object Module {
   final val profileProperty = "beangle.cdi.profiles"
 }
+
 /**
- * Abstract BindModule class.
- * The subclass can writed in /META-INF/beangle/cdi.xml
- * using modules=com.your.class
- */
+  * Abstract BindModule class.
+  * The subclass can writed in /META-INF/beangle/cdi.xml
+  * using modules=com.your.class
+  */
 abstract class BindModule extends Module {
 
   protected var binder: Binder = _
 
+  private var wiredEagerly: Boolean = _
+
   /**
-   * Getter for the field <code>config</code>.
-   */
+    * Getter for the field <code>config</code>.
+    */
   override final def configure(binder: Binder): Unit = {
     this.binder = binder
     binding()
   }
 
-  /**
-   * bind class.
-   */
-  protected final def bind(classes: Class[_]*): DefinitionBinder = binder.bind(classes: _*)
+  def wiredEagerly(newvalue: Boolean): Unit = {
+    this.wiredEagerly = newvalue
+  }
 
   /**
-   * Returns a reference definition based on Name;
-   */
+    * bind class.
+    */
+  protected final def bind(classes: Class[_]*): DefinitionBinder = {
+    binder.bind(classes: _*).wiredEagerly(wiredEagerly)
+  }
+
+  /**
+    * Returns a reference definition based on Name;
+    */
   protected final def ref(name: String): ReferenceValue = new ReferenceValue(name)
 
   protected final def ref(clazz: Class[_]): ReferenceValue = new ReferenceValue(clazz.getName)
 
   /**
-   * Return new map entry
-   */
+    * Return new map entry
+    */
   protected final def entry(key: Any, value: Any): Tuple2[_, _] = Tuple2(key, value)
 
   /**
-   * Generate a inner bean definition
-   */
+    * Generate a inner bean definition
+    */
   protected final def bean(clazz: Class[_]): Definition = {
-    bind(binder.newInnerBeanName(clazz), clazz).head
+    bind(binder.newInnerBeanName(clazz), clazz).head.wiredEagerly(wiredEagerly)
   }
 
   final def inject[T](clazz: Class[T]): Injection[T] = {
@@ -85,38 +95,35 @@ abstract class BindModule extends Module {
   final def ? = InjectPlaceHolder
 
   final def $(s: String, defaultValue: String = null) = PropertyPlaceHolder(s, defaultValue)
+
   /**
-   * Generate a list property
-   *
-   * List singleton bean references with list(A.class,B.class) or list(ref("someBeanId"),C.class).<br>
-   * List simple values with list("strValue1","strValue2")
-   */
+    * Generate a list property
+    *
+    * List singleton bean references with list(A.class,B.class) or list(ref("someBeanId"),C.class).<br>
+    * List simple values with list("strValue1","strValue2")
+    */
   protected final def list(datas: AnyRef*): List[_] = {
-    datas.map { obj =>
-      obj match {
-        case clazz: Class[_] => buildInnerReference(clazz)
-        case _               => obj
-      }
+    datas.map {
+      case clazz: Class[_] => buildInnerReference(clazz)
+      case obj => obj
     }.toList
   }
 
   /**
-   * Generate a list reference property
-   */
+    * Generate a list reference property
+    */
   protected final def listref(classes: Class[_]*): List[_] = classes.map(clazz => new ReferenceValue(clazz.getName)).toList
 
   /**
-   * Generate a set property
-   *
-   * List singleton bean references with set(A.class,B.class) or set(ref("someBeanId"),C.class).<br>
-   * List simple values with set("strValue1","strValue2")
-   */
+    * Generate a set property
+    *
+    * List singleton bean references with set(A.class,B.class) or set(ref("someBeanId"),C.class).<br>
+    * List simple values with set("strValue1","strValue2")
+    */
   protected final def set(datas: AnyRef*): Set[_] = {
-    datas.map { obj =>
-      obj match {
-        case clazz: Class[_] => buildInnerReference(clazz)
-        case _               => obj
-      }
+    datas.map {
+      case clazz: Class[_] => buildInnerReference(clazz)
+      case obj => obj
     }.toSet
   }
 
@@ -125,7 +132,7 @@ abstract class BindModule extends Module {
       case (k, v) =>
         v match {
           case clazz: Class[_] => (k, buildInnerReference(clazz))
-          case _               => (k, v)
+          case _ => (k, v)
         }
     }.toMap
   }
@@ -140,22 +147,22 @@ abstract class BindModule extends Module {
   }
 
   /**
-   * bind class with a name.
-   */
+    * bind class with a name.
+    */
   protected final def bind(beanName: String, clazz: Class[_]): DefinitionBinder = {
-    binder.bind(beanName, clazz)
+    binder.bind(beanName, clazz).wiredEagerly(wiredEagerly)
   }
 
   /**
-   * bind singleton with a name.
-   */
+    * bind singleton with a name.
+    */
   protected final def bind(beanName: String, singleton: AnyRef): Unit = {
     binder.bind(beanName, singleton)
   }
 
   /**
-   * binding.
-   */
+    * binding.
+    */
   protected def binding(): Unit
 
   final def devEnabled: Boolean = {
@@ -166,6 +173,6 @@ abstract class BindModule extends Module {
   private def buildInnerReference(clazz: Class[_]): ReferenceValue = {
     val targetBean = binder.newInnerBeanName(clazz)
     binder.add(new Definition(targetBean, clazz, Scope.Singleton.toString))
-    new ReferenceValue(targetBean)
+    ReferenceValue(targetBean)
   }
 }

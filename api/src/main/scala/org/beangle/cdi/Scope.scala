@@ -30,7 +30,7 @@ object Scope extends Enumeration {
   val Session = new Val("session")
 
   class Val(var name: String) extends super.Val {
-    override def toString(): String = name
+    override def toString: String = name
   }
 
   implicit def convertValue(v: Value): Val = v.asInstanceOf[Val]
