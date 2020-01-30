@@ -22,7 +22,7 @@ import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.logging.Logging
 import org.beangle.commons.regex.AntPathPattern
 import org.junit.runner.RunWith
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.junit.JUnitRunner
 import org.springframework.util.AntPathMatcher

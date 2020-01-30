@@ -20,7 +20,7 @@ package org.beangle.cdi.spring.config
 
 import org.beangle.cdi.spring.bean._
 import org.junit.runner.RunWith
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatestplus.junit.JUnitRunner
 import org.springframework.context.support.ClassPathXmlApplicationContext
