@@ -83,7 +83,7 @@ class ExtBeanDefinition extends GenericBeanDefinition {
 
   var wiredEagerly: Boolean = _
 
-  def this(definition: Definition, properties: Map[String, String]) {
+  def this(definition: Definition, properties: Map[String, String]) = {
     this()
     this.setBeanClass(definition.clazz)
     this.setScope(definition.scope)
@@ -104,7 +104,7 @@ class ExtBeanDefinition extends GenericBeanDefinition {
     this.setPropertyValues(mpv)
     this.nowires ++= definition.nowires
     this.optionals ++= definition.optionals
-    this.wiredEagerly=definition.wiredEagerly
+    this.wiredEagerly = definition.wiredEagerly
   }
 
 }

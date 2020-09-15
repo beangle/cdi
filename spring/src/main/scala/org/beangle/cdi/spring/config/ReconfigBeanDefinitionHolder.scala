@@ -18,25 +18,24 @@
  */
 package org.beangle.cdi.spring.config
 
+import org.beangle.cdi.spring.config.ReconfigType.{Primary, Update}
 import org.beangle.commons.lang.Strings
 import org.springframework.beans.factory.config.{BeanDefinition, BeanDefinitionHolder}
 import org.springframework.beans.factory.support.GenericBeanDefinition
 
-import ReconfigType.{Primary, Update}
 /**
- * ReconfigBeanDefinitionHolder class.
- *
- * @author chaostone
- */
+  * ReconfigBeanDefinitionHolder class.
+  * @author chaostone
+  */
 class ReconfigBeanDefinitionHolder(beanDefinition: BeanDefinition, beanName: String, aliases: Array[String])
   extends BeanDefinitionHolder(beanDefinition, beanName, aliases) {
 
   var configType = ReconfigType.Update
 
   /**
-   * Constructor for ReconfigBeanDefinitionHolder.
-   */
-  def this(beanDefinition: BeanDefinition, beanName: String) {
+    * Constructor for ReconfigBeanDefinitionHolder.
+    */
+  def this(beanDefinition: BeanDefinition, beanName: String) = {
     this(beanDefinition, beanName, null)
   }
 
