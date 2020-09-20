@@ -18,49 +18,57 @@
  */
 package org.beangle.cdi.spring.beans
 
+import java.beans.PropertyEditor
+
 import scala.util.matching.Regex
+import scala.collection.mutable
+import scala.collection.immutable
+import org.springframework.beans.{PropertyEditorRegistrar, PropertyEditorRegistry}
 
-import org.springframework.beans.{PropertyEditorRegistry, PropertyEditorRegistrar}
-
-/**
-  * Property editor registrar for Scala property editors.
+/** Property editor registrar for Scala property editors.
   *
   */
 class ScalaEditorRegistrar extends PropertyEditorRegistrar {
 
   def registerCustomEditors(registry: PropertyEditorRegistry): Unit = {
+    implicit val r = registry
+    register(classOf[Option[Any]], new OptionEditor())
     // Options
-    registry.registerCustomEditor(classOf[Option[Any]], new OptionEditor())
+    register(classOf[Option[Any]], new OptionEditor())
     // Types
-    registry.registerCustomEditor(classOf[Regex], new RegexEditor())
+    register(classOf[Regex], new RegexEditor())
 
     // Seq
-    registry.registerCustomEditor(classOf[collection.Seq[Any]], new ScalaCollectionEditor(collection.Seq.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.immutable.Seq[Any]], new ScalaCollectionEditor(collection.immutable.Seq.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.mutable.Seq[Any]], new ScalaCollectionEditor(collection.mutable.Seq.newBuilder[Any] _))
+    register(classOf[collection.Seq[Any]], new ScalaCollectionEditor(() => collection.Seq.newBuilder[Any]))
+    register(classOf[immutable.Seq[Any]], new ScalaCollectionEditor(() => collection.immutable.Seq.newBuilder[Any]))
+    register(classOf[mutable.Seq[Any]], new ScalaCollectionEditor(() => mutable.Seq.newBuilder[Any]))
 
     // IndexedSeq
-    registry.registerCustomEditor(classOf[collection.IndexedSeq[Any]], new ScalaCollectionEditor(collection.IndexedSeq.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.immutable.IndexedSeq[Any]], new ScalaCollectionEditor(collection.immutable.IndexedSeq.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.mutable.IndexedSeq[Any]], new ScalaCollectionEditor(collection.mutable.IndexedSeq.newBuilder[Any] _))
+    register(classOf[collection.IndexedSeq[Any]], new ScalaCollectionEditor(() => collection.IndexedSeq.newBuilder[Any]))
+    register(classOf[immutable.IndexedSeq[Any]], new ScalaCollectionEditor(() => immutable.IndexedSeq.newBuilder[Any]))
+    register(classOf[mutable.IndexedSeq[Any]], new ScalaCollectionEditor(() => mutable.IndexedSeq.newBuilder[Any]))
     // LinearSeq
-    registry.registerCustomEditor(classOf[collection.LinearSeq[Any]], new ScalaCollectionEditor(collection.LinearSeq.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.immutable.LinearSeq[Any]], new ScalaCollectionEditor(collection.immutable.LinearSeq.newBuilder[Any] _))
+    register(classOf[collection.LinearSeq[Any]], new ScalaCollectionEditor(() => collection.LinearSeq.newBuilder[Any]))
+    register(classOf[immutable.LinearSeq[Any]], new ScalaCollectionEditor(() => immutable.LinearSeq.newBuilder[Any]))
 
     // Buffer
-    registry.registerCustomEditor(classOf[collection.mutable.Buffer[Any]], new ScalaCollectionEditor(collection.mutable.Buffer.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.mutable.ListBuffer[Any]], new ScalaCollectionEditor(collection.mutable.ListBuffer.newBuilder[Any] _))
+    register(classOf[mutable.Buffer[Any]], new ScalaCollectionEditor(() => mutable.Buffer.newBuilder[Any]))
+    register(classOf[mutable.ListBuffer[Any]], new ScalaCollectionEditor(() => mutable.ListBuffer.newBuilder[Any]))
 
     // Set
-    registry.registerCustomEditor(classOf[collection.Set[Any]], new ScalaCollectionEditor(collection.Set.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.immutable.Set[Any]], new ScalaCollectionEditor(collection.immutable.Set.newBuilder[Any] _))
-    registry.registerCustomEditor(classOf[collection.mutable.Set[Any]], new ScalaCollectionEditor(collection.mutable.Set.newBuilder[Any] _))
+    register(classOf[collection.Set[Any]], new ScalaCollectionEditor(() => collection.Set.newBuilder[Any]))
+    register(classOf[immutable.Set[Any]], new ScalaCollectionEditor(() => immutable.Set.newBuilder[Any]))
+    register(classOf[mutable.Set[Any]], new ScalaCollectionEditor(() => mutable.Set.newBuilder[Any]))
 
     // Map
-    registry.registerCustomEditor(classOf[collection.Map[Any, Any]], new ScalaCollectionEditor(collection.Map.newBuilder[Any, Any] _))
-    registry.registerCustomEditor(classOf[collection.immutable.Map[Any, Any]], new ScalaCollectionEditor(collection.immutable.Map.newBuilder[Any, Any] _))
-    registry.registerCustomEditor(classOf[collection.mutable.Map[Any, Any]], new ScalaCollectionEditor(collection.mutable.Map.newBuilder[Any, Any] _))
-    registry.registerCustomEditor(classOf[collection.mutable.HashMap[Any, Any]], new ScalaCollectionEditor(collection.mutable.HashMap.newBuilder[Any, Any] _))
+    register(classOf[collection.Map[Any, Any]], new ScalaCollectionEditor(() => collection.Map.newBuilder[Any, Any]))
+    register(classOf[immutable.Map[Any, Any]], new ScalaCollectionEditor(() => immutable.Map.newBuilder[Any, Any]))
+    register(classOf[mutable.Map[Any, Any]], new ScalaCollectionEditor(() => mutable.Map.newBuilder[Any, Any]))
+    register(classOf[mutable.HashMap[Any, Any]], new ScalaCollectionEditor(() => mutable.HashMap.newBuilder[Any, Any]))
   }
 
+  @inline
+  private def register(clazz: Class[_], editor: PropertyEditor)(implicit registry: PropertyEditorRegistry): Unit = {
+    registry.registerCustomEditor(clazz, editor)
+  }
 }

@@ -21,15 +21,15 @@ import scala.language.implicitConversions
 
 object Scope extends Enumeration {
 
-  val Singleton = new Val("")
+  val Singleton = new Scope("")
 
-  val Prototype = new Val("prototype")
+  val Prototype = new Scope("prototype")
 
-  val Request = new Val("request")
+  val Request = new Scope("request")
 
-  val Session = new Val("session")
+  val Session = new Scope("session")
 
-  class Val(var name: String) extends super.Val {
+  class Scope(var name: String) extends super.Val {
     override def toString: String = name
   }
 

@@ -25,8 +25,7 @@ import org.beangle.commons.lang.reflect.Reflections.newInstance
 import org.beangle.commons.logging.Logging
 import org.beangle.cdi.spring.context.{BeanFactoryLoader, ContextLoader}
 
-import javax.servlet.{ServletContextEvent, ServletContextListener}
-import org.beangle.commons.lang.Strings
+import jakarta.servlet.{ServletContextEvent, ServletContextListener}
 import org.beangle.cdi.Container
 
 /**

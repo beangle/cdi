@@ -38,7 +38,7 @@ trait Container {
 
   def getBeans[T](clazz: Class[T]): Map[String, T]
 
-  def keys(): Set[_]
+  def keys: Set[_]
 
   def parent: Container
 
