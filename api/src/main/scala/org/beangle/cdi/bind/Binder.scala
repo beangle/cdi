@@ -113,7 +113,7 @@ object Binder {
         val beanIter = beans.iterator
         val descIter = descs.iterator
         while (beanIter.hasNext) {
-          beanIter.next.description = descIter.next
+          beanIter.next().description = descIter.next()
         }
       }
       this
@@ -175,7 +175,7 @@ object Binder {
       this
     }
 
-    def in(scope: Scope.Val): this.type = {
+    def in(scope: Scope.Scope): this.type = {
       for (definition <- beans) definition.scope = scope.toString
       this
     }
