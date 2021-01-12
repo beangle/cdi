@@ -29,7 +29,6 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
       <version>${spring.version}</version>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.h2database</groupId>
