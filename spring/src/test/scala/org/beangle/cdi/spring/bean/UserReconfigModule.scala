@@ -16,14 +16,18 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.beangle.cdi.spring.config
+package org.beangle.cdi.spring.bean
 
-/**
- * ReconfigType class.
- *
- * @author chaostone
- */
-object ReconfigType extends Enumeration {
-  type ReconfigType = Value
-  val Update, Remove,Primary = Value
+import org.beangle.cdi.bind.ReconfigModule
+
+class UserReconfigModule extends ReconfigModule {
+  protected override def config(): Unit = {
+    update("userLdapProvider").setClass(classOf[AdvancedUserLdapProvider])
+
+    update("userService")
+      .set("someMap", map("string" -> "override string"))
+      .merge("someList", list("just third string"))
+
+    updateProperty("1","3")
+  }
 }

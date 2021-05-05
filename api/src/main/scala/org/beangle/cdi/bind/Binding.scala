@@ -19,14 +19,15 @@
 package org.beangle.cdi.bind
 
 import org.beangle.cdi.Scope
-import org.beangle.cdi.bind.Binder._
+import org.beangle.cdi.bind.Binding._
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.lang.Strings
 import org.beangle.commons.lang.annotation.description
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Binder {
+object Binding {
 
   case class ReferenceValue(ref: String)
 
@@ -37,13 +38,15 @@ object Binder {
   case class PropertyPlaceHolder(name: String, defaultValue: String)
 
   /**
-    * Bean Definition
-    */
-  class Definition(var beanName: String, val clazz: Class[_], scopeName: String) {
+   * Bean Definition
+   */
+  class Definition(var beanName: String, var clazz: Class[_], scopeName: String) {
 
     var scope: String = if (null == scopeName) "Singleton" else scopeName
 
     var initMethod: String = _
+
+    var destroyMethod: String = _
 
     var properties = new collection.mutable.HashMap[String, Any]
 
@@ -57,7 +60,7 @@ object Binder {
 
     var targetClass: Class[_] = _
 
-    var constructorArgs: Seq[_] = _
+    var constructorArgs: mutable.Buffer[Any] = _
 
     var description: String = _
 
@@ -67,6 +70,10 @@ object Binder {
 
     var wiredEagerly: Boolean = _
 
+    var factoryBean: String = _
+
+    var factoryMethod: String = _
+
     def isAbstract: Boolean = abstractFlag
 
     def property(property: String, value: AnyRef): Definition = {
@@ -75,7 +82,7 @@ object Binder {
     }
 
     def constructor(args: Any*): this.type = {
-      this.constructorArgs = args
+      this.constructorArgs = args.toBuffer
       this
     }
 
@@ -89,13 +96,13 @@ object Binder {
       this
     }
 
-    def wiredEagerly(newvalue:Boolean): this.type = {
-      this.wiredEagerly=newvalue
+    def wiredEagerly(newvalue: Boolean): this.type = {
+      this.wiredEagerly = newvalue
       this
     }
   }
 
-  class DefinitionBinder(val config: Binder, classes: Class[_]*) {
+  class DefinitionBinder(val config: Binding, classes: Class[_]*) {
 
     private val beans = new ListBuffer[Definition]
 
@@ -137,7 +144,7 @@ object Binder {
       config.add(targetDefinition)
       for (definition <- beans) {
         definition.targetClass = clazz
-        definition.properties.put(property, new ReferenceValue(targetBean))
+        definition.properties.put(property, ReferenceValue(targetBean))
       }
       this
     }
@@ -146,7 +153,7 @@ object Binder {
       config.add(target)
       for (definition <- beans) {
         definition.targetClass = target.clazz
-        definition.properties.put(property, new ReferenceValue(target.beanName))
+        definition.properties.put(property, ReferenceValue(target.beanName))
       }
       this
     }
@@ -163,9 +170,9 @@ object Binder {
       this
     }
 
-    def wiredEagerly(newvalue:Boolean): this.type = {
+    def wiredEagerly(newvalue: Boolean): this.type = {
       for (definition <- beans) {
-        definition.wiredEagerly=newvalue
+        definition.wiredEagerly = newvalue
       }
       this
     }
@@ -186,7 +193,7 @@ object Binder {
     }
 
     def constructor(args: Any*): this.type = {
-      for (definition <- beans) definition.constructorArgs = args
+      for (definition <- beans) definition.constructorArgs = args.toBuffer
       this
     }
 
@@ -232,10 +239,11 @@ object Binder {
 }
 
 /**
-  * Binder class.
-  * @author chaostone
-  */
-class Binder(val module: String) {
+ * Module's Binding Space
+ *
+ * @author chaostone
+ */
+class Binding(val module: String) {
 
   val definitions = new ListBuffer[Definition]
 
@@ -246,29 +254,29 @@ class Binder(val module: String) {
   }
 
   /**
-    * bind class with a name.
-    */
+   * bind class with a name.
+   */
   def bind(beanName: String, clazz: Class[_]): DefinitionBinder = {
     new DefinitionBinder(this).bind(beanName, clazz)
   }
 
   /**
-    * bind object with a name.
-    */
+   * bind object with a name.
+   */
   def bind(beanName: String, singleton: AnyRef): Unit = {
     singletons += (beanName -> singleton)
   }
 
   /**
-    * bind.
-    */
+   * bind.
+   */
   def bind(classes: Class[_]*): DefinitionBinder = {
     new DefinitionBinder(this, classes: _*)
   }
 
   /**
-    * add.
-    */
+   * add.
+   */
   protected[bind] def add(definition: Definition): Unit = {
     definitions += definition
   }

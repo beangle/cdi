@@ -31,11 +31,11 @@ class ModuleTest extends AnyFunSpec with Matchers {
       val module = new BindModule {
         protected override def binding(): Unit = {}
       }
-      System.setProperty(Module.profileProperty, "dev")
+      System.setProperty(BindModule.profileProperty, "dev")
       assert(module.devEnabled)
-      System.clearProperty(Module.profileProperty)
+      System.clearProperty(BindModule.profileProperty)
       assert(!module.devEnabled)
-      System.setProperty(Module.profileProperty, "dev,other")
+      System.setProperty(BindModule.profileProperty, "dev,other")
       assert(module.devEnabled)
     }
   }
