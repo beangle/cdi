@@ -2,5 +2,6 @@
 <cdi>
   <container>
     <module class="org.beangle.cdi.spring.bean.TestModule"/>
+    <module class="org.beangle.cdi.spring.bean.UserReconfigModule"/>
   </container>
 </cdi>

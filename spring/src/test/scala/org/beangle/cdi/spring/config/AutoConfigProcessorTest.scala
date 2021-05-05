@@ -55,9 +55,7 @@ class AutoConfigProcessorTest extends AnyFunSpec with Matchers with Logging {
       consumer should not be (null)
       consumer.resources should not be (null)
       logger.debug(s"config  advance context-auto completed using $watch")
-
     }
-
   }
 
   private def testFactoryBean(factory: ApplicationContext): Unit = {

@@ -18,10 +18,12 @@
  */
 package org.beangle.cdi.spring.config
 
-import javax.xml.parsers.DocumentBuilderFactory
+import org.beangle.cdi.bind.Reconfig
 import org.springframework.core.io.Resource
 import org.w3c.dom.Element
 import org.xml.sax.InputSource
+
+import javax.xml.parsers.DocumentBuilderFactory
 
 /** BeanDefinitionReader
   * @author chaostone
@@ -30,8 +32,8 @@ object ReconfigReader {
 
   /** load spring-config.xml
     */
-  def load(resource: Resource): List[ReconfigBeanDefinitionHolder] = {
-    val holders = new collection.mutable.ListBuffer[ReconfigBeanDefinitionHolder]
+  def load(resource: Resource): List[Reconfig.Definition] = {
+    val holders = new collection.mutable.ListBuffer[Reconfig.Definition]
     try {
       val inputStream = resource.getInputStream
       try {
@@ -41,12 +43,15 @@ object ReconfigReader {
         val doc = docBuilder.parse(inputSource)
         val root = doc.getDocumentElement
         val nl = root.getChildNodes
-        val parser = new BeanDefinitionParser()
+        val parser = new ReconfigParser()
         for (i <- 0 until nl.getLength) {
           val node = nl.item(i)
           if (node.isInstanceOf[Element]) {
             val ele = node.asInstanceOf[Element]
-            holders += parser.parseBeanDefinitionElement(ele)
+            val holder = parser.parseBeanDefinitionElement(ele)
+            if (null != holder) {
+              holders += holder
+            }
           }
         }
       } finally {
@@ -57,4 +62,5 @@ object ReconfigReader {
     }
     holders.toList
   }
+
 }
