@@ -40,7 +40,6 @@ import scala.collection.mutable
  * @author chaostone
  */
 class ReconfigParser extends Logging {
-
   /**
    * Stores all used bean names so we can enforce uniqueness on a per file
    * basis.

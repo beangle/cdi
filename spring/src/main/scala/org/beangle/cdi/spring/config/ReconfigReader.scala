@@ -19,13 +19,11 @@
 package org.beangle.cdi.spring.config
 
 import org.beangle.cdi.bind.Reconfig
-import org.beangle.cdi.bind.Reconfig.ReconfigType
-import org.springframework.beans.factory.config.{BeanDefinition, BeanDefinitionHolder}
-
-import javax.xml.parsers.DocumentBuilderFactory
 import org.springframework.core.io.Resource
 import org.w3c.dom.Element
 import org.xml.sax.InputSource
+
+import javax.xml.parsers.DocumentBuilderFactory
 
 /** BeanDefinitionReader
   * @author chaostone
@@ -50,7 +48,10 @@ object ReconfigReader {
           val node = nl.item(i)
           if (node.isInstanceOf[Element]) {
             val ele = node.asInstanceOf[Element]
-            holders += parser.parseBeanDefinitionElement(ele)
+            val holder = parser.parseBeanDefinitionElement(ele)
+            if (null != holder) {
+              holders += holder
+            }
           }
         }
       } finally {

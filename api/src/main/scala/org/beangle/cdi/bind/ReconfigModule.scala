@@ -30,7 +30,7 @@ abstract class ReconfigModule {
     config()
   }
 
-  protected def update(name: String): Reconfig.Definition = {
+  protected final def update(name: String): Reconfig.Definition = {
     cfg.definitions.get(name) match {
       case Some(d) => d
       case None =>
@@ -40,17 +40,17 @@ abstract class ReconfigModule {
     }
   }
 
-  protected def updateProperty(name: String, value: String): Unit = {
+  protected final def updateProperty(name: String, value: String): Unit = {
     this.cfg.properties.put(name, value)
   }
 
-  protected def updateProperties(entries: (String, String)*): Unit = {
+  protected final def updateProperties(entries: (String, String)*): Unit = {
     entries foreach { case (k, v) =>
       this.cfg.properties.put(k, v)
     }
   }
 
-  protected def remove(name: String): Unit = {
+  protected final def remove(name: String): Unit = {
     val rd = new Reconfig.Definition(name, Reconfig.ReconfigType.Remove, null)
     this.cfg.definitions.put(name, rd)
   }

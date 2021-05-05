@@ -90,6 +90,7 @@ object ExtBeanDefinition {
   }
 }
 
+import ExtBeanDefinition.convert
 class ExtBeanDefinition extends GenericBeanDefinition {
 
   val nowires: collection.mutable.Set[String] = Collections.newSet[String]
@@ -108,10 +109,9 @@ class ExtBeanDefinition extends GenericBeanDefinition {
     if (null != d.factoryMethod) this.setFactoryMethodName(d.factoryMethod)
     val mpv = new MutablePropertyValues()
     for ((key, v) <- d.properties) {
-      //      if(key.startsWith("-"))
-      mpv.add(key, ExtBeanDefinition.convert(v, properties))
+      mpv.add(key, convert(v, properties))
     }
-
+    this.setPropertyValues(mpv)
     this.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO)
     this.setLazyInit(d.lazyInit)
     this.setAbstract(d.isAbstract)
@@ -120,9 +120,8 @@ class ExtBeanDefinition extends GenericBeanDefinition {
     this.setDescription(d.description)
     if (null != d.constructorArgs) {
       val cav = this.getConstructorArgumentValues
-      d.constructorArgs.foreach(arg => cav.addGenericArgumentValue(ExtBeanDefinition.convert(arg, properties)))
+      d.constructorArgs.foreach(arg => cav.addGenericArgumentValue(convert(arg, properties)))
     }
-    this.setPropertyValues(mpv)
     this.nowires ++= d.nowires
     this.optionals ++= d.optionals
     this.wiredEagerly = d.wiredEagerly
