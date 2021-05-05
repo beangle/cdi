@@ -38,6 +38,9 @@ class ScalaEditorRegistrar extends PropertyEditorRegistrar {
     // Types
     register(classOf[Regex], new RegexEditor())
 
+    //Iterable
+    register(classOf[collection.Iterable[Any]], new ScalaCollectionEditor(() => collection.Seq.newBuilder[Any]))
+
     // Seq
     register(classOf[collection.Seq[Any]], new ScalaCollectionEditor(() => collection.Seq.newBuilder[Any]))
     register(classOf[immutable.Seq[Any]], new ScalaCollectionEditor(() => collection.immutable.Seq.newBuilder[Any]))
