@@ -8,7 +8,7 @@
   <groupId>org.beangle.cdi</groupId>
   <artifactId>beangle-cdi-parent_2.13</artifactId>
   <packaging>pom</packaging>
-  <version>0.2.6-SNAPSHOT</version>
+  <version>0.2.7-SNAPSHOT</version>
   <name>Beangle CDI Parent</name>
 
   <modules>
@@ -35,7 +35,7 @@
   </scm>
 
   <properties>
-    <commons.version>5.2.2-SNAPSHOT</commons.version>
+    <commons.version>5.2.2</commons.version>
     <spring.version>5.3.6</spring.version>
   </properties>
 
