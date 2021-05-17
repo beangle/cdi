@@ -34,10 +34,13 @@ import org.beangle.commons.lang.reflect._
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.lang.{ClassLoaders, Strings, SystemInfo}
 import org.beangle.commons.logging.Logging
+import org.beangle.commons.net.http.HttpUtils
 import org.springframework.beans.factory.FactoryBean
 import org.springframework.beans.factory.config._
 import org.springframework.beans.factory.support._
 import org.springframework.core.io.{Resource, UrlResource}
+
+import java.net.URL
 
 /**
  * 完成bean的自动注册和再配置
@@ -142,6 +145,12 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
 
     if (null != reconfigUrl && reconfigUrl.startsWith("${")) {
       reconfigUrl = System.getProperty(Strings.substringBetween(reconfigUrl, "${", "}"))
+      if (Strings.isNotBlank(reconfigUrl)) {
+        if (reconfigUrl.startsWith("http")) {
+          if (!HttpUtils.access(new URL(reconfigUrl)).isOk) reconfigUrl = null
+        }
+      }
+
     }
     if (Strings.isNotBlank(reconfigUrl)) {
       val reader = ReconfigReader

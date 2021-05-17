@@ -23,15 +23,17 @@ import org.springframework.core.io.Resource
 import org.w3c.dom.Element
 import org.xml.sax.InputSource
 
+import java.io.FileNotFoundException
 import javax.xml.parsers.DocumentBuilderFactory
 
 /** BeanDefinitionReader
-  * @author chaostone
-  */
+ *
+ * @author chaostone
+ */
 object ReconfigReader {
 
   /** load spring-config.xml
-    */
+   */
   def load(resource: Resource): List[Reconfig.Definition] = {
     val holders = new collection.mutable.ListBuffer[Reconfig.Definition]
     try {
@@ -58,6 +60,7 @@ object ReconfigReader {
         if (null != inputStream) inputStream.close()
       }
     } catch {
+      case _: FileNotFoundException => //ignore
       case ex: Exception => throw new RuntimeException("IOException parsing XML document from " + resource.getDescription(), ex)
     }
     holders.toList
