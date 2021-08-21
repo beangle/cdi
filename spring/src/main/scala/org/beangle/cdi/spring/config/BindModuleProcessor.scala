@@ -1,26 +1,25 @@
 /*
- * Beangle, Agile Development Scaffold and Toolkits.
- *
- * Copyright © 2005, The Beangle Software.
+ * Copyright (C) 2005, The Beangle Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.beangle.cdi.spring.config
 
-import org.beangle.cdi.bind.Binding._
+import org.beangle.cdi.bind.*
+import org.beangle.cdi.bind.Binding.*
 import org.beangle.cdi.bind.Reconfig.ReconfigType
-import org.beangle.cdi.bind._
 import org.beangle.cdi.spring.beans.{FactoryBeanProxy, ScalaBeanInfoFactory, ScalaEditorRegistrar}
 import org.beangle.cdi.spring.context.HierarchicalEventMulticaster
 import org.beangle.cdi.{BeanNamesEventMulticaster, ContainerListener, PropertySource, Scope}
@@ -29,15 +28,15 @@ import org.beangle.commons.collection.Collections
 import org.beangle.commons.config.Resources
 import org.beangle.commons.io.IOs
 import org.beangle.commons.lang.annotation.description
-import org.beangle.commons.lang.reflect.Reflections.{getGenericParamType, newInstance}
-import org.beangle.commons.lang.reflect._
+import org.beangle.commons.lang.reflect.*
+import org.beangle.commons.lang.reflect.Reflections.{getGenericParamTypes, newInstance}
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.lang.{ClassLoaders, Strings, SystemInfo}
 import org.beangle.commons.logging.Logging
 import org.beangle.commons.net.http.HttpUtils
 import org.springframework.beans.factory.FactoryBean
-import org.springframework.beans.factory.config._
-import org.springframework.beans.factory.support._
+import org.springframework.beans.factory.config.*
+import org.springframework.beans.factory.support.*
 import org.springframework.core.io.{Resource, UrlResource}
 
 import java.net.URL
@@ -53,7 +52,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
 
   var moduleLocations: Array[Resource] = Array.empty
 
-  private var modules: Set[BindModule] = Set.empty
+  var modules: Set[BindModule] = Set.empty
 
   private var properties = Collections.newMap[String, String]
 
@@ -94,7 +93,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     }
     properties = null
     reconfigs = null
-    ScalaBeanInfoFactory.BeanInfos.clear()
+    //BindModule.cache.clear()
   }
 
   def postProcessBeanFactory(factory: ConfigurableListableBeanFactory): Unit = {
@@ -239,7 +238,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
           proxy.setScope(defn.getScope)
           proxy.setPrimary(defn.isPrimary)
           registry.register(name + "#proxy", clazz, defn)
-          val objectTypes = getGenericParamType(clazz, classOf[Factory[_]])
+          val objectTypes = getGenericParamTypes(clazz, classOf[Factory[_]])
           if (objectTypes.isEmpty) throw new RuntimeException(s"Cannot find factory object type of class ${clazz.getName}")
           val objectType = objectTypes.values.head
           proxy.getPropertyValues.add("target", new RuntimeBeanReference(name + "#proxy"))
@@ -431,24 +430,31 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   /**
    * convert typeinfo into ReferenceValue
    */
-  private def convertInjectValue(typeinfo: TypeInfo, registry: BindRegistry, excludeBeanName: String): Any = {
-    val result =
-      typeinfo match {
-        case ElementType(clazz, optional) => Injection(clazz)
-        case CollectionType(clazz, componentType) =>
+  private def convertInjectValue(typeinfo: TypeInfo, registry: BindRegistry, excluded: String): Any = {
+    val result = typeinfo match {
+      case TypeInfo.GeneralType(clazz, args) =>
+        if typeinfo.isOptional then Injection(args.head.clazz) else Injection(clazz)
+      case TypeInfo.OptionType(elementType) => Injection(elementType.clazz)
+      case it@TypeInfo.IterableType(clazz, argTypes) =>
+        if (it.isCollection) {
+          val componentType = it.elementType.clazz
           if (componentType == classOf[AnyRef]) List.empty
           else {
-            val result = registry.getBeanNames(componentType) filterNot (n => n == excludeBeanName) map (bn => new RuntimeBeanReference(bn))
-            if (typeinfo.asInstanceOf[CollectionType].isSetType) result.toSet else result.toList
+            val beans = registry.getBeanNames(componentType) filterNot (n => n == excluded) map (bn => new RuntimeBeanReference(bn))
+            if (it.isSet) beans.toSet else beans.toList
           }
-        case MapType(clazz, keyType, valueType) =>
+        } else {
+          val kvtype = it.elementType.args
+          val keyType = kvtype(0).clazz
+          val valueType = kvtype(1).clazz
           if (keyType == classOf[String]) {
             if (valueType == classOf[AnyRef]) Map.empty
-            else registry.getBeanNames(valueType).filterNot(n => n == excludeBeanName).map(bn => (bn, new RuntimeBeanReference(bn))).toMap
+            else registry.getBeanNames(valueType).filterNot(n => n == excluded).map(bn => (bn, new RuntimeBeanReference(bn))).toMap
           } else {
             Map.empty
           }
-      }
+        }
+    }
     ExtBeanDefinition.convert(result, properties)
   }
 
@@ -457,17 +463,17 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
    */
   private def autowireBean(beanName: String, mbd: ExtBeanDefinition, registry: BindRegistry): Unit = {
     val clazz = SpringBindRegistry.getBeanClass(mbd)
-    val manifest = ScalaBeanInfoFactory.BeanInfos.get(clazz)
+    val manifest = BeanInfos.get(clazz)
     //1. inject constructor
     // find only constructor or constructor with same parameters count
-    val ctor: ConstructorDescriptor = {
-      val ctors = manifest.constructors
+    val ctor: BeanInfo.ConstructorInfo = {
+      val ctors = manifest.ctors
       if (mbd.getConstructorArgumentValues.isEmpty) {
         if (ctors.length == 1) ctors.head
         else null
       } else {
         val argLength = mbd.getConstructorArgumentValues.getArgumentCount
-        ctors.find(ctor => ctor.constructor.getParameterTypes.length == argLength).orNull
+        ctors.find(ctor => ctor.parameters.length == argLength).orNull
       }
     }
 
@@ -475,24 +481,24 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
       // doesn't have arguments
       if (mbd.getConstructorArgumentValues.isEmpty) {
         val cav = mbd.getConstructorArgumentValues
-        (0 until ctor.args.length) foreach { i =>
-          val typeinfo = ctor.args(i)
-          manifest.defaultConstructorParams.get(i + 1) match {
+        (0 until ctor.parameters.length) foreach { i =>
+          val param = ctor.parameters(i)
+          param.defaultValue match {
             case Some(v) => cav.addGenericArgumentValue(v)
-            case None => cav.addGenericArgumentValue(convertInjectValue(typeinfo, registry, beanName))
+            case None => cav.addGenericArgumentValue(convertInjectValue(param.typeinfo, registry, beanName))
           }
         }
       } else {
         // check have inject place holder
         val cav = new ConstructorArgumentValues
         var i = 0
-        val paramTypes = ctor.args
+        val params = ctor.parameters
         val itor = mbd.getConstructorArgumentValues.getGenericArgumentValues.iterator
         while (itor.hasNext) {
           val v = itor.next.getValue
           cav.addGenericArgumentValue(
             v match {
-              case InjectPlaceHolder => if (i < paramTypes.length) convertInjectValue(paramTypes(i), registry, beanName) else null
+              case InjectPlaceHolder => if (i < params.length) convertInjectValue(params(i).typeinfo, registry, beanName) else null
               case _ => v
             })
           i += 1
@@ -528,56 +534,56 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     //2. inject properties
     val properties = unsatisfiedNonSimpleProperties(mbd, beanName)
     for ((propertyName, propertyType) <- properties) {
-      propertyType match {
-        case ElementType(clazz, optional) =>
-          val beanNames = registry.getBeanNames(propertyType.clazz)
-          var binded = false
-          if (beanNames.size == 1) {
-            mbd.getPropertyValues.add(propertyName, new RuntimeBeanReference(beanNames(0)))
-            binded = true
-          } else if (beanNames.size > 1) {
-            // first autowire by name
+      if (!propertyType.isIterable || propertyType.isOptional) {
+        val propertyClazz = if propertyType.isOptional then propertyType.args.head.clazz else propertyType.clazz
+        val beanNames = registry.getBeanNames(propertyClazz)
+        var binded = false
+        if (beanNames.size == 1) {
+          mbd.getPropertyValues.add(propertyName, new RuntimeBeanReference(beanNames(0)))
+          binded = true
+        } else if (beanNames.size > 1) {
+          // first autowire by name
+          for (name <- beanNames if !binded) {
+            if (name.equals(propertyName)) {
+              mbd.getPropertyValues.add(propertyName, new RuntimeBeanReference(name))
+              binded = true
+            }
+          }
+          // second autowire by primary
+          if (!binded) {
             for (name <- beanNames if !binded) {
-              if (name.equals(propertyName)) {
+              if (registry.isPrimary(name)) {
                 mbd.getPropertyValues.add(propertyName, new RuntimeBeanReference(name))
                 binded = true
               }
             }
-            // second autowire by primary
-            if (!binded) {
-              for (name <- beanNames if !binded) {
-                if (registry.isPrimary(name)) {
-                  mbd.getPropertyValues.add(propertyName, new RuntimeBeanReference(name))
-                  binded = true
-                }
-              }
-            }
-            // third autowire by default
-            if (!binded) {
-              for (name <- beanNames if !binded) {
-                if (name.endsWith(".default")) {
-                  mbd.getPropertyValues.add(propertyName, new RuntimeBeanReference(name))
-                  binded = true
-                }
-              }
-            }
           }
+          // third autowire by default
           if (!binded) {
-            if (mbd.optionals.contains(propertyName)) {
-              if (beanNames.isEmpty) logger.debug(s"$beanName's $propertyName cannot found candidate beans.")
-              else logger.warn(s"$beanName's $propertyName expected single bean but found ${beanNames.size}:$beanNames")
-            } else {
-              if (!optional && mbd.wiredEagerly && !clazz.isPrimitive) {
-                throw new RuntimeException(s"Cannot find suitable bean for $beanName's $propertyName(${beanNames.size}:$beanNames)")
+            for (name <- beanNames if !binded) {
+              if (name.endsWith(".default")) {
+                mbd.getPropertyValues.add(propertyName, new RuntimeBeanReference(name))
+                binded = true
               }
             }
           }
-        case _ =>
-          val v = convertInjectValue(propertyType, registry, beanName)
-          v match {
-            case jc: java.util.Collection[_] => if (!jc.isEmpty) mbd.getPropertyValues.add(propertyName, jc)
-            case jm: java.util.Map[_, _] => if (!jm.isEmpty) mbd.getPropertyValues.add(propertyName, jm)
+        }
+        if (!binded) {
+          if (mbd.optionals.contains(propertyName)) {
+            if (beanNames.isEmpty) logger.debug(s"$beanName's $propertyName cannot found candidate beans.")
+            else logger.warn(s"$beanName's $propertyName expected single bean but found ${beanNames.size}:$beanNames")
+          } else {
+            if (!propertyType.isOptional && mbd.wiredEagerly && !clazz.isPrimitive) {
+              throw new RuntimeException(s"Cannot find suitable bean for $beanName's $propertyName(${beanNames.size}:$beanNames)")
+            }
           }
+        }
+      } else {
+        val v = convertInjectValue(propertyType, registry, beanName)
+        v match {
+          case jc: java.util.Collection[_] => if (!jc.isEmpty) mbd.getPropertyValues.add(propertyName, jc)
+          case jm: java.util.Map[_, _] => if (!jm.isEmpty) mbd.getPropertyValues.add(propertyName, jm)
+        }
       }
     }
   }
@@ -593,13 +599,14 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     if (!mbd.isAbstract) {
       val pvs = mbd.getPropertyValues
       val nowireProperties = mbd.nowires
-      for ((name, m) <- ScalaBeanInfoFactory.BeanInfos.get(clazz).properties) {
+      for ((name, m) <- BeanInfos.get(clazz).properties) {
         if (m.writable && !nowireProperties.contains(name)) {
           val method = m.setter.get
           val typeinfo = m.typeinfo
           if (null == method.getAnnotation(classOf[nowire]) && !pvs.contains(name)) {
-            if (typeinfo.isElement) {
-              if (!typeinfo.clazz.getName.startsWith("java.") && !typeinfo.clazz.getName.startsWith("scala.")) {
+            if (!typeinfo.isIterable || typeinfo.isOptional) {
+              val propertyClazz = if typeinfo.isOptional then typeinfo.args.head.clazz else typeinfo.clazz
+              if (!propertyClazz.getName.startsWith("java.") && !propertyClazz.getName.startsWith("scala.")) {
                 //Skip Factory.result method for it's a provider,DONOT need wire
                 if (!(name == "result" && classOf[Factory[_]].isAssignableFrom(clazz))) properties.put(name, typeinfo)
               }
