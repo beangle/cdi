@@ -41,7 +41,7 @@ object Binding {
    */
   class Definition(var beanName: String, var clazz: Class[_], scopeName: String) {
 
-    var scope: String = if (null == scopeName) "Singleton" else scopeName
+    var scope: String = if (null == scopeName) "singleton" else scopeName
 
     var initMethod: String = _
 
