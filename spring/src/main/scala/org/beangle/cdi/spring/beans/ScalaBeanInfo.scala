@@ -30,9 +30,6 @@ class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
 
   private def buildProperties(beanClass: Class[_]): Array[PropertyDescriptor] = {
     val descriptors = new collection.mutable.HashMap[String, PropertyDescriptor]
-    if(beanClass.getName == "org.beangle.cdi.spring.context.SpringContainer"){
-      println(beanClass)
-    }
     val manifest = BeanInfos.get(beanClass)
     for ((name, mi) <- manifest.properties) {
       descriptors.put(name, new PropertyDescriptor(name, mi.getter.orNull, mi.setter.orNull))
