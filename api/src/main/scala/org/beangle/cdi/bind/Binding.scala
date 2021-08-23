@@ -181,7 +181,7 @@ object Binding {
       this
     }
 
-    def in(scope: Scope.Scope): this.type = {
+    def in(scope: Scope): this.type = {
       for (definition <- beans) definition.scope = scope.toString
       this
     }

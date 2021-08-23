@@ -20,7 +20,7 @@ package org.beangle.cdi.bind
 import org.beangle.commons.collection.Collections
 
 object Reconfig {
-  class Definition(val name: String,var configType: ReconfigType.ReconfigType, var definition: Binding.Definition) {
+  class Definition(val name: String, var configType: ReconfigType, var definition: Binding.Definition) {
 
     def setClass(clazz: Class[_]): this.type = {
       definition.clazz = clazz
@@ -50,9 +50,8 @@ object Reconfig {
     }
   }
 
-  object ReconfigType extends Enumeration {
-    type ReconfigType = Value
-    val Update, Remove, Primary = Value
+  enum ReconfigType {
+    case Update, Remove, Primary
   }
 }
 

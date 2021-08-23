@@ -16,21 +16,8 @@
  */
 
 package org.beangle.cdi
-import scala.language.implicitConversions
 
-object Scope extends Enumeration {
+enum Scope {
 
-  val Singleton = new Scope("")
-
-  val Prototype = new Scope("prototype")
-
-  val Request = new Scope("request")
-
-  val Session = new Scope("session")
-
-  class Scope(var name: String) extends super.Val {
-    override def toString: String = name
-  }
-
-  implicit def convertValue(v: Value): Val = v.asInstanceOf[Val]
+  case Singleton,Prototype,Request,Session
 }
