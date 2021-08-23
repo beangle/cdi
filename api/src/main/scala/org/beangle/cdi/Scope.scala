@@ -17,7 +17,13 @@
 
 package org.beangle.cdi
 
+import org.beangle.commons.lang.Strings
+
 enum Scope {
 
   case Singleton,Prototype,Request,Session
+
+  def name:String={
+    Strings.uncapitalize(this.toString)
+  }
 }

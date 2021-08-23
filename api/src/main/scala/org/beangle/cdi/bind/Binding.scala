@@ -137,7 +137,7 @@ object Binding {
 
     def proxy(property: String, clazz: Class[_]): this.type = {
       val targetBean = config.newInnerBeanName(clazz)
-      val targetDefinition = new Definition(targetBean, clazz, Scope.Singleton.toString)
+      val targetDefinition = new Definition(targetBean, clazz, Scope.Singleton.name)
       val an = clazz.getAnnotation(classOf[description])
       if (null != an) targetDefinition.description = an.value()
       config.add(targetDefinition)
@@ -182,7 +182,7 @@ object Binding {
     }
 
     def in(scope: Scope): this.type = {
-      for (definition <- beans) definition.scope = scope.toString
+      for (definition <- beans) definition.scope = scope.name
       this
     }
 
@@ -208,7 +208,7 @@ object Binding {
 
     def bind(classes: Class[_]*): this.type = {
       for (clazz <- classes) {
-        val definition = new Definition(getBeanName(clazz, false), clazz, Scope.Singleton.toString)
+        val definition = new Definition(getBeanName(clazz, false), clazz, Scope.Singleton.name)
         val an = clazz.getAnnotation(classOf[description])
         if (null != an) definition.description = an.value()
         config.add(definition)
@@ -218,7 +218,7 @@ object Binding {
     }
 
     def bind(name: String, clazz: Class[_]): this.type = {
-      val definition = new Definition(name, clazz, Scope.Singleton.toString)
+      val definition = new Definition(name, clazz, Scope.Singleton.name)
       val an = clazz.getAnnotation(classOf[description])
       if (null != an) definition.description = an.value()
       config.add(definition)

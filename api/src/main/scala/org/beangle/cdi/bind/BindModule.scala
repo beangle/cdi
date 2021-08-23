@@ -200,7 +200,7 @@ abstract class BindModule {
 
   private def buildInnerReference(clazz: Class[_]): ReferenceValue = {
     val targetBean = binder.newInnerBeanName(clazz)
-    binder.add(new Definition(targetBean, clazz, Scope.Singleton.toString))
+    binder.add(new Definition(targetBean, clazz, Scope.Singleton.name))
     ReferenceValue(targetBean)
   }
 }

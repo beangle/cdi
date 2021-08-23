@@ -38,18 +38,12 @@ class ReconfigProcessorTest extends AnyFunSpec with Matchers with Logging {
 
       // userService
       val userService = ctx.getBean("userService").asInstanceOf[UserService]
-
       userService should not be (null)
-
       userService.someMap should not be (null)
-
       userService.provider.getClass() should equal(classOf[UserDaoProvider])
-
       // userLdapService
       val userLdapService = ctx.getBean("userLdapService").asInstanceOf[UserService]
-
       userLdapService should not be (null)
-
       userLdapService.provider.getClass() should equal(classOf[UserLdapProvider])
     }
 
@@ -59,14 +53,10 @@ class ReconfigProcessorTest extends AnyFunSpec with Matchers with Logging {
       val userService = factory.getBean("userService").asInstanceOf[UserService]
 
       userService should not be (null)
-
       // unmerged map
       userService.someMap should not be (null)
-
       userService.someMap.size should be(1)
-
       userService.someMap("string") should be("override string")
-
       // merged list
       userService.someList.size should be(3)
 
@@ -134,10 +124,8 @@ class ReconfigProcessorTest extends AnyFunSpec with Matchers with Logging {
     val action = factory.getBean(classOf[SomeAction].getName()).asInstanceOf[SomeAction]
 
     action should not be (null)
-
     action.hasDaoProvider() should be(true)
     action.hasLdapProvider() should be(true)
-
     action.userDaoProvider should equal(daoProvider)
     action.ldapProvider should equal(ldapProvider)
 

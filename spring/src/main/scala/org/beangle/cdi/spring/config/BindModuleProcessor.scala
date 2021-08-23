@@ -279,7 +279,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
    */
   private def registerLast(registry: BindRegistry): Unit = {
     val eventMulticaster = new Definition("EventMulticaster.default" + System.currentTimeMillis(),
-      classOf[HierarchicalEventMulticaster], Scope.Singleton.toString)
+      classOf[HierarchicalEventMulticaster], Scope.Singleton.name)
     eventMulticaster.description = getClassDescription(classOf[BeanNamesEventMulticaster])
     eventMulticaster.property("container", this)
     registry.getBeanNames(classOf[HierarchicalEventMulticaster]).foreach { parentName =>
