@@ -1,21 +1,20 @@
 /*
- * Beangle, Agile Development Scaffold and Toolkits.
- *
- * Copyright © 2005, The Beangle Software.
+ * Copyright (C) 2005, The Beangle Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.beangle.cdi.bind
 
 import org.beangle.cdi.Scope
@@ -42,7 +41,7 @@ object Binding {
    */
   class Definition(var beanName: String, var clazz: Class[_], scopeName: String) {
 
-    var scope: String = if (null == scopeName) "Singleton" else scopeName
+    var scope: String = if (null == scopeName) "singleton" else scopeName
 
     var initMethod: String = _
 
@@ -138,7 +137,7 @@ object Binding {
 
     def proxy(property: String, clazz: Class[_]): this.type = {
       val targetBean = config.newInnerBeanName(clazz)
-      val targetDefinition = new Definition(targetBean, clazz, Scope.Singleton.toString)
+      val targetDefinition = new Definition(targetBean, clazz, Scope.Singleton.name)
       val an = clazz.getAnnotation(classOf[description])
       if (null != an) targetDefinition.description = an.value()
       config.add(targetDefinition)
@@ -182,8 +181,8 @@ object Binding {
       this
     }
 
-    def in(scope: Scope.Scope): this.type = {
-      for (definition <- beans) definition.scope = scope.toString
+    def in(scope: Scope): this.type = {
+      for (definition <- beans) definition.scope = scope.name
       this
     }
 
@@ -209,7 +208,7 @@ object Binding {
 
     def bind(classes: Class[_]*): this.type = {
       for (clazz <- classes) {
-        val definition = new Definition(getBeanName(clazz, false), clazz, Scope.Singleton.toString)
+        val definition = new Definition(getBeanName(clazz, false), clazz, Scope.Singleton.name)
         val an = clazz.getAnnotation(classOf[description])
         if (null != an) definition.description = an.value()
         config.add(definition)
@@ -219,7 +218,7 @@ object Binding {
     }
 
     def bind(name: String, clazz: Class[_]): this.type = {
-      val definition = new Definition(name, clazz, Scope.Singleton.toString)
+      val definition = new Definition(name, clazz, Scope.Singleton.name)
       val an = clazz.getAnnotation(classOf[description])
       if (null != an) definition.description = an.value()
       config.add(definition)

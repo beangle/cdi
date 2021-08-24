@@ -1,31 +1,71 @@
 /*
- * Beangle, Agile Development Scaffold and Toolkits.
- *
- * Copyright © 2005, The Beangle Software.
+ * Copyright (C) 2005, The Beangle Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.beangle.cdi.bind
 
 import org.beangle.cdi.Scope
-import org.beangle.cdi.bind.Binding._
+import org.beangle.cdi.bind.Binding.*
 import org.beangle.commons.lang.Strings
+import org.beangle.commons.lang.reflect.{BeanInfo, BeanInfoCache, BeanInfoDigger, BeanInfos,BeanInfoLoader}
 
-import java.{util => ju}
+import scala.quoted.*
+import java.util as ju
 
 object BindModule {
   final val profileProperty = "beangle.cdi.profiles"
+  /**
+   * bind class with a name.
+   */
+  def bind(clazzesExpr:Expr[Seq[Class[_]]],
+                   binder:Expr[Binding],wiredEagerly:Expr[Boolean])
+                  (implicit quotes: Quotes):Expr[DefinitionBinder]={
+    import quotes.reflect.*
+    '{
+      ${BeanInfoDigger.digInto(clazzesExpr,'{BeanInfos.cache})}
+      ${binder}.bind(${clazzesExpr}:_*).wiredEagerly(${wiredEagerly})
+    }
+  }
+
+  /**
+   * bind class with a name.
+   */
+  def bind[T:Type](beanName: Expr[String], clazz:Expr[Class[T]],
+                          binder:Expr[Binding],wiredEagerly:Expr[Boolean])
+                         (implicit quotes: Quotes):Expr[DefinitionBinder]={
+    import quotes.reflect.*
+    '{
+      ${BeanInfoDigger.digInto(clazz,'{BeanInfos.cache})}
+      ${binder}.bind(${beanName}, ${clazz}).wiredEagerly(${wiredEagerly})
+    }
+  }
+
+  /**
+   * bind class with a name.
+   */
+  def bean[T:Type](clazz:Expr[Class[T]],
+                   binder:Expr[Binding],wiredEagerly:Expr[Boolean])
+                  (implicit quotes: Quotes):Expr[Definition]={
+    import quotes.reflect.*
+    '{
+      ${BeanInfoDigger.digInto(clazz,'{BeanInfos.cache})}
+      ${binder}.bind(${binder}.newInnerBeanName(${clazz}), ${clazz}).head.wiredEagerly(${wiredEagerly})
+    }
+  }
+
 }
 
 /**
@@ -54,9 +94,7 @@ abstract class BindModule {
   /**
    * bind class.
    */
-  protected final def bind(classes: Class[_]*): DefinitionBinder = {
-    binder.bind(classes: _*).wiredEagerly(wiredEagerly)
-  }
+  protected inline def bind(inline classes: Class[_]*): DefinitionBinder =  ${BindModule.bind('classes,'binder,'wiredEagerly)}
 
   /**
    * Returns a reference definition based on Name;
@@ -73,9 +111,7 @@ abstract class BindModule {
   /**
    * Generate a inner bean definition
    */
-  protected final def bean(clazz: Class[_]): Definition = {
-    bind(binder.newInnerBeanName(clazz), clazz).head.wiredEagerly(wiredEagerly)
-  }
+  protected inline def bean[T](clazz: Class[T]): Definition = ${BindModule.bean('clazz,'binder,'wiredEagerly)}
 
   final def inject[T](clazz: Class[T]): Injection[T] = {
     Injection(clazz)
@@ -142,9 +178,8 @@ abstract class BindModule {
   /**
    * bind class with a name.
    */
-  protected final def bind(beanName: String, clazz: Class[_]): DefinitionBinder = {
-    binder.bind(beanName, clazz).wiredEagerly(wiredEagerly)
-  }
+  protected  inline def bind[T](beanName: String, clazz: Class[T]): DefinitionBinder =
+     ${BindModule.bind('beanName,'clazz,'binder,'wiredEagerly)}
 
   /**
    * bind singleton with a name.
@@ -165,7 +200,7 @@ abstract class BindModule {
 
   private def buildInnerReference(clazz: Class[_]): ReferenceValue = {
     val targetBean = binder.newInnerBeanName(clazz)
-    binder.add(new Definition(targetBean, clazz, Scope.Singleton.toString))
+    binder.add(new Definition(targetBean, clazz, Scope.Singleton.name))
     ReferenceValue(targetBean)
   }
 }

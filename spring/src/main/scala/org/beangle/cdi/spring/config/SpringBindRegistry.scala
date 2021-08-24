@@ -1,27 +1,26 @@
 /*
- * Beangle, Agile Development Scaffold and Toolkits.
- *
- * Copyright © 2005, The Beangle Software.
+ * Copyright (C) 2005, The Beangle Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.beangle.cdi.spring.config
 
 import org.beangle.cdi.bind.BindRegistry
 import org.beangle.commons.bean.Factory
 import org.beangle.commons.lang.ClassLoaders
-import org.beangle.commons.lang.reflect.Reflections.{getGenericParamType, newInstance}
+import org.beangle.commons.lang.reflect.Reflections.{getGenericParamTypes, newInstance}
 import org.beangle.commons.logging.Logging
 import org.springframework.beans.factory.{FactoryBean, HierarchicalBeanFactory}
 import org.springframework.beans.factory.config.{BeanDefinition, BeanDefinitionHolder, RuntimeBeanReference, SingletonBeanRegistry}
@@ -48,7 +47,7 @@ object SpringBindRegistry {
         if (classOf[FactoryBean[_]].isAssignableFrom(factoryClass)) {
           factoryClass = newInstance(factoryClass.asInstanceOf[Class[FactoryBean[_]]]).getObjectType
         } else if (classOf[Factory[_]].isAssignableFrom(factoryClass)) {
-          factoryClass = getGenericParamType(factoryClass, classOf[Factory[_]]).values.head
+          factoryClass = getGenericParamTypes(factoryClass, classOf[Factory[_]]).values.head
         }
         clazz = factoryClass.getMethod(factoryMethodName).getReturnType
       }
@@ -148,7 +147,7 @@ class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegis
           } else if (classOf[Factory[_]].isAssignableFrom(beanClass)) {
             nameTypes.put("&" + name, beanClass)
             if (bd.isPrimary) primaries += ("&" + name)
-            val objectClass = getGenericParamType(beanClass, classOf[Factory[_]]).values.head.asInstanceOf[Class[_]]
+            val objectClass = getGenericParamTypes(beanClass, classOf[Factory[_]]).values.head.asInstanceOf[Class[_]]
             nameTypes.put(name, objectClass)
           } else {
             nameTypes.put(name, beanClass)
