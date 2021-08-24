@@ -1,5 +1,5 @@
-import Dependencies._
-import BuildSettings._
+import org.beangle.parent.Dependencies._
+import org.beangle.parent.Settings._
 import sbt.url
 
 ThisBuild / organization := "org.beangle.cdi"
@@ -24,6 +24,9 @@ ThisBuild / developers := List(
 ThisBuild / description := "The Beangle CDI Library"
 ThisBuild / homepage := Some(url("https://beangle.github.io/spring/index.html"))
 
+val beangle_commons_core = "org.beangle.commons" %% "beangle-commons-core" % "5.2.5"
+val commonDeps = Seq(beangle_commons_core, logback_classic, logback_core, scalatest)
+
 lazy val root = (project in file("."))
   .settings()
   .aggregate(api,spring)
@@ -31,15 +34,15 @@ lazy val root = (project in file("."))
 lazy val api = (project in file("api"))
   .settings(
     name := "beangle-cdi-api",
-    commonSettings,
+    common,
     libraryDependencies ++= commonDeps
   )
 
 lazy val spring = (project in file("spring"))
   .settings(
     name := "beangle-cdi-spring",
-    commonSettings,
-    libraryDependencies ++= (commonDeps ++ Seq(servletapi,springContext,springBeans,scalaxml,h2))
+    common,
+    libraryDependencies ++= (commonDeps ++ Seq(servletapi,spring_context,spring_beans,scalaxml,h2))
   ).dependsOn(api)
 
 publish / skip := true
