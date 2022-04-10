@@ -81,7 +81,7 @@ class BeanFactoryLoader extends DefaultResourceLoader with ResourcePatternResolv
    */
   protected def initApplicationEventMulticaster(beanFactory: ConfigurableListableBeanFactory): Unit = {
     val multicasters = beanFactory.getBeansOfType(classOf[EventMulticaster])
-    if (multicasters.isEmpty()) {
+    if (multicasters.isEmpty) {
       eventMulticaster = new DefaultEventMulticaster
     } else {
       eventMulticaster = multicasters.values.iterator().next()
@@ -140,7 +140,7 @@ class BeanFactoryLoader extends DefaultResourceLoader with ResourcePatternResolv
   }
 
   override def getResources(locationPattern: String): Array[Resource] = {
-    return this.resourcePatternResolver.getResources(locationPattern)
+    this.resourcePatternResolver.getResources(locationPattern)
   }
 
   override def close(): Unit = {
