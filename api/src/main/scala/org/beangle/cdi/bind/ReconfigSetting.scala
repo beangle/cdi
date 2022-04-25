@@ -15,13 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.context
+package org.beangle.cdi.bind
 
-import org.springframework.beans.factory.BeanFactory
+class ReconfigSetting {
+  var url: String = _
+  var ignoreMissing: Boolean = true
 
-trait ContextLoader {
-  def load(id: String, contextClassName: String, configLocation: String,
-           reconfigLocation: String, parent: BeanFactory): BeanFactory
-
-  def close(): Unit
+  def this(url: String) = {
+    this()
+    this.url = url
+  }
 }

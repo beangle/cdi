@@ -17,14 +17,15 @@
 
 package org.beangle.cdi.spring.context
 
+import org.beangle.cdi.bind.BindRegistry
 import org.beangle.commons.io.IOs
-import org.beangle.commons.lang.ClassLoaders
 import org.beangle.commons.lang.reflect.Reflections
 import org.beangle.commons.lang.time.Stopwatch
+import org.beangle.commons.lang.{ClassLoaders, Strings}
 import org.beangle.commons.logging.Logging
 import org.springframework.beans.factory.BeanFactory
-import org.springframework.context.{ ApplicationContext, ConfigurableApplicationContext }
-import org.springframework.context.support.{ AbstractRefreshableApplicationContext, AbstractRefreshableConfigApplicationContext }
+import org.springframework.context.support.{AbstractRefreshableApplicationContext, AbstractRefreshableConfigApplicationContext}
+import org.springframework.context.{ApplicationContext, ConfigurableApplicationContext}
 
 /**
  * Load ApplicationContext
@@ -47,7 +48,8 @@ class ApplicationContextLoader extends ContextLoader with Logging {
     }
   }
 
-  def load(id: String, contextClassName: String, configLocation: String, parent: BeanFactory): ApplicationContext = {
+  def load(id: String, contextClassName: String, configLocation: String,
+           reconfigLocation: String, parent: BeanFactory): ApplicationContext = {
     val contextClass = determineContextClass(contextClassName)
     require(classOf[ConfigurableApplicationContext].isAssignableFrom(contextClass))
     val watch = new Stopwatch(true)
@@ -58,6 +60,7 @@ class ApplicationContextLoader extends ContextLoader with Logging {
       case _ =>
     }
     result.setId(id)
+    BindRegistry.reconfigUrl = if Strings.isNotBlank(reconfigLocation) then reconfigLocation else ""
     result.setParent(parent.asInstanceOf[ApplicationContext])
     result.asInstanceOf[AbstractRefreshableConfigApplicationContext].setConfigLocation(configLocation)
     result.refresh()
