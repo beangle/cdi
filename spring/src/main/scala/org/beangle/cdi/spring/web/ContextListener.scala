@@ -17,24 +17,27 @@
 
 package org.beangle.cdi.spring.web
 
+import jakarta.servlet.{ServletContext, ServletContextEvent, ServletContextListener}
+import org.beangle.cdi.Container
+import org.beangle.cdi.bind.BindRegistry
+import org.beangle.cdi.spring.context.{BeanFactoryLoader, ContextLoader}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.lang.ClassLoaders.{getResources, load}
-import org.beangle.commons.lang.Strings.{substringAfter, substringBefore, isNotEmpty}
+import org.beangle.commons.lang.Strings.{isNotEmpty, substringAfter, substringBefore}
 import org.beangle.commons.lang.reflect.Reflections.newInstance
+import org.beangle.commons.lang.{Strings, SystemInfo}
 import org.beangle.commons.logging.Logging
-import org.beangle.cdi.spring.context.{BeanFactoryLoader, ContextLoader}
-
-import jakarta.servlet.{ServletContextEvent, ServletContextListener}
-import org.beangle.cdi.Container
 
 /**
-  * 1. Disable Definition Overriding
-  * 2. Default config location(spring-context.xml)
-  * 3. Load children context
-  */
+ * 1. Disable Definition Overriding
+ * 2. Default config location(spring-context.xml)
+ * 3. Load children context
+ */
 class ContextListener extends ServletContextListener with Logging {
 
   var contextConfigLocation = "classpath:spring-context.xml"
+
+  var reConfigLocation: String = _
 
   var childContextConfigLocation = ""
 
@@ -44,20 +47,27 @@ class ContextListener extends ServletContextListener with Logging {
 
   private val springContextAvaliable = !getResources("org/springframework/context/support/AbstractApplicationContext.class").isEmpty
 
-  def loadContainer(): Container = {
-    val root = newLoader().load("WebApplicationContext:ROOT", contextClassName, contextConfigLocation, null)
+  def loadContainer(sc: ServletContext): Container = {
+    if (null == reConfigLocation) {
+      reConfigLocation = sc.getAttribute(BindRegistry.ReconfigUrlProperty).asInstanceOf[String]
+    }
+    if (null == reConfigLocation) {
+      reConfigLocation = SystemInfo.properties.getOrElse(BindRegistry.ReconfigUrlProperty, null)
+    }
+
+    val root = newLoader().load("ROOT", contextClassName, contextConfigLocation, reConfigLocation, null)
     //load children
     if (isNotEmpty(childContextConfigLocation)) {
-      newLoader().load(substringBefore(childContextConfigLocation, "@"), contextClassName, substringAfter(childContextConfigLocation, "@"), root)
-    }
-    Container.containers.find { c => c.parent == Container.ROOT && c.parent != null } match {
-      case Some(c) => c
-      case None => throw new RuntimeException("Cannot find container from Containers")
+      val childCtxId = substringBefore(childContextConfigLocation, "@")
+      newLoader().load(childCtxId, contextClassName, substringAfter(childContextConfigLocation, "@"), null, root)
+      Container.get(childCtxId)
+    } else {
+      Container.ROOT
     }
   }
 
   override def contextInitialized(sce: ServletContextEvent): Unit = {
-    if (loaders.isEmpty) loadContainer()
+    if (loaders.isEmpty) loadContainer(sce.getServletContext)
   }
 
   override def contextDestroyed(sce: ServletContextEvent): Unit = {

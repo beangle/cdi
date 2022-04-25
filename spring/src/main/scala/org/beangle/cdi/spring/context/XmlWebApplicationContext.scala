@@ -42,7 +42,7 @@ class XmlWebApplicationContext extends AbstractRefreshableConfigApplicationConte
   protected override def finishRefresh(): Unit = {
     super.finishRefresh()
     val eventMulticasterIter = this.getBeansOfType(classOf[EventMulticaster]).values.iterator()
-    if (eventMulticasterIter.hasNext()) {
+    if (eventMulticasterIter.hasNext) {
       val eventMulticaster = eventMulticasterIter.next()
       eventMulticaster.multicast(new BeanFactoryRefreshedEvent(this.getBeanFactory))
     }

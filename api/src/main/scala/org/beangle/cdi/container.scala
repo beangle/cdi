@@ -17,6 +17,8 @@
 
 package org.beangle.cdi
 
+import scala.collection.mutable
+
 /**
  * Bean Container.
  *
@@ -24,6 +26,8 @@ package org.beangle.cdi
  * @since 3.1.0
  */
 trait Container {
+
+  def id: String
 
   def contains(key: Any): Boolean
 
@@ -53,7 +57,11 @@ object Container {
     listeners = listener :: listeners
   }
 
-  val containers = new collection.mutable.HashSet[Container]
+  val containers = new mutable.HashMap[String, Container]
+
+  def get(id: String): Container = {
+    Container.containers.getOrElse(id, ROOT)
+  }
 }
 
 trait ContainerAware {

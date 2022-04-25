@@ -17,34 +17,39 @@
 
 package org.beangle.cdi.spring.context
 
+import org.beangle.cdi.bind.{BindRegistry, ReconfigSetting}
 import org.beangle.cdi.spring.config.BindModuleProcessor
 import org.beangle.cdi.{Container, ContainerListener}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.event.{Event, EventListener}
 import org.beangle.commons.lang.annotation.description
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
+import org.springframework.beans.factory.support.DefaultListableBeanFactory
 import org.springframework.beans.factory.{BeanFactory, BeanFactoryAware, InitializingBean, NoSuchBeanDefinitionException}
 
 import scala.jdk.javaapi.CollectionConverters.asScala
 
 /** Spring based IOC Container
-  * @author chaostone
-  * @since 3.1.0
-  */
+ *
+ * @author chaostone
+ * @since 3.1.0
+ */
 @description("Spring提供的Bean容器")
 class SpringContainer extends BindModuleProcessor with Container with InitializingBean
   with BeanFactoryAware with EventListener[BeanFactoryEvent] {
 
   var parent: Container = _
 
-  var context: ConfigurableListableBeanFactory = _
+  var context: DefaultListableBeanFactory = _
 
   var listeners: List[ContainerListener] = Nil
+
+  override def id: String = context.getSerializationId
 
   override def getType(key: Any): Option[Class[_]] = {
     try {
       val clazz = context.getType(key.toString)
-      if (null == clazz) None else Some(clazz)
+      Option(clazz)
     } catch {
       case e: NoSuchBeanDefinitionException => None
     }
@@ -59,59 +64,55 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
   }
 
   override def getBean[T](key: Any): Option[T] = {
-    try {
-      Some(context.getBean(key.toString).asInstanceOf[T])
-    } catch {
-      case e: NoSuchBeanDefinitionException => None
-    }
+    try Some(context.getBean(key.toString).asInstanceOf[T])
+    catch case _: NoSuchBeanDefinitionException => None
   }
 
   override def getBean[T](clazz: Class[T]): Option[T] = {
-    try {
-      Some(context.getBean(clazz).asInstanceOf[T])
-    } catch {
-      case e: NoSuchBeanDefinitionException => None
-    }
+    try Some(context.getBean(clazz))
+    catch case _: NoSuchBeanDefinitionException => None
   }
 
   override def getBeans[T](clazz: Class[T]): Map[String, T] = {
-    if (null == parent) {
-      asScala(context.getBeansOfType(clazz)).toMap
-    } else {
+    if null == parent then asScala(context.getBeansOfType(clazz)).toMap
+    else
       val beans = Collections.newMap[String, T]
       beans ++= parent.getBeans[T](clazz)
       beans ++= asScala(context.getBeansOfType(clazz))
       beans.toMap
-    }
   }
 
   override def keys: Set[_] = {
-    context.getBeanDefinitionNames().toSet
+    val names = context.getBeanDefinitionNames().toSet
+    names.filterNot(x => context.getBeanDefinition(x).isAbstract)
   }
 
   override def setBeanFactory(beanFactory: BeanFactory): Unit = {
-    context = beanFactory.asInstanceOf[ConfigurableListableBeanFactory]
+    context = beanFactory.asInstanceOf[DefaultListableBeanFactory]
   }
 
   /** Move temporary hooks into myself
-    *
-    * PS. for SpringContainer is a BeanDefinitionRegistryPostProcessor, so when context initializing, the bean
-    * is inited before others,so using spring native InitializingBean,not beangle's Initializing interface.
-    */
+   *
+   * PS. for SpringContainer is a BeanDefinitionRegistryPostProcessor, so when context initializing, the bean
+   * is inited before others,so using spring native InitializingBean,not beangle's Initializing interface.
+   */
   override def afterPropertiesSet(): Unit = {
     if (null == context.getParentBeanFactory) {
       if (null == Container.ROOT) Container.ROOT = this
     } else {
       parent = context.getParentBeanFactory.getBean(classOf[SpringContainer])
     }
-    Container.containers.add(this)
+    Container.containers.put(id, this)
     this.listeners = Container.listeners
     Container.listeners = Nil
+
+    if null == reconfigSetting && null != BindRegistry.reconfigUrl then
+      reconfigSetting = new ReconfigSetting(BindRegistry.reconfigUrl)
   }
 
   /**
-    * Handle an application event.
-    */
+   * Handle an application event.
+   */
   def onEvent(event: BeanFactoryEvent): Unit = {
     val c = event.getSource.asInstanceOf[ConfigurableListableBeanFactory]
     //for child application context issue a event to parent,so we should take a look.
@@ -121,7 +122,7 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
           getListeners(c) foreach (l => l.onStarted(this))
         case cce: BeanFactoryClosedEvent =>
           if (Container.ROOT == this) Container.ROOT = null
-          Container.containers.remove(this)
+          Container.containers.remove(this.id)
           getListeners(c) foreach (l => l.onStopped(this))
         case _ =>
       }
@@ -136,15 +137,15 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
   }
 
   /**
-    * Determine whether this listener actually supports the given event type.
-    */
+   * Determine whether this listener actually supports the given event type.
+   */
   def supportsEventType(eventType: Class[_ <: Event]): Boolean = {
     classOf[BeanFactoryRefreshedEvent] == eventType
   }
 
   /**
-    * Determine whether this listener actually supports the given source type.
-    */
+   * Determine whether this listener actually supports the given source type.
+   */
   def supportsSourceType(sourceType: Class[_]): Boolean = {
     true
   }

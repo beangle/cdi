@@ -26,7 +26,6 @@ import scala.quoted.*
 import java.util as ju
 
 object BindModule {
-  final val profileProperty = "beangle.cdi.profiles"
   /**
    * bind class with a name.
    */
@@ -194,7 +193,7 @@ abstract class BindModule {
   protected def binding(): Unit
 
   final def devEnabled: Boolean = {
-    val profiles = System.getProperty(BindModule.profileProperty)
+    val profiles = System.getProperty(BindRegistry.ProfileProperty)
     null != profiles && Strings.split(profiles, ",").toSet.contains("dev")
   }
 

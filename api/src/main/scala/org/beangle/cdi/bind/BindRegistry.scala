@@ -17,6 +17,12 @@
 
 package org.beangle.cdi.bind
 
+object BindRegistry {
+  final val ProfileProperty = "beangle.cdi.profiles"
+  final val ReconfigUrlProperty = "beangle.cdi.reconfig_url"
+  var reconfigUrl: String = _
+}
+
 /**
  * BindRegistry interface.
  *
@@ -36,18 +42,22 @@ trait BindRegistry {
 
   /**
    * register bean definition
-   * @param name beanName
+   *
+   * @param name  beanName
    * @param clazz cannot  be null
    *
    */
   def register(name: String, clazz: Class[_]): Unit
+
   /**
    * register singleton
    */
   def register(name: String, obj: AnyRef): Unit
+
   /**
    * register bean definition
-   * @param name beanName
+   *
+   * @param name  beanName
    * @param clazz can be null if definition is abstract
    *
    */

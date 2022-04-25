@@ -17,20 +17,21 @@
 
 package org.beangle.cdi.spring.context
 
-import org.beangle.commons.event.{ DefaultEventMulticaster, EventMulticaster }
-import org.beangle.commons.lang.ClassLoaders
+import org.beangle.cdi.bind.{BindRegistry, ReconfigSetting}
+import org.beangle.commons.event.{DefaultEventMulticaster, EventMulticaster}
+import org.beangle.commons.lang.{ClassLoaders, Strings}
 import org.beangle.commons.lang.reflect.Reflections
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.logging.Logging
 import org.springframework.beans.factory.BeanFactory
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
-import org.springframework.beans.factory.support.{ BeanDefinitionRegistryPostProcessor, DefaultListableBeanFactory }
-import org.springframework.beans.factory.xml.{ ResourceEntityResolver, XmlBeanDefinitionReader }
+import org.springframework.beans.factory.support.{BeanDefinitionRegistryPostProcessor, DefaultListableBeanFactory}
+import org.springframework.beans.factory.xml.{ResourceEntityResolver, XmlBeanDefinitionReader}
 import org.springframework.beans.support.ResourceEditorRegistrar
 import org.springframework.core.convert.ConversionService
 import org.springframework.core.env.StandardEnvironment
-import org.springframework.core.io.{ DefaultResourceLoader, Resource }
-import org.springframework.core.io.support.{ PathMatchingResourcePatternResolver, ResourcePatternResolver }
+import org.springframework.core.io.{DefaultResourceLoader, Resource}
+import org.springframework.core.io.support.{PathMatchingResourcePatternResolver, ResourcePatternResolver}
 import org.springframework.util.ClassUtils
 
 /**
@@ -43,7 +44,8 @@ class BeanFactoryLoader extends DefaultResourceLoader with ResourcePatternResolv
   var classLoader = ClassUtils.getDefaultClassLoader()
   var result: BeanFactory = _
 
-  override def load(id: String, contextClassName: String, configLocation: String, parent: BeanFactory): BeanFactory = {
+  override def load(id: String, contextClassName: String, configLocation: String,
+                    reconfigLocation:String,parent: BeanFactory): BeanFactory = {
     val watch = new Stopwatch(true)
     logger.info(s"$id starting")
 
@@ -54,6 +56,7 @@ class BeanFactoryLoader extends DefaultResourceLoader with ResourcePatternResolv
     result.setAllowBeanDefinitionOverriding(false)
     result.setSerializationId(id)
     result.setParentBeanFactory(parent)
+    BindRegistry.reconfigUrl = if Strings.isNotBlank(reconfigLocation) then reconfigLocation else ""
     loadBeanDefinitions(result, environment.resolveRequiredPlaceholders(configLocation))
     refresh(result)
     logger.info(s"$id started in $watch")

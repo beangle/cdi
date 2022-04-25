@@ -58,32 +58,32 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
 
   private var reconfigs = Collections.newBuffer[Reconfig.Definition]
 
-  var reconfigUrl: String = null
+  var reconfigSetting: ReconfigSetting = null
 
   /** Automate register and wire bean
    * Reconfig beans
    */
-  override def postProcessBeanDefinitionRegistry(definitionRegistry: BeanDefinitionRegistry): Unit = {
+  override def postProcessBeanDefinitionRegistry(bdRegistry: BeanDefinitionRegistry): Unit = {
     // find bean definition by code
-    val registry = new SpringBindRegistry(definitionRegistry)
-    readConfig()
+    val registry = new SpringBindRegistry(bdRegistry)
+    readConfig(bdRegistry)
     val newDefinitions = registerModules(registry)
     //reconfig all bean by spring-config.xml
-    reconfig(definitionRegistry, registry)
+    reconfig(bdRegistry, registry)
     //register beangle factory
-    registerBeangleFactory(definitionRegistry, registry)
+    registerBeangleFactory(bdRegistry, registry)
     //register last one
     registerLast(registry)
 
     // support initializing/disposable
-    lifecycle(registry, definitionRegistry)
+    lifecycle(registry, bdRegistry)
     // wire by constructor/properties
     autowire(newDefinitions, registry)
 
     // add container description
     val meType = this.getClass
     registry.getBeanNames(meType) foreach { containerName =>
-      val containerDef = definitionRegistry.getBeanDefinition(containerName)
+      val containerDef = bdRegistry.getBeanDefinition(containerName)
       if (null == containerDef.getDescription) {
         containerDef match {
           case abDef: AbstractBeanDefinition => abDef.setDescription(getClassDescription(meType))
@@ -93,7 +93,6 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     }
     properties = null
     reconfigs = null
-    //BindModule.cache.clear()
   }
 
   def postProcessBeanFactory(factory: ConfigurableListableBeanFactory): Unit = {
@@ -103,9 +102,9 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
 
   /** Read spring-config.xml
    */
-  private def readConfig(): Unit = {
+  private def readConfig(bdRegistry: BeanDefinitionRegistry): Unit = {
     properties ++= SystemInfo.properties
-    val profile = properties.get(BindModule.profileProperty).orNull
+    val profile = properties.get(BindRegistry.ProfileProperty).orNull
     val profiles = if (null == profile) Set.empty[String] else Strings.split(profile, ",").map(s => s.trim).toSet
 
     //collect bindmodules and read reconfig properties
@@ -132,8 +131,9 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
                   this.properties ++= recfg.properties
                 case m: BindModule =>
               }
-              if (module.isInstanceOf[BindModule]) {
-                moduleSet += module.asInstanceOf[BindModule]
+              module match {
+                case module1: BindModule => moduleSet += module1
+                case _ =>
               }
             }
           }
@@ -142,19 +142,18 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
       IOs.close(is)
     }
 
-    if (null != reconfigUrl && reconfigUrl.startsWith("${")) {
-      reconfigUrl = System.getProperty(Strings.substringBetween(reconfigUrl, "${", "}"))
-      if (Strings.isNotBlank(reconfigUrl)) {
-        if (reconfigUrl.startsWith("http")) {
-          if (!HttpUtils.access(new URL(reconfigUrl)).isOk) reconfigUrl = null
-        }
+    if (null != reconfigSetting) {
+      val url = reconfigSetting.url
+      if (Strings.isNotBlank(url) && url.startsWith("http")) {
+        println("access url:" + url)
+        if (!HttpUtils.access(new URL(url)).isOk) reconfigSetting = null
       }
-
     }
-    if (Strings.isNotBlank(reconfigUrl)) {
+
+    if (null != reconfigSetting && Strings.isNotBlank(reconfigSetting.url)) {
       val reader = ReconfigReader
       val watch = new Stopwatch(true)
-      val holders = reader.load(new UrlResource(reconfigUrl))
+      val holders = reader.load(new UrlResource(reconfigSetting.url))
       for (holder <- holders) {
         val beanName = holder.name
         if (beanName == "properties") {
@@ -165,7 +164,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
           reconfigs += holder
         }
       }
-      logger.info(s"Read $reconfigUrl in $watch")
+      logger.info(s"Read ${reconfigSetting.url} in $watch")
     }
 
     this.moduleLocations = effectiveLocations.toArray
