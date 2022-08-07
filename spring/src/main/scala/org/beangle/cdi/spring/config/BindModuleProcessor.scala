@@ -145,7 +145,6 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     if (null != reconfigSetting) {
       val url = reconfigSetting.url
       if (Strings.isNotBlank(url) && url.startsWith("http")) {
-        println("access url:" + url)
         if (!HttpUtils.access(new URL(url)).isOk) reconfigSetting = null
       }
     }
