@@ -3,7 +3,7 @@ import org.beangle.parent.Settings._
 import sbt.url
 
 ThisBuild / organization := "org.beangle.cdi"
-ThisBuild / version := "0.4.1-SNAPSHOT"
+ThisBuild / version := "0.4.1"
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -24,7 +24,7 @@ ThisBuild / developers := List(
 ThisBuild / description := "The Beangle CDI Library"
 ThisBuild / homepage := Some(url("https://beangle.github.io/cdi/index.html"))
 
-val beangle_commons_core = "org.beangle.commons" %% "beangle-commons-core" % "5.4.0"
+val beangle_commons_core = "org.beangle.commons" %% "beangle-commons-core" % "5.4.1"
 val commonDeps = Seq(beangle_commons_core, logback_classic % "test", logback_core % "test", scalatest)
 
 lazy val root = (project in file("."))
