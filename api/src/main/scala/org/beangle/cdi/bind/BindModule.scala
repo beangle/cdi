@@ -19,49 +19,49 @@ package org.beangle.cdi.bind
 
 import org.beangle.cdi.Scope
 import org.beangle.cdi.bind.Binding.*
-import org.beangle.commons.lang.Strings
-import org.beangle.commons.lang.reflect.{BeanInfo, BeanInfoCache, BeanInfoDigger, BeanInfos,BeanInfoLoader}
+import org.beangle.commons.lang.reflect.*
+import org.beangle.commons.lang.{JVM, Strings}
 
-import scala.quoted.*
 import java.util as ju
+import scala.quoted.*
 
 object BindModule {
   /**
    * bind class with a name.
    */
-  def bind(clazzesExpr:Expr[Seq[Class[_]]],
-                   binder:Expr[Binding],wiredEagerly:Expr[Boolean])
-                  (implicit quotes: Quotes):Expr[DefinitionBinder]={
+  def bind(clazzesExpr: Expr[Seq[Class[_]]],
+           binder: Expr[Binding], wiredEagerly: Expr[Boolean])
+          (implicit quotes: Quotes): Expr[DefinitionBinder] = {
     import quotes.reflect.*
     '{
-      ${BeanInfoDigger.digInto(clazzesExpr,'{BeanInfos.cache})}
-      ${binder}.bind(${clazzesExpr}:_*).wiredEagerly(${wiredEagerly})
+      ${ BeanInfoDigger.digInto(clazzesExpr, '{ BeanInfos.cache }) }
+      ${ binder }.bind(${ clazzesExpr }: _*).wiredEagerly(${ wiredEagerly })
     }
   }
 
   /**
    * bind class with a name.
    */
-  def bind[T:Type](beanName: Expr[String], clazz:Expr[Class[T]],
-                          binder:Expr[Binding],wiredEagerly:Expr[Boolean])
-                         (implicit quotes: Quotes):Expr[DefinitionBinder]={
+  def bind[T: Type](beanName: Expr[String], clazz: Expr[Class[T]],
+                    binder: Expr[Binding], wiredEagerly: Expr[Boolean])
+                   (implicit quotes: Quotes): Expr[DefinitionBinder] = {
     import quotes.reflect.*
     '{
-      ${BeanInfoDigger.digInto(clazz,'{BeanInfos.cache})}
-      ${binder}.bind(${beanName}, ${clazz}).wiredEagerly(${wiredEagerly})
+      ${ BeanInfoDigger.digInto(clazz, '{ BeanInfos.cache }) }
+      ${ binder }.bind(${ beanName }, ${ clazz }).wiredEagerly(${ wiredEagerly })
     }
   }
 
   /**
    * bind class with a name.
    */
-  def bean[T:Type](clazz:Expr[Class[T]],
-                   binder:Expr[Binding],wiredEagerly:Expr[Boolean])
-                  (implicit quotes: Quotes):Expr[Definition]={
+  def bean[T: Type](clazz: Expr[Class[T]],
+                    binder: Expr[Binding], wiredEagerly: Expr[Boolean])
+                   (implicit quotes: Quotes): Expr[Definition] = {
     import quotes.reflect.*
     '{
-      ${BeanInfoDigger.digInto(clazz,'{BeanInfos.cache})}
-      ${binder}.bind(${binder}.newInnerBeanName(${clazz}), ${clazz}).head.wiredEagerly(${wiredEagerly})
+      ${ BeanInfoDigger.digInto(clazz, '{ BeanInfos.cache }) }
+      ${ binder }.bind(${ binder }.newInnerBeanName(${ clazz }), ${ clazz }).head.wiredEagerly(${ wiredEagerly })
     }
   }
 
@@ -93,7 +93,7 @@ abstract class BindModule {
   /**
    * bind class.
    */
-  protected inline def bind(inline classes: Class[_]*): DefinitionBinder =  ${BindModule.bind('classes,'binder,'wiredEagerly)}
+  protected inline def bind(inline classes: Class[_]*): DefinitionBinder = ${ BindModule.bind('classes, 'binder, 'wiredEagerly) }
 
   /**
    * Returns a reference definition based on Name;
@@ -110,7 +110,7 @@ abstract class BindModule {
   /**
    * Generate a inner bean definition
    */
-  protected inline def bean[T](clazz: Class[T]): Definition = ${BindModule.bean('clazz,'binder,'wiredEagerly)}
+  protected inline def bean[T](clazz: Class[T]): Definition = ${ BindModule.bean('clazz, 'binder, 'wiredEagerly) }
 
   final def inject[T](clazz: Class[T]): Injection[T] = {
     Injection(clazz)
@@ -177,8 +177,8 @@ abstract class BindModule {
   /**
    * bind class with a name.
    */
-  protected  inline def bind[T](beanName: String, clazz: Class[T]): DefinitionBinder =
-     ${BindModule.bind('beanName,'clazz,'binder,'wiredEagerly)}
+  protected inline def bind[T](beanName: String, clazz: Class[T]): DefinitionBinder =
+    ${ BindModule.bind('beanName, 'clazz, 'binder, 'wiredEagerly) }
 
   /**
    * bind singleton with a name.
@@ -194,7 +194,8 @@ abstract class BindModule {
 
   final def devEnabled: Boolean = {
     val profiles = System.getProperty(BindRegistry.ProfileProperty)
-    null != profiles && Strings.split(profiles, ",").toSet.contains("dev")
+    val enabled = null != profiles && Strings.split(profiles, ",").toSet.contains("dev")
+    enabled || JVM.isDebugMode
   }
 
   private def buildInnerReference(clazz: Class[_]): ReferenceValue = {
