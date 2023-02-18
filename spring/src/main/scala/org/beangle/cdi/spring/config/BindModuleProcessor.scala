@@ -31,7 +31,7 @@ import org.beangle.commons.lang.annotation.description
 import org.beangle.commons.lang.reflect.*
 import org.beangle.commons.lang.reflect.Reflections.{getGenericParamTypes, newInstance}
 import org.beangle.commons.lang.time.Stopwatch
-import org.beangle.commons.lang.{ClassLoaders, Strings, SystemInfo}
+import org.beangle.commons.lang.{ClassLoaders, JVM, Strings, SystemInfo}
 import org.beangle.commons.logging.Logging
 import org.beangle.commons.net.http.HttpUtils
 import org.springframework.beans.factory.FactoryBean
@@ -104,8 +104,9 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
    */
   private def readConfig(bdRegistry: BeanDefinitionRegistry): Unit = {
     properties ++= SystemInfo.properties
-    val profile = properties.get(BindRegistry.ProfileProperty).orNull
-    val profiles = if (null == profile) Set.empty[String] else Strings.split(profile, ",").map(s => s.trim).toSet
+    var profile = properties.get(BindRegistry.ProfileProperty).getOrElse("")
+    if (JVM.isDebugMode) profile += ",dev"
+    val profiles = Strings.split(profile, ",").map(s => s.trim).toSet
 
     //collect bindmodules and read reconfig properties
     val moduleSet = new collection.mutable.HashSet[BindModule]
