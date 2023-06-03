@@ -35,7 +35,7 @@ class ResourcesEditor extends PropertyEditorSupport {
   private def getResource(location: String): Option[URL] = {
     if (Strings.isBlank(location)) return None
     val resourceList = resourceResolver.getResources(location)
-    if (resourceList.isEmpty) None else Some(resourceList.head)
+    resourceList.headOption
   }
 
   private def getResources(locationPattern: String): List[URL] = {
@@ -48,7 +48,7 @@ class ResourcesEditor extends PropertyEditorSupport {
       var global: Option[URL] = None
       var locals: List[URL] = List.empty
       var user: Option[URL] = None
-      if (paths.length > 0) global = getResource(paths(0))
+      if (paths.nonEmpty) global = getResource(paths(0))
       if (paths.length > 1) locals = getResources(paths(1))
       if (paths.length > 2) user = getResource(paths(2))
       setValue(new Resources(global, locals, user))
