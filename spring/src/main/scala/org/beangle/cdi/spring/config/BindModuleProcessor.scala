@@ -342,11 +342,11 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
       binder.singletons foreach { e =>
         val beanName = e._1
         if (singletons.contains(beanName)) {
-          if (null != profile && bean2profiles.get(beanName).isEmpty) {
+          if (null != profile && !bean2profiles.contains(beanName)) {
             singletons.put(beanName, e._2)
             bean2profiles.put(beanName, profile)
           } else {
-            logger.warn(s"Ingore exists bean definition $beanName in ${module.getClass.getName}")
+            logger.warn(s"Ignore exists bean definition $beanName in ${module.getClass.getName}")
           }
         } else {
           singletons.put(beanName, e._2)
@@ -357,11 +357,11 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
       for (definition <- binder.definitions) {
         val beanName = definition.beanName
         if (definitions.contains(beanName)) {
-          if (null != profile && bean2profiles.get(beanName).isEmpty) {
+          if (null != profile && !bean2profiles.contains(beanName)) {
             definitions.put(beanName, definition)
             bean2profiles.put(beanName, profile)
           } else {
-            logger.warn(s"Ingore exists bean definition $beanName in ${module.getClass.getName}")
+            logger.warn(s"Ignore exists bean definition $beanName in ${module.getClass.getName}")
           }
         } else {
           definitions.put(beanName, definition)
@@ -373,7 +373,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     var newBeanCount = 0
     singletons foreach {
       case (beanName, singleton) =>
-        if (registry.contains(beanName)) logger.warn(s"Ingore exists bean definition $beanName")
+        if (registry.contains(beanName)) logger.warn(s"Ignore exists bean definition $beanName")
         else {
           registry.register(beanName, singleton)
           newBeanCount += 1
@@ -382,7 +382,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     val beanDefinitions = new collection.mutable.HashMap[String, ExtBeanDefinition]
     definitions foreach {
       case (beanName, definition) =>
-        if (registry.contains(beanName)) logger.warn(s"Ingore exists bean definition $beanName")
+        if (registry.contains(beanName)) logger.warn(s"Ignore exists bean definition $beanName")
         else {
           beanDefinitions.put(beanName, registerBean(definition, registry))
           newBeanCount += 1
@@ -464,12 +464,11 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     val clazz = SpringBindRegistry.getBeanClass(mbd)
     val manifest = BeanInfos.get(clazz)
     //1. inject constructor
-    // find only constructor or constructor with same parameters count
+    // find only one constructor or constructor with same parameters count
     val ctor: BeanInfo.ConstructorInfo = {
       val ctors = manifest.ctors
       if (mbd.getConstructorArgumentValues.isEmpty) {
-        if (ctors.length == 1) ctors.head
-        else null
+        if (ctors.length == 1) ctors.head else null
       } else {
         val argLength = mbd.getConstructorArgumentValues.getArgumentCount
         ctors.find(ctor => ctor.parameters.length == argLength).orNull
@@ -480,7 +479,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
       // doesn't have arguments
       if (mbd.getConstructorArgumentValues.isEmpty) {
         val cav = mbd.getConstructorArgumentValues
-        (0 until ctor.parameters.length) foreach { i =>
+        ctor.parameters.indices foreach { i =>
           val param = ctor.parameters(i)
           param.defaultValue match {
             case Some(v) => cav.addGenericArgumentValue(v)
