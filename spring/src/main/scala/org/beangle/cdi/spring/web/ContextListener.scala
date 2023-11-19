@@ -29,56 +29,39 @@ import org.beangle.commons.lang.{Strings, SystemInfo}
 import org.beangle.commons.logging.Logging
 
 /**
- * 1. Disable Definition Overriding
- * 2. Default config location(spring-context.xml)
- * 3. Load children context
- */
+  * 1. Disable Definition Overriding
+  * 2. Default config location(spring-context.xml)
+  * 3. Load children context
+  */
 class ContextListener extends ServletContextListener with Logging {
 
   var contextConfigLocation = "classpath:spring-context.xml"
 
-  var reConfigLocation: String = _
-
-  var childContextConfigLocation = ""
-
   var contextClassName: String = _
 
-  private val loaders = Collections.newBuffer[ContextLoader]
+  private var loader: ContextLoader = _
 
-  private val springContextAvaliable = !getResources("org/springframework/context/support/AbstractApplicationContext.class").isEmpty
+  private val springContextAvailable = !getResources("org/springframework/context/support/AbstractApplicationContext.class").isEmpty
 
   def loadContainer(sc: ServletContext): Container = {
-    if (null == reConfigLocation) {
-      reConfigLocation = sc.getAttribute(BindRegistry.ReconfigUrlProperty).asInstanceOf[String]
-    }
-    if (null == reConfigLocation) {
-      reConfigLocation = SystemInfo.properties.getOrElse(BindRegistry.ReconfigUrlProperty, null)
-    }
-
-    val root = newLoader().load("ROOT", contextClassName, contextConfigLocation, reConfigLocation, null)
-    //load children
-    if (isNotEmpty(childContextConfigLocation)) {
-      val childCtxId = substringBefore(childContextConfigLocation, "@")
-      newLoader().load(childCtxId, contextClassName, substringAfter(childContextConfigLocation, "@"), null, root)
-      Container.get(childCtxId)
-    } else {
-      Container.ROOT
-    }
+    newLoader().load("ROOT", contextClassName, contextConfigLocation, null)
+    Container.ROOT
   }
 
   override def contextInitialized(sce: ServletContextEvent): Unit = {
-    if (loaders.isEmpty) loadContainer(sce.getServletContext)
+    if (null == loader) loadContainer(sce.getServletContext)
   }
 
   override def contextDestroyed(sce: ServletContextEvent): Unit = {
-    loaders.foreach { loader => loader.close() }
+    if null != loader then loader.close()
   }
 
   private def newLoader(): ContextLoader = {
-    val loader =
-      if (springContextAvaliable) newInstance(load("org.beangle.cdi.spring.context.ApplicationContextLoader")).asInstanceOf[ContextLoader]
-      else new BeanFactoryLoader()
-    loaders += loader
-    loader
+    if null == loader then
+      this.loader =
+        if (springContextAvailable) newInstance(load("org.beangle.cdi.spring.context.ApplicationContextLoader")).asInstanceOf[ContextLoader]
+        else new BeanFactoryLoader()
+
+    this.loader
   }
 }

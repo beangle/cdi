@@ -18,15 +18,23 @@
 package org.beangle.cdi.bind
 
 import org.beangle.cdi.bind.Binding.ReferenceValue
+import org.beangle.commons.lang.Strings
+import org.beangle.commons.lang.time.Stopwatch
+import org.beangle.commons.net.http.HttpUtils
 
-import java.{util => ju}
+import java.net.URL
+import java.util as ju
 
 abstract class ReconfigModule {
   var cfg: Reconfig = _
+  var configUrl: String = _
+  var ignoreMissing: Boolean = true
 
   final def configure(reconfig: Reconfig): Unit = {
     this.cfg = reconfig
     config()
+    this.cfg.ignoreMissing = this.ignoreMissing
+
   }
 
   protected final def update(name: String): Reconfig.Definition = {

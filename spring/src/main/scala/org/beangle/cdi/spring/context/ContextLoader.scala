@@ -20,8 +20,7 @@ package org.beangle.cdi.spring.context
 import org.springframework.beans.factory.BeanFactory
 
 trait ContextLoader {
-  def load(id: String, contextClassName: String, configLocation: String,
-           reconfigLocation: String, parent: BeanFactory): BeanFactory
+  def load(id: String, contextClassName: String, configLocation: String, parent: BeanFactory): BeanFactory
 
   def close(): Unit
 }

@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.spring.context
 
-import org.beangle.cdi.bind.{BindRegistry, ReconfigSetting}
+import org.beangle.cdi.bind.BindRegistry
 import org.beangle.cdi.spring.config.BindModuleProcessor
 import org.beangle.cdi.{Container, ContainerListener}
 import org.beangle.commons.collection.Collections
@@ -105,9 +105,6 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
     Container.containers.put(id, this)
     this.listeners = Container.listeners
     Container.listeners = Nil
-
-    if null == reconfigSetting && null != BindRegistry.reconfigUrl then
-      reconfigSetting = new ReconfigSetting(BindRegistry.reconfigUrl)
   }
 
   /**

@@ -26,8 +26,11 @@ class SpringXmlParserTest extends AnyFunSpec with Matchers with Logging {
 
   describe("BeanDefinitionReader") {
     it("parse xml") {
-      val holders = ReconfigReader.load(new ClassPathResource("org/beangle/cdi/spring/context-simple.xml"))
+      val holders = ReconfigParser.load(new ClassPathResource("org/beangle/cdi/spring/context-simple.xml"))
       holders.length should be (5)
+
+      val holders2 = ReconfigParser.load(new ClassPathResource("spring-config-test.xml"))
+      holders2.length should be(2)
     }
   }
 }

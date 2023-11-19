@@ -28,8 +28,8 @@ import org.springframework.context.support.{AbstractRefreshableApplicationContex
 import org.springframework.context.{ApplicationContext, ConfigurableApplicationContext}
 
 /**
- * Load ApplicationContext
- */
+  * Load ApplicationContext
+  */
 class ApplicationContextLoader extends ContextLoader with Logging {
 
   var result: ConfigurableApplicationContext = _
@@ -48,8 +48,7 @@ class ApplicationContextLoader extends ContextLoader with Logging {
     }
   }
 
-  def load(id: String, contextClassName: String, configLocation: String,
-           reconfigLocation: String, parent: BeanFactory): ApplicationContext = {
+  def load(id: String, contextClassName: String, configLocation: String, parent: BeanFactory): ApplicationContext = {
     val contextClass = determineContextClass(contextClassName)
     require(classOf[ConfigurableApplicationContext].isAssignableFrom(contextClass))
     val watch = new Stopwatch(true)
@@ -60,7 +59,6 @@ class ApplicationContextLoader extends ContextLoader with Logging {
       case _ =>
     }
     result.setId(id)
-    BindRegistry.reconfigUrl = if Strings.isNotBlank(reconfigLocation) then reconfigLocation else ""
     result.setParent(parent.asInstanceOf[ApplicationContext])
     result.asInstanceOf[AbstractRefreshableConfigApplicationContext].setConfigLocation(configLocation)
     result.refresh()

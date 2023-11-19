@@ -19,8 +19,6 @@ package org.beangle.cdi.bind
 
 object BindRegistry {
   final val ProfileProperty = "beangle.cdi.profiles"
-  final val ReconfigUrlProperty = "beangle.cdi.reconfig_url"
-  var reconfigUrl: String = _
 }
 
 /**
