@@ -19,20 +19,16 @@ package org.beangle.cdi.spring.web
 
 import jakarta.servlet.{ServletContext, ServletContextEvent, ServletContextListener}
 import org.beangle.cdi.Container
-import org.beangle.cdi.bind.BindRegistry
 import org.beangle.cdi.spring.context.{BeanFactoryLoader, ContextLoader}
-import org.beangle.commons.collection.Collections
 import org.beangle.commons.lang.ClassLoaders.{getResources, load}
-import org.beangle.commons.lang.Strings.{isNotEmpty, substringAfter, substringBefore}
+import org.beangle.commons.lang.Strings
 import org.beangle.commons.lang.reflect.Reflections.newInstance
-import org.beangle.commons.lang.{Strings, SystemInfo}
 import org.beangle.commons.logging.Logging
 
 /**
-  * 1. Disable Definition Overriding
-  * 2. Default config location(spring-context.xml)
-  * 3. Load children context
-  */
+ * 1. Disable Definition Overriding
+ * 2. Default config location(spring-context.xml)
+ */
 class ContextListener extends ServletContextListener with Logging {
 
   var contextConfigLocation = "classpath:spring-context.xml"
@@ -41,7 +37,7 @@ class ContextListener extends ServletContextListener with Logging {
 
   private var loader: ContextLoader = _
 
-  private val springContextAvailable = !getResources("org/springframework/context/support/AbstractApplicationContext.class").isEmpty
+  private val springContextAvailable = getResources("org/springframework/context/support/AbstractApplicationContext.class").nonEmpty
 
   def loadContainer(sc: ServletContext): Container = {
     newLoader().load("ROOT", contextClassName, contextConfigLocation, null)
