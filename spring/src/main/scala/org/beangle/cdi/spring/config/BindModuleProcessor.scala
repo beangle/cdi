@@ -40,11 +40,12 @@ import org.springframework.beans.factory.support.*
 import org.springframework.core.io.{Resource, UrlResource}
 
 import java.io.File
+
 /**
- * 完成bean的自动注册和再配置
- *
- * @author chaostone
- */
+  * 完成bean的自动注册和再配置
+  *
+  * @author chaostone
+  */
 abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor with Logging {
 
   var name: String = "default"
@@ -58,8 +59,8 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   private var reconfigs = Collections.newBuffer[Reconfig]
 
   /** Automate register and wire bean
-   * Reconfig beans
-   */
+    * Reconfig beans
+    */
   override def postProcessBeanDefinitionRegistry(bdRegistry: BeanDefinitionRegistry): Unit = {
     // find bean definition by code
     val registry = new SpringBindRegistry(bdRegistry)
@@ -99,7 +100,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /** Read modules and reconfig modules
-   */
+    */
   private def readConfig(bdRegistry: BeanDefinitionRegistry): Unit = {
     properties ++= SystemInfo.properties
     var profile = properties.getOrElse(BindRegistry.ProfileProperty, "")
@@ -145,10 +146,10 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /** Read spring style config.xml
-   *
-   * @param configUrl
-   * @param reconfig
-   */
+    *
+    * @param configUrl
+    * @param reconfig
+    */
   private def readReconfig(configUrl: String, reconfig: Reconfig): Unit = {
     var url = configUrl
     if (Strings.isNotBlank(configUrl)) {
@@ -197,10 +198,10 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /** Apply reconfig to bean definitions
-   *
-   * @param registry
-   * @param bindRegistry
-   */
+    *
+    * @param registry
+    * @param bindRegistry
+    */
   private def reconfig(registry: BeanDefinitionRegistry, bindRegistry: BindRegistry): Unit = {
     val watch = new Stopwatch(true)
     val beanNames = new collection.mutable.HashSet[String]
@@ -244,8 +245,8 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /**
-   * Try find bean implements factory interface,and convert to spring FactoryBean[_]
-   */
+    * Try find bean implements factory interface,and convert to spring FactoryBean[_]
+    */
   private def registerBeangleFactory(definitionRegistry: BeanDefinitionRegistry, registry: BindRegistry): Unit = {
     for (name <- definitionRegistry.getBeanDefinitionNames if !(name.startsWith("&"))) {
       val defn = definitionRegistry.getBeanDefinition(name).asInstanceOf[AbstractBeanDefinition]
@@ -274,8 +275,8 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /**
-   * lifecycle.
-   */
+    * lifecycle.
+    */
   private def lifecycle(registry: BindRegistry, definitionRegistry: BeanDefinitionRegistry): Unit = {
     registry.beanNames foreach { name =>
       val clazz = registry.getBeanType(name)
@@ -297,7 +298,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /** register last buildin beans.
-   */
+    */
   private def registerLast(registry: BindRegistry): Unit = {
     val eventMulticaster = new Definition("EventMulticaster.default" + System.currentTimeMillis(),
       classOf[HierarchicalEventMulticaster], Scope.Singleton.name)
@@ -311,7 +312,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /** 合并bean定义
-   */
+    */
   private def mergeDefinition(target: BeanDefinition, source: Reconfig.Definition): String = {
     if (null == target.getBeanClassName) {
       logger.warn(s"ignore bean definition ${source.name} for without class")
@@ -348,7 +349,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /** registerModules.
-   */
+    */
   private def registerModules(registry: BindRegistry): Map[String, ExtBeanDefinition] = {
     val watch = new Stopwatch(true)
     val definitions = new collection.mutable.HashMap[String, Definition]
@@ -415,8 +416,8 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /**
-   * registerBean.
-   */
+    * registerBean.
+    */
   private def registerBean(defn: Definition, registry: BindRegistry): ExtBeanDefinition = {
     val bd = new ExtBeanDefinition(defn, properties)
     //register spring factory bean
@@ -436,12 +437,12 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /** Autowire bean by constructor and properties.
-   *
-   * <ul>policy
-   * <li>find unique dependency
-   * <li>find primary type of dependency
-   * </ul>
-   */
+    *
+    * <ul>policy
+    * <li>find unique dependency
+    * <li>find primary type of dependency
+    * </ul>
+    */
   private def autowire(newBeanDefinitions: Map[String, ExtBeanDefinition], registry: BindRegistry): Unit = {
     val watch = new Stopwatch(true)
     for ((name, bd) <- newBeanDefinitions) autowireBean(name, bd, registry)
@@ -449,8 +450,8 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /**
-   * convert typeinfo into ReferenceValue
-   */
+    * convert typeinfo into ReferenceValue
+    */
   private def convertInjectValue(typeinfo: TypeInfo, registry: BindRegistry, excluded: String): Any = {
     val result = typeinfo match {
       case TypeInfo.GeneralType(clazz, args) =>
@@ -480,8 +481,8 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /**
-   * autowire single bean.
-   */
+    * autowire single bean.
+    */
   private def autowireBean(beanName: String, mbd: ExtBeanDefinition, registry: BindRegistry): Unit = {
     val clazz = SpringBindRegistry.getBeanClass(mbd)
     val manifest = BeanInfos.get(clazz)
@@ -593,7 +594,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
             if (beanNames.isEmpty) logger.debug(s"$beanName's $propertyName cannot found candidate beans.")
             else logger.warn(s"$beanName's $propertyName expected single bean but found ${beanNames.size}:$beanNames")
           } else {
-            if (!propertyType.isOptional && mbd.wiredEagerly && !clazz.isPrimitive) {
+            if (!propertyType.isOptional && mbd.wiredEagerly && !propertyType.clazz.isPrimitive) {
               throw new RuntimeException(s"Cannot find suitable bean for $beanName's $propertyName(${beanNames.size}:$beanNames)")
             }
           }
@@ -609,9 +610,9 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   }
 
   /**
-   * Find unsatisfied properties<br>
-   * Unsatisfied property is empty value and not primary type and not starts with java.
-   */
+    * Find unsatisfied properties<br>
+    * Unsatisfied property is empty value and not primary type and not starts with java.
+    */
   private def unsatisfiedNonSimpleProperties(mbd: ExtBeanDefinition, beanName: String): collection.Map[String, TypeInfo] = {
     val properties = new collection.mutable.HashMap[String, TypeInfo]
     val bd = mbd.asInstanceOf[GenericBeanDefinition]
@@ -626,7 +627,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
           if (null == method.getAnnotation(classOf[nowire]) && !pvs.contains(name)) {
             if (!typeinfo.isIterable || typeinfo.isOptional) {
               val propertyClazz = if typeinfo.isOptional then typeinfo.args.head.clazz else typeinfo.clazz
-              if (!propertyClazz.getName.startsWith("java.") && !propertyClazz.getName.startsWith("scala.")) {
+              if (!propertyClazz.isPrimitive && !propertyClazz.getName.startsWith("java.") && !propertyClazz.getName.startsWith("scala.")) {
                 //Skip Factory.result method for it's a provider,DONOT need wire
                 if (!(name == "result" && classOf[Factory[_]].isAssignableFrom(clazz))) properties.put(name, typeinfo)
               }

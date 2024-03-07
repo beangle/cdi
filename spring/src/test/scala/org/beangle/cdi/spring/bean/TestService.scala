@@ -24,4 +24,6 @@ class TestService {
   var noneDao: TestDao = null
 
   var optionDao: Option[OptionDao] = None
+
+  var enableAdmin: Boolean = _
 }
