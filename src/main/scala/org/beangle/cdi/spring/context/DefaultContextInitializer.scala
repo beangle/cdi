@@ -15,40 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.web
+package org.beangle.cdi.spring.context
 
-import jakarta.servlet.{ServletContext, ServletContextEvent, ServletContextListener}
 import org.beangle.cdi.Container
-import org.beangle.cdi.spring.context.{BeanFactoryLoader, ContextLoader}
 import org.beangle.commons.lang.ClassLoaders.{getResources, load}
-import org.beangle.commons.lang.Strings
+import org.beangle.commons.lang.Objects
 import org.beangle.commons.lang.reflect.Reflections.newInstance
-import org.beangle.commons.logging.Logging
 
-/**
- * 1. Disable Definition Overriding
- * 2. Default config location(spring-context.xml)
- */
-class ContextListener extends ServletContextListener with Logging {
+object DefaultContextInitializer {
+  def apply(contextConfigLocation: String, contextClassName: String): DefaultContextInitializer = {
+    new DefaultContextInitializer(Objects.defaultIfNull(contextConfigLocation, "classpath:spring-context.xml"), contextClassName)
+  }
+}
 
-  var contextConfigLocation = "classpath:spring-context.xml"
-
-  var contextClassName: String = _
+class DefaultContextInitializer(val contextConfigLocation: String, val contextClassName: String) {
 
   private var loader: ContextLoader = _
 
   private val springContextAvailable = getResources("org/springframework/context/support/AbstractApplicationContext.class").nonEmpty
 
-  def loadContainer(sc: ServletContext): Container = {
+  def init(): Container = {
     newLoader().load("ROOT", contextClassName, contextConfigLocation, null)
     Container.ROOT
   }
 
-  override def contextInitialized(sce: ServletContextEvent): Unit = {
-    if (null == loader) loadContainer(sce.getServletContext)
-  }
-
-  override def contextDestroyed(sce: ServletContextEvent): Unit = {
+  def close(): Unit = {
     if null != loader then loader.close()
   }
 

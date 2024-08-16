@@ -4,7 +4,7 @@ import sbt.Keys.libraryDependencies
 import sbt.url
 
 ThisBuild / organization := "org.beangle.cdi"
-ThisBuild / version := "0.6.8-SNAPSHOT"
+ThisBuild / version := "0.6.8"
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -33,7 +33,6 @@ lazy val root = (project in file("."))
     common,
     libraryDependencies ++= Seq(beangle_commons, scalaxml),
     libraryDependencies ++= Seq(logback_classic % "test", scalatest),
-    libraryDependencies += servletapi % "optional",
     libraryDependencies += spring_context % "optional",
     libraryDependencies += spring_beans % "optional"
   )
