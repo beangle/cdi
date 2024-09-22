@@ -28,6 +28,10 @@ object DefaultContextInitializer {
   }
 }
 
+/** 缺省上下文初始化器
+ * @param contextConfigLocation
+ * @param contextClassName
+ */
 class DefaultContextInitializer(val contextConfigLocation: String, val contextClassName: String) {
 
   private var loader: ContextLoader = _
