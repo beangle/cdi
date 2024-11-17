@@ -20,10 +20,9 @@ package org.beangle.cdi.spring.config
 import org.beangle.cdi.spring.beans.{FactoryBeanProxy, ScalaEditorRegistrar}
 import org.beangle.cdi.spring.context.HierarchicalEventMulticaster
 import org.beangle.commons.bean.{Disposable, Factory, Initializing}
-import org.beangle.commons.cdi.*
-import org.beangle.commons.cdi.Scope
 import org.beangle.commons.cdi.Binding.*
 import org.beangle.commons.cdi.Reconfig.ReconfigType
+import org.beangle.commons.cdi.{Scope, *}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.config.Resources
 import org.beangle.commons.io.IOs
@@ -38,6 +37,7 @@ import org.springframework.beans.factory.FactoryBean
 import org.springframework.beans.factory.config.*
 import org.springframework.beans.factory.support.*
 import org.springframework.core.io.{Resource, UrlResource}
+import org.springframework.util.ClassUtils
 
 import java.io.File
 
@@ -57,6 +57,8 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
   private var properties = Collections.newMap[String, String]
 
   private var reconfigs = Collections.newBuffer[Reconfig]
+
+  private val classLoader = ClassUtils.getDefaultClassLoader
 
   /** Automate register and wire bean
    * Reconfig beans
@@ -279,17 +281,18 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
    */
   private def lifecycle(registry: BindRegistry, definitionRegistry: BeanDefinitionRegistry): Unit = {
     registry.beanNames foreach { name =>
-      val clazz = registry.getBeanType(name)
       val springName = if (name.startsWith("&")) name.substring(1) else name
       if (definitionRegistry.containsBeanDefinition(springName)) {
         val defn = definitionRegistry.getBeanDefinition(springName).asInstanceOf[AbstractBeanDefinition]
+        if (!defn.hasBeanClass) defn.resolveBeanClass(classLoader)
+        val defnClazz = defn.getBeanClass
         // convert Initializing to init-method
-        if (classOf[Initializing].isAssignableFrom(clazz) && null == defn.getInitMethodName
+        if (classOf[Initializing].isAssignableFrom(defnClazz) && null == defn.getInitMethodName
           && !defn.getPropertyValues.contains("init-method")) {
           defn.setInitMethodName("init")
         }
         // convert Disposable to destroy-method
-        if (classOf[Disposable].isAssignableFrom(clazz) && null == defn.getDestroyMethodName
+        if (classOf[Disposable].isAssignableFrom(defnClazz) && null == defn.getDestroyMethodName
           && !defn.getPropertyValues.contains("destroy-method")) {
           defn.setDestroyMethodName("destroy")
         }
