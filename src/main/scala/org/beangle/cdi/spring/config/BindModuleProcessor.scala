@@ -284,17 +284,19 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
       val springName = if (name.startsWith("&")) name.substring(1) else name
       if (definitionRegistry.containsBeanDefinition(springName)) {
         val defn = definitionRegistry.getBeanDefinition(springName).asInstanceOf[AbstractBeanDefinition]
-        if (!defn.hasBeanClass) defn.resolveBeanClass(classLoader)
-        val defnClazz = defn.getBeanClass
-        // convert Initializing to init-method
-        if (classOf[Initializing].isAssignableFrom(defnClazz) && null == defn.getInitMethodName
-          && !defn.getPropertyValues.contains("init-method")) {
-          defn.setInitMethodName("init")
-        }
-        // convert Disposable to destroy-method
-        if (classOf[Disposable].isAssignableFrom(defnClazz) && null == defn.getDestroyMethodName
-          && !defn.getPropertyValues.contains("destroy-method")) {
-          defn.setDestroyMethodName("destroy")
+        if (null != defn.getBeanClassName) {
+          if !defn.hasBeanClass then defn.resolveBeanClass(classLoader)
+          val defnClazz = defn.getBeanClass
+          // convert Initializing to init-method
+          if (classOf[Initializing].isAssignableFrom(defnClazz) && null == defn.getInitMethodName
+            && !defn.getPropertyValues.contains("init-method")) {
+            defn.setInitMethodName("init")
+          }
+          // convert Disposable to destroy-method
+          if (classOf[Disposable].isAssignableFrom(defnClazz) && null == defn.getDestroyMethodName
+            && !defn.getPropertyValues.contains("destroy-method")) {
+            defn.setDestroyMethodName("destroy")
+          }
         }
       }
     }
