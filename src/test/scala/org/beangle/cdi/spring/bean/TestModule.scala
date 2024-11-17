@@ -17,8 +17,8 @@
 
 package org.beangle.cdi.spring.bean
 
-import org.beangle.cdi.Scope
-import org.beangle.cdi.bind.BindModule
+import org.beangle.commons.cdi.Scope
+import org.beangle.commons.cdi.BindModule
 
 object TestModule extends BindModule {
 

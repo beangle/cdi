@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.spring.config
 
-import org.beangle.cdi.Container
+import org.beangle.commons.cdi.Container
 import org.beangle.cdi.spring.bean.*
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.logging.Logging

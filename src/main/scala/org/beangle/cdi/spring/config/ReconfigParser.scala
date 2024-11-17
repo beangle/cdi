@@ -17,9 +17,9 @@
 
 package org.beangle.cdi.spring.config
 
-import org.beangle.cdi.bind.Binding.InjectPlaceHolder
-import org.beangle.cdi.bind.Reconfig.ReconfigType
-import org.beangle.cdi.bind.{Binding, Reconfig}
+import org.beangle.commons.cdi.Binding.InjectPlaceHolder
+import org.beangle.commons.cdi.Reconfig.ReconfigType
+import org.beangle.commons.cdi.{Binding, Reconfig}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.conversion.impl.DefaultConversion
 import org.beangle.commons.lang.{ClassLoaders, Strings}

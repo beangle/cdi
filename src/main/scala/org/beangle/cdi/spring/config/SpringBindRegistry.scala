@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.spring.config
 
-import org.beangle.cdi.bind.BindRegistry
+import org.beangle.commons.cdi.BindRegistry
 import org.beangle.commons.bean.Factory
 import org.beangle.commons.lang.ClassLoaders
 import org.beangle.commons.lang.reflect.Reflections.{getGenericParamTypes, newInstance}

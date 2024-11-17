@@ -17,14 +17,14 @@
 
 package org.beangle.cdi.spring.context
 
-import org.beangle.commons.event.{DefaultEventMulticaster, Event, EventMulticaster, EventListener}
-import org.beangle.cdi.{Container, ContainerListener}
 import org.beangle.commons.bean.Initializing
+import org.beangle.commons.event.{DefaultEventMulticaster, Event, EventListener, EventMulticaster}
+import org.beangle.commons.cdi.{Container, ContainerListener}
 
 /**
-  * @author chaostone
-  *
-  */
+ * @author chaostone
+ *
+ */
 class HierarchicalEventMulticaster extends DefaultEventMulticaster with Initializing {
 
   var parent: EventMulticaster = _

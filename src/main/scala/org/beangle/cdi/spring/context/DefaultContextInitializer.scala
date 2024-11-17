@@ -17,18 +17,19 @@
 
 package org.beangle.cdi.spring.context
 
-import org.beangle.cdi.Container
+import org.beangle.commons.cdi.Container
 import org.beangle.commons.lang.ClassLoaders.{getResources, load}
 import org.beangle.commons.lang.Objects
 import org.beangle.commons.lang.reflect.Reflections.newInstance
 
 object DefaultContextInitializer {
   def apply(contextConfigLocation: String, contextClassName: String): DefaultContextInitializer = {
-    new DefaultContextInitializer(Objects.defaultIfNull(contextConfigLocation, "classpath:spring-context.xml"), contextClassName)
+    new DefaultContextInitializer(Objects.nvl(contextConfigLocation, "classpath:spring-context.xml"), contextClassName)
   }
 }
 
 /** 缺省上下文初始化器
+ *
  * @param contextConfigLocation
  * @param contextClassName
  */
@@ -40,7 +41,7 @@ class DefaultContextInitializer(val contextConfigLocation: String, val contextCl
 
   def init(): Container = {
     newLoader().load("ROOT", contextClassName, contextConfigLocation, null)
-    Container.ROOT
+    Container.Default.get
   }
 
   def close(): Unit = {

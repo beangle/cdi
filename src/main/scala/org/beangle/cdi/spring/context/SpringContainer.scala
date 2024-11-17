@@ -17,9 +17,8 @@
 
 package org.beangle.cdi.spring.context
 
-import org.beangle.cdi.bind.BindRegistry
 import org.beangle.cdi.spring.config.BindModuleProcessor
-import org.beangle.cdi.{Container, ContainerListener}
+import org.beangle.commons.cdi.{Container, ContainerListener}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.event.{Event, EventListener}
 import org.beangle.commons.lang.annotation.description
@@ -35,14 +34,11 @@ import scala.jdk.javaapi.CollectionConverters.asScala
  * @since 3.1.0
  */
 @description("Spring提供的Bean容器")
-class SpringContainer extends BindModuleProcessor with Container with InitializingBean
-  with BeanFactoryAware with EventListener[BeanFactoryEvent] {
+class SpringContainer extends BindModuleProcessor, Container, InitializingBean, BeanFactoryAware, EventListener[BeanFactoryEvent] {
 
-  var parent: Container = _
+  var parent: Option[Container] = None
 
   var context: DefaultListableBeanFactory = _
-
-  var listeners: List[ContainerListener] = Nil
 
   override def id: String = context.getSerializationId
 
@@ -74,12 +70,13 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
   }
 
   override def getBeans[T](clazz: Class[T]): Map[String, T] = {
-    if null == parent then asScala(context.getBeansOfType(clazz)).toMap
-    else
-      val beans = Collections.newMap[String, T]
-      beans ++= parent.getBeans[T](clazz)
-      beans ++= asScala(context.getBeansOfType(clazz))
-      beans.toMap
+    parent match
+      case None => asScala(context.getBeansOfType(clazz)).toMap
+      case Some(p) =>
+        val beans = Collections.newMap[String, T]
+        beans ++= p.getBeans[T](clazz)
+        beans ++= asScala(context.getBeansOfType(clazz))
+        beans.toMap
   }
 
   override def keys: Set[_] = {
@@ -94,17 +91,15 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
   /** Move temporary hooks into myself
    *
    * PS. for SpringContainer is a BeanDefinitionRegistryPostProcessor, so when context initializing, the bean
-   * is inited before others,so using spring native InitializingBean,not beangle's Initializing interface.
+   * is initialized before others,so using spring native InitializingBean,not beangle's Initializing interface.
    */
   override def afterPropertiesSet(): Unit = {
     if (null == context.getParentBeanFactory) {
-      if (null == Container.ROOT) Container.ROOT = this
+      if (Container.Default.isEmpty) Container.Default = Some(this)
     } else {
-      parent = context.getParentBeanFactory.getBean(classOf[SpringContainer])
+      parent = Option(context.getParentBeanFactory.getBean(classOf[SpringContainer]))
     }
-    Container.containers.put(id, this)
-    this.listeners = Container.listeners
-    Container.listeners = Nil
+    Container.register(this)
   }
 
   /**
@@ -118,8 +113,7 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
         case cre: BeanFactoryRefreshedEvent =>
           getListeners(c) foreach (l => l.onStarted(this))
         case cce: BeanFactoryClosedEvent =>
-          if (Container.ROOT == this) Container.ROOT = null
-          Container.containers.remove(this.id)
+          Container.unregister(this)
           getListeners(c) foreach (l => l.onStopped(this))
         case _ =>
       }
@@ -128,7 +122,6 @@ class SpringContainer extends BindModuleProcessor with Container with Initializi
 
   private def getListeners(factory: ConfigurableListableBeanFactory): Iterable[ContainerListener] = {
     val listenerSet = new collection.mutable.HashSet[ContainerListener]
-    listenerSet ++= listeners
     listenerSet ++= asScala(factory.getBeansOfType(classOf[ContainerListener]).values())
     listenerSet
   }

@@ -17,8 +17,8 @@
 
 package org.beangle.cdi.spring.bean
 
-import org.beangle.cdi.ContainerAware
-import org.beangle.cdi.Container
+import org.beangle.commons.cdi.ContainerAware
+import org.beangle.commons.cdi.Container
 
 class UserDaoProvider extends UserProvider with ContainerAware {
 

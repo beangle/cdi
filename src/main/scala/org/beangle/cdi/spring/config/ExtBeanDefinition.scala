@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.spring.config
 
-import org.beangle.cdi.bind.Binding.{Definition, PropertyPlaceHolder, ReferenceValue}
+import org.beangle.commons.cdi.Binding.{Definition, PropertyPlaceHolder, ReferenceValue}
 import org.beangle.commons.collection.Collections
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.config.{RuntimeBeanReference, TypedStringValue}

@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.spring.bean
 
-import org.beangle.cdi.bind.ReconfigModule
+import org.beangle.commons.cdi.ReconfigModule
 
 class UserReconfigModule extends ReconfigModule {
   protected override def config(): Unit = {

@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.spring.context
 
-import org.beangle.cdi.bind.BindRegistry
+import org.beangle.commons.cdi.BindRegistry
 import org.beangle.commons.event.{DefaultEventMulticaster, EventMulticaster}
 import org.beangle.commons.lang.reflect.Reflections
 import org.beangle.commons.lang.time.Stopwatch
