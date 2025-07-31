@@ -37,37 +37,31 @@ import java.util.Properties
 import javax.xml.parsers.DocumentBuilderFactory
 import scala.collection.mutable
 
-/**
-  * Reconfig BeanDefinition Parser
-  *
-  * @author chaostone
-  */
+/** Reconfig BeanDefinition Parser
+ *
+ * @author chaostone
+ */
 class ReconfigParser extends Logging {
-  /**
-    * Stores all used bean names so we can enforce uniqueness on a per file
-    * basis.
-    */
+  /** Stores all used bean names so we can enforce uniqueness on a per file
+   * basis.
+   */
   private val usedNames = new mutable.HashSet[String]
 
-  /**
-    * Report an error with the given message for the given source element.
-    */
-  protected def error(message: String, source: Any, cause: Throwable = null): Unit = {
+  /** Report an error with the given message for the given source element. */
+  private def error(message: String, source: Any, cause: Throwable = null): Unit = {
     logger.error(message)
   }
 
-  /**
-    * Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
-    * were errors during parse.
-    */
+  /** Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
+   * were errors during parse.
+   */
   def parseBeanDefinitionElement(ele: Element): Reconfig.Definition = {
     parseBeanDefinitionElement(ele, null)
   }
 
-  /**
-    * Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
-    * were errors during parse.
-    */
+  /** Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
+   * were errors during parse.
+   */
   private def parseBeanDefinitionElement(ele: Element, containingBean: Binding.Definition): Reconfig.Definition = {
     val id = ele.getAttribute(ID_ATTRIBUTE)
     val nameAttr = ele.getAttribute(NAME_ATTRIBUTE)
@@ -79,7 +73,7 @@ class ReconfigParser extends Logging {
     }
 
     var beanName = id
-    if (!StringUtils.hasText(beanName) && !aliases.isEmpty) {
+    if (!StringUtils.hasText(beanName) && aliases.nonEmpty) {
       beanName = aliases.remove(0)
       logger.debug(s"No XML 'id' specified - using '$beanName' as bean name and $aliases as aliases")
     }
@@ -101,11 +95,8 @@ class ReconfigParser extends Logging {
     null
   }
 
-  /**
-    * Validate that the specified bean name and aliases have not been used
-    * already.
-    */
-  protected def checkNameUniqueness(beanName: String, aliases: collection.Seq[String], beanElement: Element): Unit = {
+  /** Validate that the specified bean name and aliases have not been used already. */
+  private def checkNameUniqueness(beanName: String, aliases: collection.Seq[String], beanElement: Element): Unit = {
     var foundName: String = null
     if (StringUtils.hasText(beanName) && this.usedNames.contains(beanName)) foundName = beanName
     if (foundName == null) foundName = Collections.findFirstMatch(this.usedNames, aliases).orNull
@@ -114,11 +105,10 @@ class ReconfigParser extends Logging {
     this.usedNames ++= aliases
   }
 
-  /**
-    * Parse the bean definition itself, without regard to name or aliases. May
-    * return <code>null</code> if problems occured during the parse of the bean
-    * definition.
-    */
+  /** Parse the bean definition itself, without regard to name or aliases. May
+   * return <code>null</code> if problems occured during the parse of the bean
+   * definition.
+   */
   private def parseBeanDefinitionElement(ele: Element, beanName: String, containingBean: Binding.Definition): Binding.Definition = {
     val className = if (ele.hasAttribute(CLASS_ATTRIBUTE)) ele.getAttribute(CLASS_ATTRIBUTE).trim() else null
     try {
@@ -134,10 +124,7 @@ class ReconfigParser extends Logging {
     null
   }
 
-  /**
-    * Apply the attributes of the given bean element to the given bean *
-    * definition.
-    */
+  /** Apply the attributes of the given bean element to the given bean definition. */
   private def parseBeanDefinitionAttributes(ele: Element, beanName: String,
                                             containingBean: Binding.Definition, bd: Binding.Definition): Binding.Definition = {
     if (ele.hasAttribute(SCOPE_ATTRIBUTE)) {
@@ -174,29 +161,21 @@ class ReconfigParser extends Logging {
     bd
   }
 
-  /**
-    * Parse constructor-arg sub-elements of the given bean element.
-    */
+  /** Parse constructor-arg sub-elements of the given bean element. */
   private def parseConstructorArgElements(beanEle: Element, bd: Binding.Definition): Unit = {
     findChildren(beanEle, CONSTRUCTOR_ARG_ELEMENT) foreach { node =>
       parseConstructorArgElement(node, bd)
     }
   }
 
-  /**
-    * Parse property sub-elements of the given bean element.
-    *
-    */
+  /** Parse property sub-elements of the given bean element. */
   private def parsePropertyElements(beanEle: Element, bd: Binding.Definition): Unit = {
     findChildren(beanEle, PROPERTY_ELEMENT) foreach { node =>
       parsePropertyElement(node, bd)
     }
   }
 
-  /**
-    * Parse a constructor-arg element.
-    *
-    */
+  /** Parse a constructor-arg element. */
   private def parseConstructorArgElement(ele: Element, bd: Binding.Definition): Unit = {
     val indexAttr = ele.getAttribute(INDEX_ATTRIBUTE)
     if (bd.constructorArgs == null) {
@@ -210,19 +189,15 @@ class ReconfigParser extends Logging {
     }
   }
 
-  /**
-    * Parse a property element.
-    *
-    */
+  /** Parse a property element. */
   private def parsePropertyElement(ele: Element, bd: Binding.Definition): Unit = {
     val propertyName = ele.getAttribute(NAME_ATTRIBUTE)
     bd.properties.put(propertyName, parsePropertyValue(ele, bd, propertyName))
   }
 
-  /**
-    * Get the value of a property element. May be a list etc. Also used for
-    * constructor arguments, "propertyName" being null in this case.
-    */
+  /** Get the value of a property element. May be a list etc. Also used for
+   * constructor arguments, "propertyName" being null in this case.
+   */
   private def parsePropertyValue(ele: Element, bd: Binding.Definition, propertyName: String): Object = {
     val elementName = if (propertyName != null) "<property> element for property '" + propertyName + "'"
     else "<constructor-arg> element"
@@ -257,20 +232,14 @@ class ReconfigParser extends Logging {
     }
   }
 
-  /**
-    * <p>
-    * parsePropertySubElement.
-    * </p>
-    *
-    */
+  /** parsePropertySubElement */
   private def parsePropertySubElement(ele: Element, bd: Binding.Definition): Object = {
     parsePropertySubElement(ele, bd, null)
   }
 
-  /**
-    * Parse a value, ref or collection sub-element of a property or
-    * constructor-arg element.
-    */
+  /** Parse a value, ref or collection sub-element of a property or
+   * constructor-arg element.
+   */
   private def parsePropertySubElement(ele: Element, bd: Binding.Definition, defaultValueType: String): Object = {
     if (!isDefaultNamespace(ele.getNamespaceURI)) {
       error("Cannot support nested element .", ele)
@@ -296,59 +265,49 @@ class ReconfigParser extends Logging {
     } else if (nodeNameEquals(ele, PROPS_ELEMENT)) {
       parsePropsElement(ele)
     } else {
-      error("Unknown property sub-element: [" + ele.getNodeName() + "]", ele)
+      error("Unknown property sub-element: [" + ele.getNodeName + "]", ele)
       null
     }
   }
 
-  /**
-    * Return a typed String value Object for the given value element.
-    */
+  /** Return a typed String value Object for the given value element. */
   private def parseValueElement(ele: Element, defaultTypeName: String): Object = {
     DomUtils.getTextValue(ele) // It's a literal value.
   }
 
-  /**
-    * Parse an array element.
-    */
+  /** Parse an array element. */
   private def parseArrayElement(arrayEle: Element, bd: Binding.Definition): Object = {
     val elementType = arrayEle.getAttribute(VALUE_TYPE_ATTRIBUTE)
     val nl = arrayEle.getChildNodes
-    val target = new ManagedArray(elementType, nl.getLength())
+    val target = new ManagedArray(elementType, nl.getLength)
     target.setElementTypeName(elementType)
     parseCollectionElements(nl, target, bd, elementType)
     target
   }
 
-  /**
-    * Parse a list element.
-    */
+  /** Parse a list element. */
   private def parseListElement(collectionEle: Element, bd: Binding.Definition): java.util.List[Object] = {
     val defaultElementType = collectionEle.getAttribute(VALUE_TYPE_ATTRIBUTE)
-    val nl = collectionEle.getChildNodes()
-    val target = new ManagedList[Object](nl.getLength())
+    val nl = collectionEle.getChildNodes
+    val target = new ManagedList[Object](nl.getLength)
     target.setElementTypeName(defaultElementType)
     parseCollectionElements(nl, target, bd, defaultElementType)
     target
   }
 
-  /**
-    * Parse a set element.
-    */
+  /** Parse a set element. */
   private def parseSetElement(collectionEle: Element, bd: Binding.Definition): java.util.Set[Object] = {
     val defaultElementType = collectionEle.getAttribute(VALUE_TYPE_ATTRIBUTE)
-    val nl = collectionEle.getChildNodes()
-    val target = new ManagedSet[Object](nl.getLength())
+    val nl = collectionEle.getChildNodes
+    val target = new ManagedSet[Object](nl.getLength)
     target.setElementTypeName(defaultElementType)
     parseCollectionElements(nl, target, bd, defaultElementType)
     target
   }
 
-  /**
-    * parseCollectionElements.
-    */
-  protected def parseCollectionElements(elementNodes: NodeList, target: java.util.Collection[Object], bd: Binding.Definition,
-                                        defaultElementType: String): Unit = {
+  /** parseCollectionElements. */
+  private def parseCollectionElements(elementNodes: NodeList, target: java.util.Collection[Object], bd: Binding.Definition,
+                                      defaultElementType: String): Unit = {
     for (i <- 0 until elementNodes.getLength) {
       val node = elementNodes.item(i)
       if (node.isInstanceOf[Element] && !nodeNameEquals(node, DESCRIPTION_ELEMENT))
@@ -356,9 +315,7 @@ class ReconfigParser extends Logging {
     }
   }
 
-  /**
-    * Parse a map element.
-    */
+  /** Parse a map element. */
   private def parseMapElement(mapEle: Element, bd: Binding.Definition): collection.Map[Any, Any] = {
     val defaultKeyType = mapEle.getAttribute(KEY_TYPE_ATTRIBUTE)
     val defaultValueType = mapEle.getAttribute(VALUE_TYPE_ATTRIBUTE)
@@ -410,16 +367,12 @@ class ReconfigParser extends Logging {
     map
   }
 
-  /**
-    * Parse a key sub-element of a map element.
-    */
-  protected def parseKeyElement(keyEle: Element, bd: Binding.Definition, defaultKeyTypeName: String): Object = {
+  /** Parse a key sub-element of a map element. */
+  private def parseKeyElement(keyEle: Element, bd: Binding.Definition, defaultKeyTypeName: String): Object = {
     parsePropertySubElement(findOnlyOneChildren(keyEle), bd, defaultKeyTypeName)
   }
 
-  /**
-    * Parse a props element.
-    */
+  /** Parse a props element. */
   private def parsePropsElement(propsEle: Element): java.util.Properties = {
     val props = new Properties()
     findChildren(propsEle, PROP_ELEMENT) foreach { propEle =>
@@ -452,7 +405,7 @@ class ReconfigParser extends Logging {
   }
 
   private def findOnlyOneChildren(ele: Element, tagName: String = null): Element = {
-    val entrySubNodes = ele.getChildNodes()
+    val entrySubNodes = ele.getChildNodes
     var childEle: Element = null
     for (j <- 0 until entrySubNodes.getLength) {
       val node = entrySubNodes.item(j)
@@ -479,13 +432,12 @@ class ReconfigParser extends Logging {
 }
 
 /** BeanDefinitionReader
-  *
-  * @author chaostone
-  */
+ *
+ * @author chaostone
+ */
 object ReconfigParser {
 
-  /** load spring config.xml
-    */
+  /** load spring config.xml */
   def load(resource: Resource): List[Reconfig.Definition] = {
     val holders = new collection.mutable.ListBuffer[Reconfig.Definition]
     try {
@@ -513,7 +465,7 @@ object ReconfigParser {
       }
     } catch {
       case _: FileNotFoundException => //ignore
-      case ex: Exception => throw new RuntimeException("IOException parsing XML document from " + resource.getDescription(), ex)
+      case ex: Exception => throw new RuntimeException("IOException parsing XML document from " + resource.getDescription, ex)
     }
     holders.toList
   }
