@@ -18,14 +18,14 @@
 package org.beangle.cdi.spring.beans
 
 import java.beans.PropertyEditorSupport
-
+import scala.annotation.nowarn
 import scala.collection.mutable
 import scala.jdk.javaapi.CollectionConverters
 
 /**
-  * Property editor for Scala collections, converting any source collection to a given
-  * target collection type.
-  */
+ * Property editor for Scala collections, converting any source collection to a given
+ * target collection type.
+ */
 class ScalaCollectionEditor[T, U](val builderFunc: () => mutable.Builder[T, _], val nullAsEmpty: Boolean = false)
   extends PropertyEditorSupport {
 
@@ -33,23 +33,20 @@ class ScalaCollectionEditor[T, U](val builderFunc: () => mutable.Builder[T, _], 
     setValue(text)
   }
 
+  @nowarn
   override def setValue(value: AnyRef): Unit = {
     val builder = builderFunc()
     value match {
       case null if !nullAsEmpty =>
         super.setValue(null)
         return
-      case null if nullAsEmpty =>
-        builder.clear()
-      case source: IterableOnce[T] =>
-        builder ++= source
-      case jcl: java.util.Collection[T] =>
-        builder ++= CollectionConverters.asScala(jcl)
+      case null if nullAsEmpty => builder.clear()
+      case source: IterableOnce[T] => builder ++= source
+      case jcl: java.util.Collection[T] => builder ++= CollectionConverters.asScala(jcl)
       case javaMap: java.util.Map[T, U] =>
         val mapBuilder = builder.asInstanceOf[mutable.Builder[(T, U), _]]
         mapBuilder ++= CollectionConverters.asScala(javaMap)
-      case el:Any =>
-        builder += el.asInstanceOf[T]
+      case el: Any => builder += el.asInstanceOf[T]
     }
     super.setValue(builder.result())
   }

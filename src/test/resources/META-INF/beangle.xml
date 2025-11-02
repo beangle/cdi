@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<cdi>
-  <container>
+<beangle>
+  <cdi>
     <module class="org.beangle.cdi.spring.bean.TestModule"/>
     <module class="org.beangle.cdi.spring.bean.UserReconfigModule"/>
-  </container>
-</cdi>
+  </cdi>
+</beangle>

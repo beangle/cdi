@@ -4,7 +4,7 @@
 <beans>
   <bean id="BeanContainer"
     class="org.beangle.cdi.spring.context.SpringContainer">
-    <property name="moduleLocations" value="classpath*:META-INF/beangle/cdi.xml" />
+    <property name="moduleLocations" value="classpath*:META-INF/beangle.xml" />
   </bean>
 
   <import resource="classpath*:META-INF/spring/*.xml" />

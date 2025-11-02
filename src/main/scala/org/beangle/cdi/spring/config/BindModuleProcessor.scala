@@ -25,7 +25,6 @@ import org.beangle.commons.cdi.Reconfig.ReconfigType
 import org.beangle.commons.cdi.{Scope, *}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.config.Resources
-import org.beangle.commons.io.IOs
 import org.beangle.commons.lang.annotation.description
 import org.beangle.commons.lang.reflect.*
 import org.beangle.commons.lang.reflect.Reflections.{getGenericParamTypes, newInstance}
@@ -108,39 +107,33 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
     if (JVM.isDebugMode) profile += ",dev"
     val profiles = Strings.split(profile, ",").map(s => s.trim).toSet
 
-    //collect bindmodules and read reconfig properties
+    //collect bind modules and read reconfig properties
     val moduleSet = new collection.mutable.HashSet[BindModule]
     val effectiveLocations = Collections.newBuffer[Resource]
     moduleLocations foreach { r =>
-      val is = r.getInputStream
-      (scala.xml.XML.load(is) \ "container") foreach { con =>
-        var containerName = (con \ "@name").text
-        if (Strings.isEmpty(containerName)) containerName = "default"
-        if (containerName == this.name) {
+      CDI.fromXml(r.getInputStream) foreach { cdi =>
+        if (cdi.name == this.name) {
           effectiveLocations += r
-          (con \ "module") foreach { moduleElem =>
-            val module = loadModule((moduleElem \ "@class").text)
-            val anno = module.getClass.getAnnotation(classOf[profile])
-            if (null == anno || null != anno && new ProfileMatcher(anno.value).matches(profiles)) {
+          cdi.modules foreach { moduleElem =>
+            val module = moduleElem.loadModule()
+            if (moduleElem.matches(module, profiles)) {
               module match {
-                case ps: PropertySource =>
-                  this.properties ++= ps.properties
-                case rc: ReconfigModule =>
+                case bm: BindModule => moduleSet += bm
+                case rm: ReconfigModule =>
                   val recfg = new Reconfig
-                  rc.configure(recfg)
-                  readReconfig(rc.configUrl, recfg)
+                  rm.configure(recfg)
+                  readReconfig(rm.configUrl, recfg)
                   reconfigs += recfg
-                case m: BindModule =>
               }
+              //如果还提供属性配置
               module match {
-                case module1: BindModule => moduleSet += module1
+                case ps: PropertySource => this.properties ++= ps.properties
                 case _ =>
               }
             }
           }
         }
       }
-      IOs.close(is)
     }
     this.moduleLocations = effectiveLocations.toArray
     this.modules = moduleSet.toSet
@@ -180,21 +173,6 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
         }
       }
       logger.info(s"Read ${configUrl} in $watch")
-    }
-  }
-
-  private def loadModule(name: String): Any = {
-    var moduleClass = ClassLoaders.load(name)
-    if (!classOf[BindModule].isAssignableFrom(moduleClass) && !classOf[ReconfigModule].isAssignableFrom(moduleClass)) {
-      ClassLoaders.get(name + "$") match {
-        case Some(clazz) => moduleClass = clazz
-        case None => throw new RuntimeException(name + " is not a module")
-      }
-    }
-    if (moduleClass.getConstructors.length > 0) {
-      newInstance(moduleClass)
-    } else {
-      moduleClass.getDeclaredField("MODULE$").get(null)
     }
   }
 
@@ -247,7 +225,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
 
   /** Try find bean implements factory interface,and convert to spring FactoryBean[_] */
   private def registerBeangleFactory(definitionRegistry: BeanDefinitionRegistry, registry: BindRegistry): Unit = {
-    for (name <- definitionRegistry.getBeanDefinitionNames if !(name.startsWith("&"))) {
+    for (name <- definitionRegistry.getBeanDefinitionNames if !name.startsWith("&")) {
       val defn = definitionRegistry.getBeanDefinition(name).asInstanceOf[AbstractBeanDefinition]
       if (!defn.isAbstract) {
         val clazz = SpringBindRegistry.getBeanClass(definitionRegistry, name)
@@ -528,7 +506,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
           case Injection(argClass) =>
             val beanNames = registry.getBeanNames(argClass)
             if (beanNames.size == 1) {
-              cav.addGenericArgumentValue(new RuntimeBeanReference(beanNames(0)))
+              cav.addGenericArgumentValue(new RuntimeBeanReference(beanNames.head))
             } else if (beanNames.size > 1) {
               beanNames.find { name => registry.isPrimary(name) } match {
                 case Some(name) => cav.addGenericArgumentValue(new RuntimeBeanReference(name))
