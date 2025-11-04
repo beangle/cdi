@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns="http://beangle.github.io/schema/framework"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified"
+           targetNamespace="http://beangle.github.io/schema/framework">
+
+  <xs:element name="beangle">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="web" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="initializer">
+                <xs:complexType>
+                  <xs:attribute name="class" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="ems" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="props" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="prop">
+                      <xs:complexType>
+                        <xs:simpleContent>
+                          <xs:extension base="xs:string">
+                            <xs:attribute name="key" type="xs:string" use="required"/>
+                          </xs:extension>
+                        </xs:simpleContent>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="app-name" type="xs:string" use="required"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="cdi" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="module">
+                <xs:complexType>
+                  <xs:attribute name="class" type="xs:string" use="required"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="template" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="freemarker" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="props">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element maxOccurs="unbounded" name="prop">
+                            <xs:complexType>
+                              <xs:simpleContent>
+                                <xs:extension base="xs:string">
+                                  <xs:attribute name="key" type="xs:string" use="required"/>
+                                </xs:extension>
+                              </xs:simpleContent>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="default" type="xs:boolean" use="optional"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="orm" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element maxOccurs="unbounded" name="mapping">
+                <xs:complexType>
+                  <xs:attribute name="class" type="xs:string" use="required"/>
+                  <xs:attribute name="name" type="xs:string" use="optional"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="naming" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="profile" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:sequence minOccurs="0">
+                          <xs:element name="annotation" maxOccurs="unbounded">
+                            <xs:complexType>
+                              <xs:attribute name="class" type="xs:string" use="required"/>
+                              <xs:attribute name="schema" type="xs:string" use="optional"/>
+                              <xs:attribute name="prefix" type="xs:string" use="required"/>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="profile" minOccurs="0">
+                            <xs:complexType>
+                              <xs:attribute name="package" type="xs:string" use="required"/>
+                              <xs:attribute name="pluralize" type="xs:boolean" use="optional"/>
+                              <xs:attribute name="schema" type="xs:string" use="optional"/>
+                              <xs:attribute name="abbrs" type="xs:string" use="optional"/>
+                              <xs:attribute name="prefix" type="xs:string" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="package" type="xs:string" use="required"/>
+                        <xs:attribute name="pluralize" type="xs:boolean" use="optional"/>
+                        <xs:attribute name="schema" type="xs:string" use="required"/>
+                        <xs:attribute name="abbrs" type="xs:string" use="optional"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="mvc" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="static" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="bundle">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element maxOccurs="unbounded" name="module" minOccurs="0">
+                            <xs:complexType>
+                              <xs:attribute name="name" type="xs:string" use="required"/>
+                              <xs:attribute name="js" type="xs:string" use="optional"/>
+                              <xs:attribute name="css" type="xs:string" use="optional"/>
+                              <xs:attribute name="depends" type="xs:string" use="optional"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="name" type="xs:string" use="required"/>
+                        <xs:attribute name="version" type="xs:string" use="required"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="profile" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="url">
+                      <xs:complexType>
+                        <xs:attribute name="path" type="xs:string" use="required"/>
+                        <xs:attribute name="suffix" type="xs:string" use="required"/>
+                        <xs:attribute name="style" type="xs:string" use="required"/>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="interceptor" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" use="required"/>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="decorator" minOccurs="0" maxOccurs="unbounded">
+                      <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" use="required"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute name="package" type="xs:string" use="required"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
