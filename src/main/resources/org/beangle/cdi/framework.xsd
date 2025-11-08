@@ -114,6 +114,7 @@
                         <xs:attribute name="package" type="xs:string" use="required"/>
                         <xs:attribute name="pluralize" type="xs:boolean" use="optional"/>
                         <xs:attribute name="schema" type="xs:string" use="required"/>
+                        <xs:attribute name="prefix" type="xs:string" use="optional"/>
                         <xs:attribute name="abbrs" type="xs:string" use="optional"/>
                       </xs:complexType>
                     </xs:element>
