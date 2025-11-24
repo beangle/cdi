@@ -17,13 +17,13 @@
 
 package org.beangle.cdi.spring.config
 
-import java.math.BigDecimal
-
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import org.springframework.core.convert.support.DefaultConversionService
 
-class ConvertTest extends AnyFunSpec with Matchers {
+import java.math.BigDecimal
+
+class ConvertTest extends AnyFunSpec, Matchers {
 
   describe("Spring") {
     it("Convert number and boolean") {

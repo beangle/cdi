@@ -28,9 +28,9 @@ import org.springframework.context.support.{AbstractRefreshableApplicationContex
 import org.springframework.context.{ApplicationContext, ConfigurableApplicationContext}
 
 /**
-  * Load ApplicationContext
-  */
-class ApplicationContextLoader extends ContextLoader with Logging {
+ * Load ApplicationContext
+ */
+class ApplicationContextLoader extends ContextLoader, Logging {
 
   var result: ConfigurableApplicationContext = _
 

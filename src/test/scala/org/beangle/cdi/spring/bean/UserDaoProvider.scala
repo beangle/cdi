@@ -17,10 +17,9 @@
 
 package org.beangle.cdi.spring.bean
 
-import org.beangle.commons.cdi.ContainerAware
-import org.beangle.commons.cdi.Container
+import org.beangle.commons.cdi.{Container, ContainerAware}
 
-class UserDaoProvider extends UserProvider with ContainerAware {
+class UserDaoProvider extends UserProvider, ContainerAware {
 
   var container: Container = _
 }

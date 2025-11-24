@@ -17,10 +17,10 @@
 
 package org.beangle.cdi.spring.config
 
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class ProfileMatcherTest extends AnyFunSpec with Matchers {
+class ProfileMatcherTest extends AnyFunSpec, Matchers {
 
   describe("Profile Matcher") {
     it("match success") {

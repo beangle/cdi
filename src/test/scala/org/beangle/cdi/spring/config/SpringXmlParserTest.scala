@@ -18,16 +18,16 @@
 package org.beangle.cdi.spring.config
 
 import org.beangle.commons.logging.Logging
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import org.springframework.core.io.ClassPathResource
 
-class SpringXmlParserTest extends AnyFunSpec with Matchers with Logging {
+class SpringXmlParserTest extends AnyFunSpec, Matchers, Logging {
 
   describe("BeanDefinitionReader") {
     it("parse xml") {
       val holders = ReconfigParser.load(new ClassPathResource("org/beangle/cdi/spring/context-simple.xml"))
-      holders.length should be (5)
+      holders.length should be(5)
 
       val holders2 = ReconfigParser.load(new ClassPathResource("spring-config-test.xml"))
       holders2.length should be(2)

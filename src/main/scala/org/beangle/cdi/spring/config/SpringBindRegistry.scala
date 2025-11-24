@@ -17,14 +17,14 @@
 
 package org.beangle.cdi.spring.config
 
-import org.beangle.commons.cdi.BindRegistry
 import org.beangle.commons.bean.Factory
+import org.beangle.commons.cdi.BindRegistry
 import org.beangle.commons.lang.ClassLoaders
 import org.beangle.commons.lang.reflect.Reflections.{getGenericParamTypes, newInstance}
 import org.beangle.commons.logging.Logging
-import org.springframework.beans.factory.{FactoryBean, HierarchicalBeanFactory}
 import org.springframework.beans.factory.config.{BeanDefinition, BeanDefinitionHolder, RuntimeBeanReference, SingletonBeanRegistry}
 import org.springframework.beans.factory.support.{AbstractBeanDefinition, BeanDefinitionRegistry}
+import org.springframework.beans.factory.{FactoryBean, HierarchicalBeanFactory}
 
 object SpringBindRegistry {
 
@@ -70,10 +70,11 @@ object SpringBindRegistry {
 }
 
 /**
-  * SpringBindRegistry class.
-  * @author chaostone
-  */
-class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegistry with Logging {
+ * SpringBindRegistry class.
+ *
+ * @author chaostone
+ */
+class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegistry, Logging {
 
   private val nameTypes = new collection.mutable.HashMap[String, Class[_]]
 
@@ -86,8 +87,8 @@ class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegis
   def beanNames: Set[String] = nameTypes.keySet.toSet
 
   /**
-    * Register exists spring bean definition in  PARENT and current context.
-    */
+   * Register exists spring bean definition in  PARENT and current context.
+   */
   private def registerExists(): Unit = {
     registry match {
       case hfactory: HierarchicalBeanFactory =>
@@ -108,7 +109,7 @@ class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegis
       nameTypes.put(singtonName, singletonRegistry.getSingleton(singtonName).getClass)
     }
 
-    import SpringBindRegistry._
+    import SpringBindRegistry.*
     //register definitions
     for (name <- registry.getBeanDefinitionNames) {
       val bd = registry.getBeanDefinition(name)
@@ -160,8 +161,8 @@ class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegis
   }
 
   /**
-    * Get bean name list according given type
-    */
+   * Get bean name list according given type
+   */
   def getBeanNames(clazz: Class[_]): List[String] = {
     if (typeNames.contains(clazz)) {
       typeNames(clazz)
@@ -192,8 +193,8 @@ class SpringBindRegistry(val registry: BeanDefinitionRegistry) extends BindRegis
   }
 
   /**
-    * register bean definition
-    */
+   * register bean definition
+   */
   override def register[T](name: String, clazz: Class[_], definition: T): Unit = {
     require(null != name, "class'name is null")
     val bd = definition.asInstanceOf[BeanDefinition]

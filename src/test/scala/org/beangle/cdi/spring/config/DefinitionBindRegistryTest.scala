@@ -18,13 +18,13 @@
 package org.beangle.cdi.spring.config
 
 import org.beangle.cdi.spring.bean.{ProxyFactoryBean, TestDao}
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader
 import org.springframework.core.io.ClassPathResource
 
-class DefinitionBindRegistryTest extends AnyFunSpec with Matchers {
+class DefinitionBindRegistryTest extends AnyFunSpec, Matchers {
 
   describe("Spring XmlBeanDefinitionReader") {
     it("parse xml") {

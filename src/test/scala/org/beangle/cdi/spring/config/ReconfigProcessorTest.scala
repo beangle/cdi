@@ -17,16 +17,16 @@
 
 package org.beangle.cdi.spring.config
 
-import org.beangle.commons.cdi.Container
 import org.beangle.cdi.spring.bean.*
+import org.beangle.commons.cdi.Container
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.logging.Logging
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 
-class ReconfigProcessorTest extends AnyFunSpec with Matchers with Logging {
+class ReconfigProcessorTest extends AnyFunSpec, Matchers, Logging {
 
   describe("ReconfigProcessor") {
     it("testGetDefinition") {

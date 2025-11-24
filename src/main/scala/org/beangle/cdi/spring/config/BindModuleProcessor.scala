@@ -44,7 +44,7 @@ import java.io.File
  *
  * @author chaostone
  */
-abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor with Logging {
+abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, Logging {
 
   var name: String = "default"
 
@@ -172,7 +172,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor w
           reconfig.definitions.put(holder.name, holder)
         }
       }
-      logger.info(s"Read ${configUrl} in $watch")
+      logger.info(s"Read $configUrl in $watch")
     }
   }
 
