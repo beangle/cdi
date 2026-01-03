@@ -27,8 +27,8 @@ object ProfileMatcher {
   }
   def parse(profiles: String): Node = {
     val root = new Node("_root")
-    var i = 0;
-    var last = 0;
+    var i = 0
+    var last = 0
     var current: Node = root
     var commonCnt = 0
     while (i < profiles.length) {
@@ -39,7 +39,7 @@ object ProfileMatcher {
           current = new Node(profiles.substring(last, i).trim, current)
           last = i + 1
         case ')' =>
-          commonCnt = commonCnt - 1;
+          commonCnt = commonCnt - 1
           if (last != i) new Node(profiles.substring(last, i).trim, current)
           current = current.parent
           last = i + 1

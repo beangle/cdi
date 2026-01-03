@@ -17,11 +17,10 @@
 
 package org.beangle.cdi.spring.context
 
-import org.beangle.commons.cdi.BindRegistry
 import org.beangle.commons.io.IOs
+import org.beangle.commons.lang.ClassLoaders
 import org.beangle.commons.lang.reflect.Reflections
 import org.beangle.commons.lang.time.Stopwatch
-import org.beangle.commons.lang.{ClassLoaders, Strings}
 import org.beangle.commons.logging.Logging
 import org.springframework.beans.factory.BeanFactory
 import org.springframework.context.support.{AbstractRefreshableApplicationContext, AbstractRefreshableConfigApplicationContext}
@@ -32,7 +31,7 @@ import org.springframework.context.{ApplicationContext, ConfigurableApplicationC
  */
 class ApplicationContextLoader extends ContextLoader, Logging {
 
-  var result: ConfigurableApplicationContext = _
+  private var context: ConfigurableApplicationContext = _
 
   private def determineContextClass(ctxClassName: String): Class[_] = {
     if (ctxClassName != null) {
@@ -53,20 +52,20 @@ class ApplicationContextLoader extends ContextLoader, Logging {
     require(classOf[ConfigurableApplicationContext].isAssignableFrom(contextClass))
     val watch = new Stopwatch(true)
     logger.info(s"$id starting")
-    result = Reflections.newInstance(contextClass).asInstanceOf[ConfigurableApplicationContext]
-    result match {
+    context = Reflections.newInstance(contextClass).asInstanceOf[ConfigurableApplicationContext]
+    context match {
       case ara: AbstractRefreshableApplicationContext => ara.setAllowBeanDefinitionOverriding(false)
       case _ =>
     }
-    result.setId(id)
-    result.setParent(parent.asInstanceOf[ApplicationContext])
-    result.asInstanceOf[AbstractRefreshableConfigApplicationContext].setConfigLocation(configLocation)
-    result.refresh()
+    context.setId(id)
+    context.setParent(parent.asInstanceOf[ApplicationContext])
+    context.asInstanceOf[AbstractRefreshableConfigApplicationContext].setConfigLocation(configLocation)
+    context.refresh()
     logger.info(s"$id started in $watch")
-    result
+    context
   }
 
   override def close(): Unit = {
-    result.close()
+    context.close()
   }
 }

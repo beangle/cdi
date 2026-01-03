@@ -40,7 +40,8 @@ import org.springframework.util.ClassUtils
 
 import java.io.File
 
-/** 完成bean的自动注册和再配置
+/** BindModuleProcessor完成bean的自动注册和再配置
+ * 他是BeanFactoryPostProcessor的子接口，会执行的更早一些
  *
  * @author chaostone
  */
@@ -52,7 +53,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
 
   var modules: Set[BindModule] = Set.empty
 
-  private var properties = Collections.newMap[String, String]
+  private var env: Enviroment = new Enviroment
 
   private var reconfigs = Collections.newBuffer[Reconfig]
 
@@ -62,10 +63,12 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
    * Reconfig beans
    */
   override def postProcessBeanDefinitionRegistry(bdRegistry: BeanDefinitionRegistry): Unit = {
+    env.addSource(SystemInfo.env)
+    env.addSource(SystemInfo.properties)
     // find bean definition by code
     val registry = new SpringBindRegistry(bdRegistry)
     readConfig(bdRegistry)
-    val newDefinitions = registerModules(registry)
+    val definitions = registerModules(registry)
     //reconfig all bean
     reconfig(bdRegistry, registry)
     //register beangle factory
@@ -76,7 +79,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
     // support initializing/disposable
     lifecycle(registry, bdRegistry)
     // wire by constructor/properties
-    autowire(newDefinitions, registry)
+    autowire(definitions, registry)
 
     // add container description
     val meType = this.getClass
@@ -90,7 +93,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
       }
     }
     //clean up
-    properties = null
+    env = null
     reconfigs = null
   }
 
@@ -102,14 +105,14 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
   /** Read modules and reconfig modules
    */
   private def readConfig(bdRegistry: BeanDefinitionRegistry): Unit = {
-    properties ++= SystemInfo.properties
-    var profile = properties.getOrElse(BindRegistry.ProfileProperty, "")
+    var profile = System.getProperty(BindRegistry.ProfileProperty, "")
     if (JVM.isDebugMode) profile += ",dev"
     val profiles = Strings.split(profile, ",").map(s => s.trim).toSet
 
     //collect bind modules and read reconfig properties
     val moduleSet = new collection.mutable.HashSet[BindModule]
     val effectiveLocations = Collections.newBuffer[Resource]
+
     moduleLocations foreach { r =>
       CDI.fromXml(r.getInputStream) foreach { cdi =>
         if (cdi.name == this.name) {
@@ -124,11 +127,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
                   rm.configure(recfg)
                   readReconfig(rm.configUrl, recfg)
                   reconfigs += recfg
-              }
-              //如果还提供属性配置
-              module match {
-                case ps: PropertySource => this.properties ++= ps.properties
-                case _ =>
+
               }
             }
           }
@@ -137,12 +136,22 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
     }
     this.moduleLocations = effectiveLocations.toArray
     this.modules = moduleSet.toSet
+    //将所有的Module的属性进行合并，注册processors,然后使用Reconfig进行覆盖
+    val properties = Collections.newMap[String, String]
+    modules foreach {
+      case ps: PropertySource.Provider =>
+        properties.addAll(ps.properties)
+        env.addProcessors(ps.processors)
+      case _ =>
+    }
+    reconfigs foreach (x => properties.addAll(x.properties))
+    env.addSource(properties)
   }
 
   /** Read spring style config.xml
    *
-   * @param configUrl
-   * @param reconfig
+   * @param configUrl http or file or classpath
+   * @param reconfig  reconfig module
    */
   private def readReconfig(configUrl: String, reconfig: Reconfig): Unit = {
     var url = configUrl
@@ -185,7 +194,6 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
     val watch = new Stopwatch(true)
     val beanNames = new collection.mutable.HashSet[String]
     reconfigs foreach { reconfig =>
-      this.properties ++= reconfig.properties
       reconfig.definitions.values foreach { rd =>
         val beanName = rd.name
         rd.configType match {
@@ -306,19 +314,19 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
     sourceDefn.properties foreach { case (p, v) =>
       if (p.startsWith("+")) {
         val prop = p.substring(1)
-        val converted = ExtBeanDefinition.convert(v, properties, true)
+        val converted = ExtBeanDefinition.convert(v, env, true)
         target.getPropertyValues.addPropertyValue(prop, converted)
       } else if (p.startsWith("-")) {
         target.getPropertyValues.removePropertyValue(p.substring(1))
       } else {
-        val converted = ExtBeanDefinition.convert(v, properties, false)
+        val converted = ExtBeanDefinition.convert(v, env, false)
         target.getPropertyValues.addPropertyValue(p, converted)
       }
     }
     if (null != sourceDefn.constructorArgs && sourceDefn.constructorArgs.nonEmpty) {
       val cav = target.getConstructorArgumentValues
       cav.clear()
-      sourceDefn.constructorArgs.foreach(arg => cav.addGenericArgumentValue(ExtBeanDefinition.convert(arg, properties)))
+      sourceDefn.constructorArgs.foreach(arg => cav.addGenericArgumentValue(ExtBeanDefinition.convert(arg, env)))
     }
     logger.debug(s"Reconfig bean ${source.name} ")
     source.name
@@ -392,7 +400,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
 
   /** registerBean. */
   private def registerBean(defn: Definition, registry: BindRegistry): ExtBeanDefinition = {
-    val bd = new ExtBeanDefinition(defn, properties)
+    val bd = new ExtBeanDefinition(defn, env)
     //register spring factory bean
     if (classOf[FactoryBean[_]].isAssignableFrom(defn.clazz)) {
       var target = defn.targetClass
@@ -448,7 +456,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
           }
         }
     }
-    ExtBeanDefinition.convert(result, properties)
+    ExtBeanDefinition.convert(result, this.env)
   }
 
   /** Autowire single bean. */

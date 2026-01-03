@@ -17,10 +17,9 @@
 
 package org.beangle.cdi.spring.bean
 
-import org.beangle.commons.cdi.Scope
-import org.beangle.commons.cdi.BindModule
+import org.beangle.commons.cdi.{BindModule, PropertySource, Scope}
 
-object TestModule extends BindModule {
+object TestModule extends BindModule, PropertySource.Provider {
 
   protected def binding(): Unit = {
     bind(classOf[SomeAction]).in(Scope.Prototype)
@@ -36,6 +35,16 @@ object TestModule extends BindModule {
 
     bind(classOf[OptionDao])
 
+    bind(classOf[RedisConfig])
+      .property("host", $("redis.host:localhost"))
+      .property("port", $("redis.port:6378"))
+      .property("url", $("${redis.host}:${redis.port}"))
+
+    bind("redisService", classOf[RedisService])
+  }
+
+  override def properties: collection.Map[String, String] = {
+    Map("redis.host" -> "host2", "redis.port" -> "1234")
   }
 
 }

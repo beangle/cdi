@@ -21,24 +21,21 @@ import org.beangle.commons.cdi.Binding.{Definition, PropertyPlaceHolder, Referen
 import org.beangle.commons.collection.Collections
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.config.{RuntimeBeanReference, TypedStringValue}
-import org.springframework.beans.factory.support._
+import org.springframework.beans.factory.support.*
 
-import java.{util => ju}
+import java.util as ju
 
 object ExtBeanDefinition {
-  def convert(v: Any, properties: collection.Map[String, String], mergeable: Boolean = true): Any = {
+
+  def convert(v: Any, env: Enviroment, mergeable: Boolean = true): Any = {
     v match {
       case value: collection.Seq[_] => toList(value, mergeable)
       case value: collection.Set[_] => toSet(value, mergeable)
       case value: ju.Properties => toProperties(value, mergeable)
-      case value: collection.Map[_, _] => toMap(value, properties, mergeable)
+      case value: collection.Map[_, _] => toMap(value, env, mergeable)
       case value: Definition => new RuntimeBeanReference(value.beanName)
       case value: ReferenceValue => new RuntimeBeanReference(value.ref)
-      case PropertyPlaceHolder(name, defaultValue) =>
-        properties.get(name) match {
-          case Some(v) => v
-          case None => if (null == defaultValue) "${" + name + "}" else defaultValue
-        }
+      case holder: PropertyPlaceHolder => env.interpreter(holder)
       case value: Any => value
     }
   }
@@ -54,12 +51,12 @@ object ExtBeanDefinition {
     props
   }
 
-  private def toMap(value: collection.Map[_, _], properties: collection.Map[String, String], mergeable: Boolean): ManagedMap[Any, Any] = {
+  private def toMap(value: collection.Map[_, _], env: Enviroment, mergeable: Boolean): ManagedMap[Any, Any] = {
     val maps = new ManagedMap[Any, Any]
     value foreach { case (itemk, itemv) =>
       itemv match {
         case rv: ReferenceValue => maps.put(itemk, new RuntimeBeanReference(rv.ref))
-        case _ => maps.put(itemk, convert(itemv, properties))
+        case _ => maps.put(itemk, convert(itemv, env))
       }
     }
     maps.setMergeEnabled(mergeable)
@@ -89,7 +86,8 @@ object ExtBeanDefinition {
   }
 }
 
-import ExtBeanDefinition.convert
+import org.beangle.cdi.spring.config.ExtBeanDefinition.convert
+
 class ExtBeanDefinition extends GenericBeanDefinition {
 
   val nowires: collection.mutable.Set[String] = Collections.newSet[String]
@@ -98,7 +96,7 @@ class ExtBeanDefinition extends GenericBeanDefinition {
 
   var wiredEagerly: Boolean = _
 
-  def this(d: Definition, properties: collection.Map[String, String]) = {
+  def this(d: Definition, env: Enviroment) = {
     this()
     this.setBeanClass(d.clazz)
     this.setScope(d.scope)
@@ -108,7 +106,7 @@ class ExtBeanDefinition extends GenericBeanDefinition {
     if (null != d.factoryMethod) this.setFactoryMethodName(d.factoryMethod)
     val mpv = new MutablePropertyValues()
     for ((key, v) <- d.properties) {
-      mpv.add(key, convert(v, properties))
+      mpv.add(key, convert(v, env))
     }
     this.setPropertyValues(mpv)
     this.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO)
@@ -119,7 +117,7 @@ class ExtBeanDefinition extends GenericBeanDefinition {
     this.setDescription(d.description)
     if (null != d.constructorArgs) {
       val cav = this.getConstructorArgumentValues
-      d.constructorArgs.foreach(arg => cav.addGenericArgumentValue(convert(arg, properties)))
+      d.constructorArgs.foreach(arg => cav.addGenericArgumentValue(convert(arg, env)))
     }
     this.nowires ++= d.nowires
     this.optionals ++= d.optionals

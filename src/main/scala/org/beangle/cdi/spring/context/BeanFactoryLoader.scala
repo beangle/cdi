@@ -23,7 +23,6 @@ import org.beangle.commons.lang.reflect.Reflections
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.logging.Logging
 import org.springframework.beans.factory.BeanFactory
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.{BeanDefinitionRegistryPostProcessor, DefaultListableBeanFactory}
 import org.springframework.beans.factory.xml.{ResourceEntityResolver, XmlBeanDefinitionReader}
 import org.springframework.beans.support.ResourceEditorRegistrar
@@ -40,28 +39,28 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
   var environment = new StandardEnvironment()
   var eventMulticaster: EventMulticaster = _
   var resourcePatternResolver: ResourcePatternResolver = new PathMatchingResourcePatternResolver
-  var classLoader = ClassUtils.getDefaultClassLoader()
-  var result: BeanFactory = _
+  var classLoader = ClassUtils.getDefaultClassLoader
+  var context: DefaultListableBeanFactory = _
 
   override def load(id: String, contextClassName: String, configLocation: String, parent: BeanFactory): BeanFactory = {
     val watch = new Stopwatch(true)
     logger.info(s"$id starting")
 
-    val result =
+    context =
       if (null == contextClassName) new DefaultListableBeanFactory()
       else Reflections.newInstance(ClassLoaders.load(contextClassName)).asInstanceOf[DefaultListableBeanFactory]
 
-    result.setAllowBeanDefinitionOverriding(false)
-    result.setSerializationId(id)
-    result.setParentBeanFactory(parent)
-    loadBeanDefinitions(result, environment.resolveRequiredPlaceholders(configLocation))
-    refresh(result)
+    context.setAllowBeanDefinitionOverriding(false)
+    context.setSerializationId(id)
+    context.setParentBeanFactory(parent)
+    loadBeanDefinitions(environment.resolveRequiredPlaceholders(configLocation))
+    refresh()
     logger.info(s"$id started in $watch")
-    result
+    context
   }
 
-  protected def loadBeanDefinitions(beanFactory: DefaultListableBeanFactory, configLocation: String): Unit = {
-    val reader = new XmlBeanDefinitionReader(beanFactory)
+  protected def loadBeanDefinitions(configLocation: String): Unit = {
+    val reader = new XmlBeanDefinitionReader(context)
     reader.setEnvironment(environment)
     reader.setResourceLoader(this)
     reader.setEntityResolver(new ResourceEntityResolver(this))
@@ -69,19 +68,19 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
     reader.loadBeanDefinitions(configLocation)
   }
 
-  protected def refresh(beanFactory: DefaultListableBeanFactory): Unit = {
-    prepareBeanFactory(beanFactory)
-    invokeBeanFactoryPostProcessors(beanFactory)
-    initApplicationEventMulticaster(beanFactory)
-    finishBeanFactoryInitialization(beanFactory)
-    eventMulticaster.multicast(new BeanFactoryRefreshedEvent(beanFactory))
+  protected def refresh(): Unit = {
+    prepareBeanFactory()
+    invokeBeanFactoryPostProcessors()
+    initApplicationEventMulticaster()
+    finishBeanFactoryInitialization()
+    eventMulticaster.multicast(new BeanFactoryRefreshedEvent(context))
   }
 
   /**
    * Initialize the ApplicationEventMulticaster.
    */
-  protected def initApplicationEventMulticaster(beanFactory: ConfigurableListableBeanFactory): Unit = {
-    val multicasters = beanFactory.getBeansOfType(classOf[EventMulticaster])
+  protected def initApplicationEventMulticaster(): Unit = {
+    val multicasters = context.getBeansOfType(classOf[EventMulticaster])
     if (multicasters.isEmpty) {
       eventMulticaster = new DefaultEventMulticaster
     } else {
@@ -93,21 +92,21 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
    * Configure the factory's standard context characteristics,
    * such as the context's ClassLoader and post-processors.
    *
-   * @param beanFactory the BeanFactory to configure
+   * @param context the BeanFactory to configure
    */
-  protected def prepareBeanFactory(beanFactory: ConfigurableListableBeanFactory): Unit = {
-    beanFactory.setBeanClassLoader(classLoader)
-    beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, environment))
+  protected def prepareBeanFactory(): Unit = {
+    context.setBeanClassLoader(classLoader)
+    context.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, environment))
 
-    beanFactory.registerResolvableDependency(classOf[BeanFactory], beanFactory)
-    if (!beanFactory.containsLocalBean("environment")) {
-      beanFactory.registerSingleton("environment", environment)
+    context.registerResolvableDependency(classOf[BeanFactory], context)
+    if (!context.containsLocalBean("environment")) {
+      context.registerSingleton("environment", environment)
     }
-    if (!beanFactory.containsLocalBean("systemProperties")) {
-      beanFactory.registerSingleton("systemProperties", environment.getSystemProperties())
+    if (!context.containsLocalBean("systemProperties")) {
+      context.registerSingleton("systemProperties", environment.getSystemProperties())
     }
-    if (!beanFactory.containsLocalBean("systemEnvironment")) {
-      beanFactory.registerSingleton("systemEnvironment", environment.getSystemEnvironment())
+    if (!context.containsLocalBean("systemEnvironment")) {
+      context.registerSingleton("systemEnvironment", environment.getSystemEnvironment())
     }
   }
 
@@ -116,12 +115,12 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
    * respecting explicit order if given.
    * <p>Must be called before singleton instantiation.
    */
-  protected def invokeBeanFactoryPostProcessors(beanFactory: DefaultListableBeanFactory): Unit = {
-    val postProcessorNames = beanFactory.getBeanNamesForType(classOf[BeanDefinitionRegistryPostProcessor], true, false)
+  protected def invokeBeanFactoryPostProcessors(): Unit = {
+    val postProcessorNames = context.getBeanNamesForType(classOf[BeanDefinitionRegistryPostProcessor], true, false)
     postProcessorNames foreach { name =>
-      val pp = beanFactory.getBean(name, classOf[BeanDefinitionRegistryPostProcessor])
-      pp.postProcessBeanDefinitionRegistry(beanFactory)
-      pp.postProcessBeanFactory(beanFactory)
+      val pp = context.getBean(name, classOf[BeanDefinitionRegistryPostProcessor])
+      pp.postProcessBeanDefinitionRegistry(context)
+      pp.postProcessBeanFactory(context)
     }
   }
 
@@ -129,17 +128,16 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
    * Finish the initialization of this context's bean factory,
    * initializing all remaining singleton beans.
    */
-  protected def finishBeanFactoryInitialization(beanFactory: ConfigurableListableBeanFactory): Unit = {
+  protected def finishBeanFactoryInitialization(): Unit = {
     val conversionServiceBeanName = "conversionService"
-    if (beanFactory.containsBean(conversionServiceBeanName) &&
-      beanFactory.isTypeMatch(conversionServiceBeanName, classOf[ConversionService])) {
-      beanFactory.setConversionService(
-        beanFactory.getBean(conversionServiceBeanName, classOf[ConversionService]))
+    if (context.containsBean(conversionServiceBeanName) &&
+      context.isTypeMatch(conversionServiceBeanName, classOf[ConversionService])) {
+      context.setConversionService(context.getBean(conversionServiceBeanName, classOf[ConversionService]))
     }
 
-    beanFactory.setTempClassLoader(null)
-    beanFactory.freezeConfiguration()
-    beanFactory.preInstantiateSingletons()
+    context.setTempClassLoader(null)
+    context.freezeConfiguration()
+    context.preInstantiateSingletons()
   }
 
   override def getResources(locationPattern: String): Array[Resource] = {

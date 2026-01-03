@@ -18,29 +18,39 @@
 package org.beangle.cdi.spring.context
 
 import org.beangle.commons.cdi.Container
-import org.beangle.commons.lang.ClassLoaders.{getResources, load}
-import org.beangle.commons.lang.Objects
 import org.beangle.commons.lang.reflect.Reflections.newInstance
+import org.beangle.commons.lang.{ClassLoaders, Objects}
+import org.springframework.beans.factory.BeanFactory
 
-object DefaultContextInitializer {
-  def apply(contextConfigLocation: String, contextClassName: String): DefaultContextInitializer = {
-    new DefaultContextInitializer(Objects.nvl(contextConfigLocation, "classpath:spring-context.xml"), contextClassName)
+object ContextInitializer {
+  def load(contextConfigLocation: String): BeanFactory = {
+    new ContextInitializer(contextConfigLocation).load()
   }
 }
 
 /** 缺省上下文初始化器
  *
- * @param contextConfigLocation
- * @param contextClassName
+ * @param contextConfigLocation xml location(classpath:path/to/any-spring-config.xml)
+ * @param contextClassName      context class name
  */
-class DefaultContextInitializer(val contextConfigLocation: String, val contextClassName: String) {
+final class ContextInitializer(contextConfigLocation: String, contextClassName: String) {
 
   private var loader: ContextLoader = _
 
-  private val springContextAvailable = getResources("org/springframework/context/support/AbstractApplicationContext.class").nonEmpty
+  def this() = {
+    this("classpath:spring-context.xml", null)
+  }
+
+  def this(contextConfigLocation: String) = {
+    this(Objects.nvl(contextConfigLocation, "classpath:spring-context.xml"), null)
+  }
+
+  def load(): BeanFactory = {
+    newLoader().load("ROOT", contextClassName, contextConfigLocation, null)
+  }
 
   def init(): Container = {
-    newLoader().load("ROOT", contextClassName, contextConfigLocation, null)
+    load()
     Container.Default.get
   }
 
@@ -51,9 +61,13 @@ class DefaultContextInitializer(val contextConfigLocation: String, val contextCl
   private def newLoader(): ContextLoader = {
     if null == loader then
       this.loader =
-        if (springContextAvailable) newInstance(load("org.beangle.cdi.spring.context.ApplicationContextLoader")).asInstanceOf[ContextLoader]
+        if (springContextAvailable) newInstance(ClassLoaders.load("org.beangle.cdi.spring.context.ApplicationContextLoader")).asInstanceOf[ContextLoader]
         else new BeanFactoryLoader()
 
     this.loader
+  }
+
+  private def springContextAvailable = {
+    ClassLoaders.getResources("org/springframework/context/support/AbstractApplicationContext.class").nonEmpty
   }
 }

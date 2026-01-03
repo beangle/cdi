@@ -25,7 +25,7 @@ ThisBuild / developers := List(
 ThisBuild / description := "The Beangle CDI Library"
 ThisBuild / homepage := Some(url("https://beangle.github.io/cdi/index.html"))
 
-val beangle_commons = "org.beangle.commons" % "beangle-commons" % "5.6.32"
+val beangle_commons = "org.beangle.commons" % "beangle-commons" % "5.6.34-SNAPSHOT"
 
 lazy val root = (project in file("."))
   .settings(
