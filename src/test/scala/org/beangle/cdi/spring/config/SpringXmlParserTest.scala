@@ -30,7 +30,12 @@ class SpringXmlParserTest extends AnyFunSpec, Matchers, Logging {
       holders.length should be(5)
 
       val holders2 = ReconfigParser.load(new ClassPathResource("spring-config-test.xml"))
-      holders2.length should be(2)
+      holders2.length should be(3)
+      val properties = holders2.find(_.name == "properties")
+      properties.nonEmpty should be(true)
+
+      properties.get.definition.properties.contains("a.b.c") should be(true)
+      properties.get.definition.properties.get("a.b.c").contains("1") should be(true)
     }
   }
 }

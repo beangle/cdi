@@ -15,4 +15,8 @@
 
   <bean id="userLdapProvider" class="org.beangle.cdi.spring.bean.AdvancedUserLdapProvider" />
 
+  <bean id="properties">
+    <property name="a.b.c" value="1"/>
+    <property name="c.d.e" value="2"/>
+  </bean>
 </beans>

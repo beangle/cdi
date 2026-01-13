@@ -63,7 +63,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
    * Reconfig beans
    */
   override def postProcessBeanDefinitionRegistry(bdRegistry: BeanDefinitionRegistry): Unit = {
-    env.addSource(SystemInfo.env)
+    env.addSource(EnvPropertySource)
     env.addSource(SystemInfo.properties)
     // find bean definition by code
     val registry = new SpringBindRegistry(bdRegistry)
