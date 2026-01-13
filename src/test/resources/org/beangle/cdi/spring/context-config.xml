@@ -30,9 +30,9 @@
     <property name="provider" ref="userDaoProvider"/>
   </bean>
 
-<!--  <bean id="userDaoProvider" class="org.beangle.cdi.spring.bean.UserDaoProvider" autowire="byType"/>-->
+  <bean id="userDaoProvider" class="org.beangle.cdi.spring.bean.UserDaoProvider" autowire="byType"/>
 
-<!--  <bean id="userLdapProvider" class="org.beangle.cdi.spring.bean.UserLdapProvider"/>-->
+  <bean id="userLdapProvider" class="org.beangle.cdi.spring.bean.UserLdapProvider"/>
 
   <bean id="userLdapService" class="org.beangle.cdi.spring.bean.UserService">
     <property name="provider" ref="userLdapProvider"/>

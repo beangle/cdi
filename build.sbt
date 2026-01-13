@@ -36,3 +36,4 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(spring_beans, spring_context % "optional")
   )
 
+Test / parallelExecution := false
