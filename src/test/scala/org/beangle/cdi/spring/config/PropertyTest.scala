@@ -19,11 +19,10 @@ package org.beangle.cdi.spring.config
 
 import org.beangle.cdi.spring.bean.RedisService
 import org.beangle.cdi.spring.context.ContextInitializer
-import org.beangle.commons.logging.Logging
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class PropertyTest extends AnyFunSpec, Matchers, Logging {
+class PropertyTest extends AnyFunSpec, Matchers {
 
   describe("PropertyResolver") {
     it("resolve env") {

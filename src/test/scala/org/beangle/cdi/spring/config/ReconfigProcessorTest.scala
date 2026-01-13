@@ -20,13 +20,12 @@ package org.beangle.cdi.spring.config
 import org.beangle.cdi.spring.bean.*
 import org.beangle.commons.cdi.Container
 import org.beangle.commons.lang.time.Stopwatch
-import org.beangle.commons.logging.Logging
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 
-class ReconfigProcessorTest extends AnyFunSpec, Matchers, Logging {
+class ReconfigProcessorTest extends AnyFunSpec, Matchers {
 
   describe("ReconfigProcessor") {
     it("testGetDefinition") {
@@ -40,11 +39,11 @@ class ReconfigProcessorTest extends AnyFunSpec, Matchers, Logging {
       val userService = ctx.getBean("userService").asInstanceOf[UserService]
       userService should not be (null)
       userService.someMap should not be (null)
-      userService.provider.getClass() should equal(classOf[UserDaoProvider])
+      userService.provider.getClass should equal(classOf[UserDaoProvider])
       // userLdapService
       val userLdapService = ctx.getBean("userLdapService").asInstanceOf[UserService]
       userLdapService should not be (null)
-      userLdapService.provider.getClass() should equal(classOf[UserLdapProvider])
+      userLdapService.provider.getClass should equal(classOf[UserLdapProvider])
     }
 
     val factory = new ClassPathXmlApplicationContext("/org/beangle/cdi/spring/context-config.xml")
@@ -67,13 +66,13 @@ class ReconfigProcessorTest extends AnyFunSpec, Matchers, Logging {
       val userLdapService = factory.getBean("userLdapService").asInstanceOf[UserService]
       userLdapService should not be (null)
 
-      userLdapService.provider.getClass() should equal(classOf[AdvancedUserLdapProvider])
+      userLdapService.provider.getClass should equal(classOf[AdvancedUserLdapProvider])
     }
 
     it("Get Singleton object and wire map") {
       factory.getBean("noneDao") should be(NoneDao)
       val managers = factory.getBeansOfType(classOf[ProviderManager])
-      assert(!managers.isEmpty())
+      assert(!managers.isEmpty)
       assert(managers.values.iterator().next.providerMap.size == 2)
     }
 
@@ -83,17 +82,17 @@ class ReconfigProcessorTest extends AnyFunSpec, Matchers, Logging {
       factory.getBean("userLdapProvider") should not be (null)
       testBean(factory)
       testFactoryBean(factory)
-      logger.debug(s"config  context-auto completed using $watch")
+      println(s"config  context-auto completed using $watch")
     }
 
     it("testAdvance") {
       val watch = new Stopwatch(true)
       // test Alias
-      factory.getBean(classOf[TestService].getName()) should not be (null)
-      val consumer = factory.getBean(classOf[ResourcesConsumer].getName()).asInstanceOf[ResourcesConsumer]
+      factory.getBean(classOf[TestService].getName) should not be (null)
+      val consumer = factory.getBean(classOf[ResourcesConsumer].getName).asInstanceOf[ResourcesConsumer]
       consumer should not be (null)
       consumer.resources should not be (null)
-      logger.debug(s"config  advance context-auto completed using $watch")
+      println(s"config  advance context-auto completed using $watch")
     }
   }
 
@@ -120,7 +119,7 @@ class ReconfigProcessorTest extends AnyFunSpec, Matchers, Logging {
     ldapProvider should not be (null)
 
     // userService
-    val action = factory.getBean(classOf[SomeAction].getName()).asInstanceOf[SomeAction]
+    val action = factory.getBean(classOf[SomeAction].getName).asInstanceOf[SomeAction]
 
     action should not be (null)
     action.hasDaoProvider() should be(true)
@@ -128,7 +127,7 @@ class ReconfigProcessorTest extends AnyFunSpec, Matchers, Logging {
     action.userDaoProvider should equal(daoProvider)
     action.ldapProvider should equal(ldapProvider)
 
-    val action2 = factory.getBean(classOf[SomeAction].getName()).asInstanceOf[SomeAction]
+    val action2 = factory.getBean(classOf[SomeAction].getName).asInstanceOf[SomeAction]
 
     action2 should not equal (action)
   }

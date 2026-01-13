@@ -17,12 +17,11 @@
 
 package org.beangle.cdi.spring.config
 
-import org.beangle.commons.logging.Logging
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import org.springframework.core.io.ClassPathResource
 
-class SpringXmlParserTest extends AnyFunSpec, Matchers, Logging {
+class SpringXmlParserTest extends AnyFunSpec, Matchers {
 
   describe("BeanDefinitionReader") {
     it("parse xml") {

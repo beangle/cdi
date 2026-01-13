@@ -32,7 +32,7 @@ lazy val root = (project in file("."))
     name := "beangle-cdi",
     common,
     libraryDependencies ++= Seq(beangle_commons, scalaxml),
-    libraryDependencies ++= Seq(logback_classic % "test", scalatest),
+    libraryDependencies ++= Seq(slf4j, logback_classic % "test", scalatest),
     libraryDependencies ++= Seq(spring_beans, spring_context % "optional")
   )
 
