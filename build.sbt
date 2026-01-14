@@ -4,7 +4,7 @@ import sbt.Keys.libraryDependencies
 import sbt.url
 
 ThisBuild / organization := "org.beangle.cdi"
-ThisBuild / version := "0.9.2"
+ThisBuild / version := "0.9.3-SNAPSHOT"
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
