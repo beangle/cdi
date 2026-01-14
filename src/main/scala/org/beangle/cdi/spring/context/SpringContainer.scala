@@ -129,14 +129,14 @@ class SpringContainer extends BindModuleProcessor, Container, InitializingBean, 
   /**
    * Determine whether this listener actually supports the given event type.
    */
-  def supportsEventType(eventType: Class[_ <: Event]): Boolean = {
-    classOf[BeanFactoryEvent] == eventType
+  override def supportsEventType(eventType: Class[_ <: Event]): Boolean = {
+    classOf[BeanFactoryEvent].isAssignableFrom(eventType)
   }
 
   /**
    * Determine whether this listener actually supports the given source type.
    */
-  def supportsSourceType(sourceType: Class[_]): Boolean = {
+  override def supportsSourceType(sourceType: Class[_]): Boolean = {
     true
   }
 }
