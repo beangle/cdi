@@ -20,7 +20,6 @@ package org.beangle.cdi.spring.beans
 import org.springframework.beans.BeanInfoFactory
 
 import java.beans.BeanInfo
-import org.beangle.commons.lang.reflect.BeanInfos
 
 class ScalaBeanInfoFactory extends BeanInfoFactory {
   def getBeanInfo(beanClass: Class[_]): BeanInfo = {

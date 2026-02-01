@@ -19,9 +19,9 @@ package org.beangle.cdi.spring.bean
 
 import org.beangle.commons.bean.Factory
 
-class ProxyFactoryBean extends Factory[TestDao] {
+class TestDaoFactory extends Factory[TestDao] {
 
   var target: TestDao = _
 
-  def result = target
+  override def getObject = target
 }

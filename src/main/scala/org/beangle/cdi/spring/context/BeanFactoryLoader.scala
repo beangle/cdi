@@ -42,7 +42,7 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
   var classLoader = ClassUtils.getDefaultClassLoader
   var context: DefaultListableBeanFactory = _
 
-  override def load(id: String, contextClassName: String, configLocation: String, parent: BeanFactory): BeanFactory = {
+  override def load(id: String, contextClassName: String, configLocation: String): BeanFactory = {
     val watch = new Stopwatch(true)
     logger.info(s"$id starting")
 
@@ -52,7 +52,6 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
 
     context.setAllowBeanDefinitionOverriding(false)
     context.setSerializationId(id)
-    context.setParentBeanFactory(parent)
     loadBeanDefinitions(environment.resolveRequiredPlaceholders(configLocation))
     refresh()
     logger.info(s"$id started in $watch")

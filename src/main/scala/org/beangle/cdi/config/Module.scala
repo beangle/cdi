@@ -15,10 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.config
+package org.beangle.cdi.config
 
-import org.beangle.commons.cdi.{BindModule, ReconfigModule, profile}
+import org.beangle.commons.cdi.{BindModule, ReconfigModule}
 import org.beangle.commons.collection.Collections
+import org.beangle.commons.config.profile
 import org.beangle.commons.io.IOs
 import org.beangle.commons.lang.reflect.Reflections
 import org.beangle.commons.lang.{ClassLoaders, Strings}
@@ -29,9 +30,10 @@ import java.io.InputStream
  *
  * @param className className
  */
-case class Module(className: String) {
+case class Module(className: String)
 
-  def loadModule(): Any = {
+object Module {
+  def load(className: String, profiles: Set[String]): Option[Any] = {
     var moduleClass = ClassLoaders.load(className)
     if (!classOf[BindModule].isAssignableFrom(moduleClass) && !classOf[ReconfigModule].isAssignableFrom(moduleClass)) {
       ClassLoaders.get(className + "$") match {
@@ -39,44 +41,40 @@ case class Module(className: String) {
         case None => throw new RuntimeException(className + " is not a module")
       }
     }
-    if (moduleClass.getConstructors.length > 0) {
-      Reflections.newInstance(moduleClass)
+    if (matches(moduleClass, profiles)) {
+      if (moduleClass.getConstructors.length > 0) {
+        Some(Reflections.newInstance(moduleClass))
+      } else {
+        Option(moduleClass.getDeclaredField("MODULE$").get(null))
+      }
     } else {
-      moduleClass.getDeclaredField("MODULE$").get(null)
+      None
     }
   }
 
-  def matches(module: Any, profiles: Set[String]): Boolean = {
-    val anno = module.getClass.getAnnotation(classOf[profile])
-    null == anno || null != anno && new ProfileMatcher(anno.value).matches(profiles)
+  private def matches(clazz: Class[_], profiles: Set[String]): Boolean = {
+    val anno = clazz.getAnnotation(classOf[profile])
+    null == anno || null != anno && profiles.contains(anno.value)
   }
 
-}
-
-case class CDI(name: String, modules: Seq[Module]) {
-
-}
-
-object CDI {
   /** 从XML中读取配置
    *
    * @param is 输入流
    * @return
    */
-  def fromXml(is: InputStream): Seq[CDI] = {
-    val cdis = (scala.xml.XML.load(is) \ "cdi") map { con =>
-      var containerName = (con \ "@name").text
-      if (Strings.isEmpty(containerName)) containerName = "default"
-      val modules = Collections.newBuffer[Module]
-      (con \ "module") foreach { moduleElem =>
-        val clazzName = (moduleElem \ "@class").text
-        if (Strings.isNotBlank(clazzName)) {
-          modules += Module(clazzName)
+  def fromXml(is: InputStream): Iterable[String] = {
+    val str = IOs.readString(is)
+    (scala.xml.XML.loadString(str) \ "cdi").headOption match {
+      case None => List.empty
+      case Some(con) =>
+        val modules = Collections.newBuffer[String]
+        (con \ "module") foreach { moduleElem =>
+          val clazzName = (moduleElem \ "@class").text
+          if (Strings.isNotBlank(clazzName)) {
+            modules += clazzName
+          }
         }
-      }
-      CDI(containerName, modules.toSeq)
+        modules
     }
-    IOs.close(is)
-    cdis
   }
 }

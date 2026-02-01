@@ -18,13 +18,14 @@
 package org.beangle.cdi.spring.bean
 
 import org.beangle.commons.bean.Initializing
+import org.beangle.commons.logging.Logging
 
-class RedisService extends Initializing {
+class RedisService extends Initializing, Logging {
 
   var config: RedisConfig = _
 
   override def init(): Unit = {
-    println(config.host)
+    logger.info("RedisService init," + config.host)
   }
 
 }

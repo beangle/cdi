@@ -25,27 +25,9 @@ import org.scalatest.matchers.should.Matchers
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 
-class ReconfigProcessorTest extends AnyFunSpec, Matchers {
+class BindModuleTest extends AnyFunSpec, Matchers {
 
   describe("ReconfigProcessor") {
-    it("testGetDefinition") {
-      val ctx = new ClassPathXmlApplicationContext("/org/beangle/cdi/spring/context-simple.xml")
-      // two user provider
-      ctx.getBean("userDaoProvider") should not be (null)
-
-      ctx.getBean("userLdapProvider") should not be (null)
-
-      // userService
-      val userService = ctx.getBean("userService").asInstanceOf[UserService]
-      userService should not be (null)
-      userService.someMap should not be (null)
-      userService.provider.getClass should equal(classOf[UserDaoProvider])
-      // userLdapService
-      val userLdapService = ctx.getBean("userLdapService").asInstanceOf[UserService]
-      userLdapService should not be (null)
-      userLdapService.provider.getClass should equal(classOf[UserLdapProvider])
-    }
-
     val factory = new ClassPathXmlApplicationContext("/org/beangle/cdi/spring/context-config.xml")
     it("Override") {
       // userService
@@ -57,7 +39,7 @@ class ReconfigProcessorTest extends AnyFunSpec, Matchers {
       userService.someMap.size should be(1)
       userService.someMap("string") should be("override string")
       // merged list
-      userService.someList.size should be(3)
+      userService.someList.size should be(1)
 
       // change class
       val ldapProvider = factory.getBean("userLdapProvider").asInstanceOf[UserLdapProvider]
@@ -83,16 +65,6 @@ class ReconfigProcessorTest extends AnyFunSpec, Matchers {
       testBean(factory)
       testFactoryBean(factory)
       println(s"config  context-auto completed using $watch")
-    }
-
-    it("testAdvance") {
-      val watch = new Stopwatch(true)
-      // test Alias
-      factory.getBean(classOf[TestService].getName) should not be (null)
-      val consumer = factory.getBean(classOf[ResourcesConsumer].getName).asInstanceOf[ResourcesConsumer]
-      consumer should not be (null)
-      consumer.resources should not be (null)
-      println(s"config  advance context-auto completed using $watch")
     }
   }
 

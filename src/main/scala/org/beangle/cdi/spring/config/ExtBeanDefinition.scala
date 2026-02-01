@@ -17,8 +17,9 @@
 
 package org.beangle.cdi.spring.config
 
-import org.beangle.commons.cdi.Binding.{Definition, PropertyPlaceHolder, ReferenceValue}
+import org.beangle.commons.cdi.Binder.{Definition, Reference}
 import org.beangle.commons.collection.Collections
+import org.beangle.commons.config.{Enviroment, PlaceHolder}
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.config.{RuntimeBeanReference, TypedStringValue}
 import org.springframework.beans.factory.support.*
@@ -34,8 +35,8 @@ object ExtBeanDefinition {
       case value: ju.Properties => toProperties(value, mergeable)
       case value: collection.Map[_, _] => toMap(value, env, mergeable)
       case value: Definition => new RuntimeBeanReference(value.beanName)
-      case value: ReferenceValue => new RuntimeBeanReference(value.ref)
-      case holder: PropertyPlaceHolder => env.interpreter(holder)
+      case value: Reference => new RuntimeBeanReference(value.ref)
+      case holder: PlaceHolder => env.interpreter(holder)
       case value: Any => value
     }
   }
@@ -55,7 +56,7 @@ object ExtBeanDefinition {
     val maps = new ManagedMap[Any, Any]
     value foreach { case (itemk, itemv) =>
       itemv match {
-        case rv: ReferenceValue => maps.put(itemk, new RuntimeBeanReference(rv.ref))
+        case rv: Reference => maps.put(itemk, new RuntimeBeanReference(rv.ref))
         case _ => maps.put(itemk, convert(itemv, env))
       }
     }
@@ -66,7 +67,7 @@ object ExtBeanDefinition {
   private def toList(value: collection.Seq[_], mergeable: Boolean): ManagedList[Any] = {
     val list = new ManagedList[Any]
     value foreach {
-      case rv: ReferenceValue => list.add(new RuntimeBeanReference(rv.ref))
+      case rv: Reference => list.add(new RuntimeBeanReference(rv.ref))
       case item: Any => list.add(item)
     }
     list.setMergeEnabled(mergeable)
@@ -77,18 +78,21 @@ object ExtBeanDefinition {
     val set = new ManagedSet[Any]
     value foreach { item =>
       set.add(item match {
-        case rv: ReferenceValue => new RuntimeBeanReference(rv.ref)
+        case rv: Reference => new RuntimeBeanReference(rv.ref)
         case _ => item
       })
     }
     set.setMergeEnabled(mergeable)
     set
   }
+
 }
 
 import org.beangle.cdi.spring.config.ExtBeanDefinition.convert
 
 class ExtBeanDefinition extends GenericBeanDefinition {
+
+  var beanName: String = _
 
   val nowires: collection.mutable.Set[String] = Collections.newSet[String]
 
@@ -100,25 +104,23 @@ class ExtBeanDefinition extends GenericBeanDefinition {
     this()
     this.setBeanClass(d.clazz)
     this.setScope(d.scope)
-    if (null != d.initMethod) this.setInitMethodName(d.initMethod)
-    if (null != d.destroyMethod) this.setDestroyMethodName(d.destroyMethod)
-    if (null != d.factoryBean) this.setFactoryBeanName(d.factoryBean)
-    if (null != d.factoryMethod) this.setFactoryMethodName(d.factoryMethod)
+    this.beanName = d.beanName
+    d.initMethod foreach { m => this.setInitMethodName(m) }
+    d.destroyMethod foreach { m => this.setDestroyMethodName(m) }
+    d.factoryBean foreach { b => this.setFactoryBeanName(b) }
+    d.factoryMethod foreach { b => this.setFactoryMethodName(b) }
+
     val mpv = new MutablePropertyValues()
-    for ((key, v) <- d.properties) {
-      mpv.add(key, convert(v, env))
-    }
+    d.properties.foreach { (key, v) => mpv.add(key, convert(v, env)) }
     this.setPropertyValues(mpv)
     this.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO)
     this.setLazyInit(d.lazyInit)
     this.setAbstract(d.isAbstract)
-    this.setParentName(d.parent)
-    this.setPrimary(d.primary)
-    this.setDescription(d.description)
-    if (null != d.constructorArgs) {
-      val cav = this.getConstructorArgumentValues
-      d.constructorArgs.foreach(arg => cav.addGenericArgumentValue(convert(arg, env)))
-    }
+    d.parent foreach { p => this.setParentName(p) }
+    this.setPrimary(d.primaryOf.nonEmpty)
+    d.description foreach { d => this.setDescription(d) }
+    val cav = this.getConstructorArgumentValues
+    d.constructorArgs.foreach(arg => cav.addGenericArgumentValue(convert(arg, env)))
     this.nowires ++= d.nowires
     this.optionals ++= d.optionals
     this.wiredEagerly = d.wiredEagerly

@@ -25,8 +25,8 @@ import scala.collection.immutable
 import org.springframework.beans.{PropertyEditorRegistrar, PropertyEditorRegistry}
 
 /** Property editor registrar for Scala property editors.
-  *
-  */
+ *
+ */
 class ScalaEditorRegistrar extends PropertyEditorRegistrar {
 
   def registerCustomEditors(registry: PropertyEditorRegistry): Unit = {

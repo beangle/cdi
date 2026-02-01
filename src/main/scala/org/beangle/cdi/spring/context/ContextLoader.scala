@@ -17,10 +17,24 @@
 
 package org.beangle.cdi.spring.context
 
+import org.beangle.commons.lang.reflect.Reflections.newInstance
+import org.beangle.commons.lang.{ClassLoaders, Objects}
 import org.springframework.beans.factory.BeanFactory
 
+object ContextLoader {
+
+  def defaultLoader: ContextLoader = {
+    if (springContextAvailable) newInstance(ClassLoaders.load("org.beangle.cdi.spring.context.ApplicationContextLoader")).asInstanceOf[ContextLoader]
+    else new BeanFactoryLoader()
+  }
+
+  private def springContextAvailable = {
+    ClassLoaders.getResources("org/springframework/context/support/AbstractApplicationContext.class").nonEmpty
+  }
+}
+
 trait ContextLoader {
-  def load(id: String, contextClassName: String, configLocation: String, parent: BeanFactory): BeanFactory
+  def load(id: String, contextClassName: String, configLocation: String): BeanFactory
 
   def close(): Unit
 }

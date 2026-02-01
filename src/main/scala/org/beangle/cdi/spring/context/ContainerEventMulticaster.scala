@@ -15,18 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.bean
+package org.beangle.cdi.spring.context
 
-import org.beangle.commons.cdi.ReconfigModule
+import org.beangle.commons.bean.Initializing
+import org.beangle.commons.cdi.Container
+import org.beangle.commons.event.{DefaultEventMulticaster, Event, EventListener, EventMulticaster}
 
-class UserReconfigModule extends ReconfigModule {
-  protected override def config(): Unit = {
-    update("userLdapProvider").setClass(classOf[AdvancedUserLdapProvider])
+/**
+ * @author chaostone
+ *
+ */
+class ContainerEventMulticaster extends DefaultEventMulticaster, Initializing {
 
-    update("userService")
-      .set("someMap", map("string" -> "override string"))
-      .merge("someList", list("just third string"))
+  var container: Container = _
 
-    updateProperty("1","3")
+  override def init(): Unit = {
+    container.getBeans(classOf[EventListener[_]]) foreach { e =>
+      addListener(e._2)
+    }
   }
+
+  override def multicast(e: Event): Unit = {
+    super.multicast(e)
+  }
+
 }

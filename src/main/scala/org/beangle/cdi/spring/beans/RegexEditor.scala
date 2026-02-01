@@ -21,8 +21,8 @@ import java.beans.PropertyEditorSupport
 import util.matching.Regex
 
 /**
-  * Editor for [[scala.util.matching.Regex]], to directly populate a `Regex` property.
-  */
+ * Editor for [[scala.util.matching.Regex]], to directly populate a `Regex` property.
+ */
 class RegexEditor extends PropertyEditorSupport {
 
   override def setAsText(text: String): Unit = {

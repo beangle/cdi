@@ -47,7 +47,7 @@ class ApplicationContextLoader extends ContextLoader, Logging {
     }
   }
 
-  def load(id: String, contextClassName: String, configLocation: String, parent: BeanFactory): ApplicationContext = {
+  def load(id: String, contextClassName: String, configLocation: String): ApplicationContext = {
     val contextClass = determineContextClass(contextClassName)
     require(classOf[ConfigurableApplicationContext].isAssignableFrom(contextClass))
     val watch = new Stopwatch(true)
@@ -58,7 +58,6 @@ class ApplicationContextLoader extends ContextLoader, Logging {
       case _ =>
     }
     context.setId(id)
-    context.setParent(parent.asInstanceOf[ApplicationContext])
     context.asInstanceOf[AbstractRefreshableConfigApplicationContext].setConfigLocation(configLocation)
     context.refresh()
     logger.info(s"$id started in $watch")

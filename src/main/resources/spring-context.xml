@@ -4,9 +4,7 @@
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
   <bean id="BeanContainer" class="org.beangle.cdi.spring.context.SpringContainer">
+    <description>Spring提供的Bean容器</description>
     <property name="moduleLocations" value="classpath*:beangle.xml" />
   </bean>
-
-  <import resource="classpath*:META-INF/spring/*.xml" />
-  <import resource="classpath*:spring.xml" />
 </beans>

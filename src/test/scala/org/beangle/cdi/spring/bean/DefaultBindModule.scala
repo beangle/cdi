@@ -17,19 +17,27 @@
 
 package org.beangle.cdi.spring.bean
 
-import org.beangle.commons.cdi.{BindModule, PropertySource, Scope}
+import org.beangle.commons.cdi.{BindModule, Scope}
 
-object TestModule extends BindModule, PropertySource.Provider {
+object DefaultBindModule extends BindModule {
 
   protected def binding(): Unit = {
+    System.setProperty("redis.host", "host2")
+    System.setProperty("redis.port", "1234")
+
+    bind("userLdapProvider", classOf[UserLdapProvider])
+    bind("userService", classOf[UserService])
+      .property("someMap", map("string" -> "just some string", "ref" -> ref("userLdapProvider")))
+      .property("someList", list("just another string", ref("userLdapProvider")))
+      .property("provider", ref("userDaoProvider"))
+
+    bind("entityDao", classOf[TestDaoFactory]).proxy("target", classOf[TestEntityDao])
+
     bind(classOf[SomeAction]).in(Scope.Prototype)
-    bind(classOf[UserLdapProvider], classOf[UserDaoProvider]).shortName()
+    bind(classOf[UserLdapProvider], classOf[UserDaoProvider]).shortName().onMissing()
     bind(classOf[TestService]).shortName().nowire("noneDao")
 
     bind(classOf[ProviderManager]).property("providers", list(ref("userDaoProvider")))
-
-    bind(classOf[ResourcesConsumer]).property("resources",
-      ";classpath*:META-INF/beangle/orm-naming.xml;classpath:beangle/orm-naming.xml")
 
     bind("noneDao", NoneDao)
 
@@ -42,9 +50,4 @@ object TestModule extends BindModule, PropertySource.Provider {
 
     bind("redisService", classOf[RedisService])
   }
-
-  override def properties: collection.Map[String, String] = {
-    Map("redis.host" -> "host2", "redis.port" -> "1234")
-  }
-
 }

@@ -17,24 +17,22 @@
 
 package org.beangle.cdi.spring.config
 
+import org.beangle.cdi.config.ReconfigParser
+import org.beangle.commons.lang.ClassLoaders
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
-import org.springframework.core.io.ClassPathResource
 
-class SpringXmlParserTest extends AnyFunSpec, Matchers {
+class ReconfigParserTest extends AnyFunSpec, Matchers {
 
-  describe("BeanDefinitionReader") {
+  describe("ReconfigParser") {
     it("parse xml") {
-      val holders = ReconfigParser.load(new ClassPathResource("org/beangle/cdi/spring/context-simple.xml"))
-      holders.length should be(5)
-
-      val holders2 = ReconfigParser.load(new ClassPathResource("spring-config-test.xml"))
+      val holders2 = ReconfigParser.load(ClassLoaders.getResource("org/beangle/cdi/spring/reconfig.xml").get)
       holders2.length should be(3)
-      val properties = holders2.find(_.name == "properties")
+      val properties = holders2.find(_.beanName == "properties")
       properties.nonEmpty should be(true)
 
-      properties.get.definition.properties.contains("a.b.c") should be(true)
-      properties.get.definition.properties.get("a.b.c").contains("1") should be(true)
+      properties.get.properties.contains("a.b.c") should be(true)
+      properties.get.properties.get("a.b.c").contains("1") should be(true)
     }
   }
 }
