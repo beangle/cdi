@@ -17,11 +17,13 @@
 
 package org.beangle.cdi.spring.config
 
+import org.beangle.cdi.CDILogger
 import org.beangle.cdi.config.{BindingLoader, BindingRegistry}
+import org.beangle.cdi.spring.beans.ScalaEditorRegistrar
 import org.beangle.cdi.spring.context.ContainerEventMulticaster
 import org.beangle.commons.cdi.{Binder, Condition}
 import org.beangle.commons.lang.time.Stopwatch
-import org.beangle.commons.logging.Logging
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.*
 import org.springframework.core.io.Resource
 import org.springframework.util.ClassUtils
@@ -31,7 +33,7 @@ import org.springframework.util.ClassUtils
  *
  * @author chaostone
  */
-abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, Logging {
+abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor {
 
   var moduleLocations: Array[Resource] = Array.empty
 
@@ -46,7 +48,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
     val (modules, reconfigs) = BindingLoader.loadModules("beangle.xml")
     val items = BindingLoader.loadRegistryItems(modules)
     val existed = SpringBeanRegistry.findBeans(springRegistry)
-    logger.info(s"Load ${items.size} beans in $watch")
+    CDILogger.info(s"Load ${items.size} beans in $watch")
 
     //reconfig autowire and register
     val registry = new BindingRegistry(existed)
@@ -58,6 +60,14 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor, 
 
     // register to spring container
     SpringBeanRegistry.register(registry.allBeans, springRegistry)
+  }
+
+  /** 这里注册的editor有助于spring将bean定义中的jucl转换成scala集合类型的参数，
+   *
+   * @param factory
+   */
+  override def postProcessBeanFactory(factory: ConfigurableListableBeanFactory): Unit = {
+    factory.addPropertyEditorRegistrar(new ScalaEditorRegistrar)
   }
 
   /** register last buildin beans. */

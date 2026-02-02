@@ -17,11 +17,11 @@
 
 package org.beangle.cdi.spring.context
 
+import org.beangle.cdi.CDILogger
 import org.beangle.commons.event.{DefaultEventMulticaster, EventMulticaster}
 import org.beangle.commons.lang.ClassLoaders
 import org.beangle.commons.lang.reflect.Reflections
 import org.beangle.commons.lang.time.Stopwatch
-import org.beangle.commons.logging.Logging
 import org.springframework.beans.factory.BeanFactory
 import org.springframework.beans.factory.support.{BeanDefinitionRegistryPostProcessor, DefaultListableBeanFactory}
 import org.springframework.beans.factory.xml.{ResourceEntityResolver, XmlBeanDefinitionReader}
@@ -35,7 +35,7 @@ import org.springframework.util.ClassUtils
 /**
  * Simple BeanFactory loader
  */
-class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, ContextLoader, Logging {
+class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, ContextLoader {
   var environment = new StandardEnvironment()
   var eventMulticaster: EventMulticaster = _
   var resourcePatternResolver: ResourcePatternResolver = new PathMatchingResourcePatternResolver
@@ -44,7 +44,7 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
 
   override def load(id: String, contextClassName: String, configLocation: String): BeanFactory = {
     val watch = new Stopwatch(true)
-    logger.info(s"$id starting")
+    CDILogger.info(s"$id starting")
 
     context =
       if (null == contextClassName) new DefaultListableBeanFactory()
@@ -54,7 +54,7 @@ class BeanFactoryLoader extends DefaultResourceLoader, ResourcePatternResolver, 
     context.setSerializationId(id)
     loadBeanDefinitions(environment.resolveRequiredPlaceholders(configLocation))
     refresh()
-    logger.info(s"$id started in $watch")
+    CDILogger.info(s"$id started in $watch")
     context
   }
 

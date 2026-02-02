@@ -17,12 +17,11 @@
 
 package org.beangle.cdi.spring.beans
 
-import java.beans.PropertyEditor
-
-import scala.util.matching.Regex
-import scala.collection.mutable
-import scala.collection.immutable
 import org.springframework.beans.{PropertyEditorRegistrar, PropertyEditorRegistry}
+
+import java.beans.PropertyEditor
+import scala.collection.{immutable, mutable}
+import scala.util.matching.Regex
 
 /** Property editor registrar for Scala property editors.
  *
@@ -30,7 +29,8 @@ import org.springframework.beans.{PropertyEditorRegistrar, PropertyEditorRegistr
 class ScalaEditorRegistrar extends PropertyEditorRegistrar {
 
   def registerCustomEditors(registry: PropertyEditorRegistry): Unit = {
-    implicit val r = registry
+    given PropertyEditorRegistry = registry
+
     register(classOf[Option[Any]], new OptionEditor())
     // Options
     register(classOf[Option[Any]], new OptionEditor())

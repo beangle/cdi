@@ -17,6 +17,7 @@
 
 package org.beangle.cdi.config
 
+import org.beangle.cdi.CDILogger
 import org.beangle.cdi.config.ReconfigParser.*
 import org.beangle.commons.cdi.Binder.{InjectPlaceHolder, Reference}
 import org.beangle.commons.cdi.Reconfig
@@ -24,7 +25,6 @@ import org.beangle.commons.cdi.Reconfig.{Definition, ReconfigType}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.conversion.impl.DefaultConversion
 import org.beangle.commons.lang.{ClassLoaders, Strings}
-import org.beangle.commons.logging.Logging
 import org.w3c.dom.{CharacterData, Comment, Element, Node}
 import org.xml.sax.InputSource
 
@@ -38,7 +38,7 @@ import scala.collection.mutable
  *
  * @author chaostone
  */
-class ReconfigParser extends Logging {
+class ReconfigParser {
 
   /** Stores all used bean names so we can enforce uniqueness on a per file basis. */
   private val usedNames = new mutable.HashSet[String]
@@ -203,7 +203,6 @@ class ReconfigParser extends Logging {
     target
   }
 
-
   /** parseCollectionElements. */
   private def parseCollectionElements(collectionEle: Element, target: mutable.Growable[Object], bd: Definition,
                                       defaultElementType: String): Unit = {
@@ -295,7 +294,7 @@ class ReconfigParser extends Logging {
  *
  * @author chaostone
  */
-object ReconfigParser extends Logging {
+object ReconfigParser {
 
   /** load bean reconfig.xml */
   def load(url: URL): List[Reconfig.Definition] = {
@@ -359,7 +358,7 @@ object ReconfigParser extends Logging {
 
   /** Report an error with the given message for the given source element. */
   private def error(message: String, source: Any, cause: Throwable = null): Any = {
-    logger.error(message)
+    CDILogger.error(message)
     null
   }
 

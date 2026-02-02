@@ -15,17 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.bean
+package org.beangle.cdi
 
-import org.beangle.cdi.CDILogger
-import org.beangle.commons.bean.Initializing
+import org.beangle.commons.logging.{Logger, slf4j}
 
-class RedisService extends Initializing {
-
-  var config: RedisConfig = _
-
-  override def init(): Unit = {
-    CDILogger.info("RedisService init," + config.host)
-  }
+object CDILogger extends Logger(slf4j("org.beangle.cdi")) {
 
 }

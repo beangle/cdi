@@ -111,7 +111,6 @@ object SpringBeanRegistry {
     }
   }
 
-
   /** 为了Factory[_]创建一个符合spring的FactoryBean的定义
    *
    * @param defn

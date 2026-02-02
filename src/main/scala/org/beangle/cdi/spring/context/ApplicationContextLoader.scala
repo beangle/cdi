@@ -17,19 +17,18 @@
 
 package org.beangle.cdi.spring.context
 
+import org.beangle.cdi.CDILogger
 import org.beangle.commons.io.IOs
 import org.beangle.commons.lang.ClassLoaders
 import org.beangle.commons.lang.reflect.Reflections
 import org.beangle.commons.lang.time.Stopwatch
-import org.beangle.commons.logging.Logging
-import org.springframework.beans.factory.BeanFactory
 import org.springframework.context.support.{AbstractRefreshableApplicationContext, AbstractRefreshableConfigApplicationContext}
 import org.springframework.context.{ApplicationContext, ConfigurableApplicationContext}
 
 /**
  * Load ApplicationContext
  */
-class ApplicationContextLoader extends ContextLoader, Logging {
+class ApplicationContextLoader extends ContextLoader {
 
   private var context: ConfigurableApplicationContext = _
 
@@ -51,7 +50,7 @@ class ApplicationContextLoader extends ContextLoader, Logging {
     val contextClass = determineContextClass(contextClassName)
     require(classOf[ConfigurableApplicationContext].isAssignableFrom(contextClass))
     val watch = new Stopwatch(true)
-    logger.info(s"$id starting")
+    CDILogger.info(s"$id starting")
     context = Reflections.newInstance(contextClass).asInstanceOf[ConfigurableApplicationContext]
     context match {
       case ara: AbstractRefreshableApplicationContext => ara.setAllowBeanDefinitionOverriding(false)
@@ -60,7 +59,7 @@ class ApplicationContextLoader extends ContextLoader, Logging {
     context.setId(id)
     context.asInstanceOf[AbstractRefreshableConfigApplicationContext].setConfigLocation(configLocation)
     context.refresh()
-    logger.info(s"$id started in $watch")
+    CDILogger.info(s"$id started in $watch")
     context
   }
 
