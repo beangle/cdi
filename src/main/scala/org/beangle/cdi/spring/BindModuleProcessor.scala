@@ -15,17 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.config
+package org.beangle.cdi.spring
 
 import org.beangle.cdi.CDILogger
-import org.beangle.cdi.config.{BindingLoader, BindingRegistry}
-import org.beangle.cdi.spring.beans.ScalaEditorRegistrar
-import org.beangle.cdi.spring.context.ContainerEventMulticaster
+import org.beangle.cdi.config.{BindingLoader, BindingRegistry, ContainerEventMulticaster}
 import org.beangle.commons.cdi.{Binder, Condition}
 import org.beangle.commons.lang.time.Stopwatch
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.*
-import org.springframework.core.io.Resource
 import org.springframework.util.ClassUtils
 
 /** BindModuleProcessor完成bean的自动注册和再配置
@@ -33,19 +30,15 @@ import org.springframework.util.ClassUtils
  *
  * @author chaostone
  */
-abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor {
-
-  var moduleLocations: Array[Resource] = Array.empty
-
-  private val classLoader = ClassUtils.getDefaultClassLoader
+abstract class BindModuleProcessor(private val configLocation: String) extends BeanDefinitionRegistryPostProcessor {
 
   /** Automate register and wire bean
    * Reconfig beans
    */
   override def postProcessBeanDefinitionRegistry(springRegistry: BeanDefinitionRegistry): Unit = {
-    //load bind and reconfig module,
+    //load bind and reconfig module
     val watch = Stopwatch.start()
-    val (modules, reconfigs) = BindingLoader.loadModules("beangle.xml")
+    val (modules, reconfigs) = BindingLoader.loadModules(configLocation)
     val items = BindingLoader.loadRegistryItems(modules)
     val existed = SpringBeanRegistry.findBeans(springRegistry)
     CDILogger.info(s"Load ${items.size} beans in $watch")
@@ -75,6 +68,7 @@ abstract class BindModuleProcessor extends BeanDefinitionRegistryPostProcessor {
     val clazz = classOf[ContainerEventMulticaster]
     val multicaster = new Binder.Definition("EventMulticaster.default", clazz, null).on(Condition.missing(clazz))
     multicaster.property("container", this)
+    multicaster.initMethod = Some("init")
     List(multicaster)
   }
 }

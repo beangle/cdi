@@ -15,27 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.beans
+package org.beangle.cdi.spring
 
-import java.beans.PropertyEditorSupport
-import util.matching.Regex
+import org.springframework.beans.BeanInfoFactory
 
-/**
- * Editor for [[scala.util.matching.Regex]], to directly populate a `Regex` property.
- */
-class RegexEditor extends PropertyEditorSupport {
+import java.beans.BeanInfo
 
-  override def setAsText(text: String): Unit = {
-    text match {
-      case null => setValue(null)
-      case s: Any => setValue(s.r)
-    }
-  }
-
-  override def getAsText: String = {
-    getValue match {
-      case null => ""
-      case regex: Regex => regex.pattern.pattern()
+class ScalaBeanInfoFactory extends BeanInfoFactory {
+  def getBeanInfo(beanClass: Class[_]): BeanInfo = {
+    val className = beanClass.getName
+    if (className.startsWith("java.") || className.startsWith("scala.")) {
+      null
+    } else {
+      new ScalaBeanInfo(beanClass)
     }
   }
 }

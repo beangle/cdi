@@ -19,7 +19,7 @@ package org.beangle.cdi.config
 
 import org.beangle.commons.cdi.{BindModule, Binder, Reconfig, ReconfigModule}
 import org.beangle.commons.collection.Collections
-import org.beangle.commons.config.{Enviroment, profile}
+import org.beangle.commons.config.{Enviroment, XmlConfigs, profile}
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.lang.{ClassLoaders, JVM, Strings}
 import org.beangle.commons.net.Networks
@@ -32,8 +32,10 @@ import scala.collection.mutable
 object BindingLoader {
 
   /** Load definition from modules and reconfig modules
+   *
+   * @param path classpath*:beangle.xml/classpath:beangle.xml/file://
    */
-  def loadModules(fileName: String): (Iterable[BindModule], Iterable[Reconfig]) = {
+  def loadModules(path: String): (Iterable[BindModule], Iterable[Reconfig]) = {
     var profile = System.getProperty(Enviroment.ProfileKey, "")
     if (JVM.isDebugMode) profile += ",dev"
     val profiles = Strings.split(profile, ",").map(s => s.trim).toSet
@@ -42,17 +44,21 @@ object BindingLoader {
     val modules = new collection.mutable.HashSet[BindModule]
     val reconfigs = Collections.newBuffer[Reconfig]
 
-    val resources = ClassLoaders.getResources(fileName)
-    resources foreach { r =>
-      Module.fromXml(r.openStream()) foreach { module =>
-        Module.load(module, profiles) foreach {
-          case bm: BindModule => modules += bm
-          case rm: ReconfigModule =>
-            val recfg = new Reconfig
-            rm.configure(recfg)
-            readReconfig(rm.configUrl, recfg)
-            reconfigs += recfg
-        }
+    val moduleNames = Collections.newBuffer[String]
+    val doc = XmlConfigs.load(path)
+    (doc \ "cdi" \ "module") foreach { m =>
+      val clazzName = (m \ "@class").text
+      if Strings.isNotBlank(clazzName) then moduleNames += clazzName
+    }
+
+    moduleNames foreach { name =>
+      Module.load(name, profiles) foreach {
+        case bm: BindModule => modules += bm
+        case rm: ReconfigModule =>
+          val recfg = new Reconfig
+          rm.configure(recfg)
+          readReconfig(rm.configUrl, recfg)
+          reconfigs += recfg
       }
     }
     (modules, reconfigs)

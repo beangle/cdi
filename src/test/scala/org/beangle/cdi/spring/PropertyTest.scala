@@ -15,15 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.context
+package org.beangle.cdi.spring
 
-import org.beangle.commons.event.Event
-import org.springframework.beans.factory.BeanFactory
-/**
- * @author chaostone
- */
-sealed class BeanFactoryEvent(factory: BeanFactory) extends Event(factory)
+import org.beangle.cdi.spring.bean.RedisService
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class BeanFactoryRefreshedEvent(factory: BeanFactory) extends BeanFactoryEvent(factory)
+class PropertyTest extends AnyFunSpec, Matchers {
 
-class BeanFactoryClosedEvent(factory: BeanFactory) extends BeanFactoryEvent(factory)
+  describe("PropertyResolver") {
+    it("resolve env") {
+      val factory = SpringContainerLoader.load()
+      val service = factory.getBean[RedisService]("redisService")
+      assert(service.nonEmpty)
+      assert(service.get.config.url == "host2:1234")
+    }
+  }
+}

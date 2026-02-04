@@ -15,19 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.beans
+package org.beangle.cdi.spring
 
-import org.springframework.beans.BeanInfoFactory
+import org.beangle.commons.bean.Factory
+import org.springframework.beans.factory.FactoryBean
 
-import java.beans.BeanInfo
+class FactoryBeanProxy[T] extends FactoryBean[T] {
 
-class ScalaBeanInfoFactory extends BeanInfoFactory {
-  def getBeanInfo(beanClass: Class[_]): BeanInfo = {
-    val className = beanClass.getName
-    if (className.startsWith("java.") || className.startsWith("scala.")) {
-      null
-    } else {
-      new ScalaBeanInfo(beanClass)
-    }
-  }
+  var target: Factory[T] = _
+
+  var objectType: Class[T] = _
+
+  override def getObject: T = target.getObject
+
+  override def isSingleton: Boolean = target.singleton
+
+  override def getObjectType: Class[T] = objectType
 }

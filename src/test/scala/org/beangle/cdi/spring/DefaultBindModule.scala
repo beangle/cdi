@@ -15,8 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.bean
+package org.beangle.cdi.spring
 
+import org.beangle.cdi.spring.bean.*
 import org.beangle.commons.cdi.{BindModule, Scope}
 
 object DefaultBindModule extends BindModule {
@@ -25,6 +26,8 @@ object DefaultBindModule extends BindModule {
     System.setProperty("redis.host", "host2")
     System.setProperty("redis.port", "1234")
 
+    bind("userDaoProvider", classOf[UserDaoProvider])
+    bind("userLdapService", classOf[UserService]).property("provider", ref("userLdapProvider"))
     bind("userLdapProvider", classOf[UserLdapProvider])
     bind("userService", classOf[UserService])
       .property("someMap", map("string" -> "just some string", "ref" -> ref("userLdapProvider")))

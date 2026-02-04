@@ -15,21 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.config
+package org.beangle.cdi.spring
 
-import org.scalatest.funspec.AnyFunSpec
-import org.scalatest.matchers.should.Matchers
-import org.springframework.core.convert.support.DefaultConversionService
+import org.beangle.cdi.spring.bean.AdvancedUserLdapProvider
+import org.beangle.commons.cdi.ReconfigModule
 
-import java.math.BigDecimal
+class DefaultReconfigModule extends ReconfigModule {
+  protected override def config(): Unit = {
+    update("userLdapProvider").setClass(classOf[AdvancedUserLdapProvider])
 
-class ConvertTest extends AnyFunSpec, Matchers {
-
-  describe("Spring") {
-    it("Convert number and boolean") {
-      val conversion = new DefaultConversionService();
-      conversion.convert("4.5", classOf[Number]) should equal(new BigDecimal("4.5"))
-      conversion.convert("true", classOf[Boolean]) should be(true)
-    }
+    update("userService")
+      .set("someMap", map("string" -> "override string"))
+      .merge("someList", list("just third string"))
   }
 }

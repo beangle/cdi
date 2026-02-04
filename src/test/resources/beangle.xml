@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <beangle>
   <cdi>
-    <module class="org.beangle.cdi.spring.bean.DefaultBindModule"/>
-    <module class="org.beangle.cdi.spring.bean.DefaultReconfigModule"/>
+    <module class="org.beangle.cdi.spring.DefaultBindModule"/>
+    <module class="org.beangle.cdi.spring.DefaultReconfigModule"/>
   </cdi>
 </beangle>

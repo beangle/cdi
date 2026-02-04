@@ -57,24 +57,4 @@ object Module {
     null == anno || null != anno && profiles.contains(anno.value)
   }
 
-  /** 从XML中读取配置
-   *
-   * @param is 输入流
-   * @return
-   */
-  def fromXml(is: InputStream): Iterable[String] = {
-    val str = IOs.readString(is)
-    (scala.xml.XML.loadString(str) \ "cdi").headOption match {
-      case None => List.empty
-      case Some(con) =>
-        val modules = Collections.newBuffer[String]
-        (con \ "module") foreach { moduleElem =>
-          val clazzName = (moduleElem \ "@class").text
-          if (Strings.isNotBlank(clazzName)) {
-            modules += clazzName
-          }
-        }
-        modules
-    }
-  }
 }

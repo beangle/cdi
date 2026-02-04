@@ -15,24 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.config
+package org.beangle.cdi.spring
 
-import org.beangle.cdi.config.ReconfigParser
-import org.beangle.commons.lang.ClassLoaders
-import org.scalatest.funspec.AnyFunSpec
-import org.scalatest.matchers.should.Matchers
+import java.beans.PropertyEditorSupport
 
-class ReconfigParserTest extends AnyFunSpec, Matchers {
+class OptionEditor extends PropertyEditorSupport {
 
-  describe("ReconfigParser") {
-    it("parse xml") {
-      val holders2 = ReconfigParser.load(ClassLoaders.getResource("org/beangle/cdi/spring/reconfig.xml").get)
-      holders2.length should be(3)
-      val properties = holders2.find(_.beanName == "properties")
-      properties.nonEmpty should be(true)
+  override def setAsText(text: String): Unit = {
+    setValue(text)
+  }
 
-      properties.get.properties.contains("a.b.c") should be(true)
-      properties.get.properties.get("a.b.c").contains("1") should be(true)
+  override def setValue(value: AnyRef): Unit = {
+    value match {
+      case s@Some(v) => super.setValue(s)
+      case None => super.setValue(None)
+      case _ => super.setValue(Option(value))
     }
   }
 }

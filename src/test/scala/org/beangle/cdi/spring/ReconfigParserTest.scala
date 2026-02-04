@@ -15,16 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.bean
+package org.beangle.cdi.spring
 
-import org.beangle.commons.cdi.ReconfigModule
+import org.beangle.cdi.config.ReconfigParser
+import org.beangle.commons.lang.ClassLoaders
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class DefaultReconfigModule extends ReconfigModule {
-  protected override def config(): Unit = {
-    update("userLdapProvider").setClass(classOf[AdvancedUserLdapProvider])
+class ReconfigParserTest extends AnyFunSpec, Matchers {
 
-    update("userService")
-      .set("someMap", map("string" -> "override string"))
-      .merge("someList", list("just third string"))
+  describe("ReconfigParser") {
+    it("parse xml") {
+      val holders2 = ReconfigParser.load(ClassLoaders.getResource("org/beangle/cdi/spring/reconfig.xml").get)
+      holders2.length should be(3)
+      val properties = holders2.find(_.beanName == "properties")
+      properties.nonEmpty should be(true)
+
+      properties.get.properties.contains("a.b.c") should be(true)
+      properties.get.properties.get("a.b.c").contains("1") should be(true)
+    }
   }
 }

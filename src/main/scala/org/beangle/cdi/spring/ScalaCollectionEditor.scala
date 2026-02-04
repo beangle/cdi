@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.beans
+package org.beangle.cdi.spring
 
 import java.beans.PropertyEditorSupport
 import scala.annotation.nowarn

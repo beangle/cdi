@@ -15,28 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.context
+package org.beangle.cdi.config
 
-import org.beangle.commons.bean.Initializing
-import org.beangle.commons.cdi.Container
-import org.beangle.commons.event.{DefaultEventMulticaster, Event, EventListener, EventMulticaster}
+import org.beangle.commons.cdi.{Container, ContainerListener}
+import org.springframework.beans.factory.support.DefaultListableBeanFactory
 
-/**
- * @author chaostone
- *
- */
-class ContainerEventMulticaster extends DefaultEventMulticaster, Initializing {
-
-  var container: Container = _
-
-  override def init(): Unit = {
-    container.getBeans(classOf[EventListener[_]]) foreach { e =>
-      addListener(e._2)
+object ContainerHooks {
+  /**
+   * 通知ContainerListener
+   */
+  def notify(container: Container): Unit = {
+    container.getBeans(classOf[ContainerListener]) foreach { lns =>
+      lns._2.onStarted(container)
     }
   }
-
-  override def multicast(e: Event): Unit = {
-    super.multicast(e)
-  }
-
 }

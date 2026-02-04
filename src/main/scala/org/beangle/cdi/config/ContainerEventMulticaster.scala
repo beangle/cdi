@@ -15,20 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.beans
+package org.beangle.cdi.config
 
-import org.beangle.commons.bean.Factory
-import org.springframework.beans.factory.FactoryBean
+import org.beangle.commons.bean.Initializing
+import org.beangle.commons.cdi.{CdiEventListener, Container}
+import org.beangle.commons.event.DefaultEventMulticaster
 
-class FactoryBeanProxy[T] extends FactoryBean[T] {
+/** 将容器中的监听器搜集起来，集中注册到时间广播中
+ *
+ * @author chaostone
+ */
+class ContainerEventMulticaster extends DefaultEventMulticaster, Initializing {
 
-  var target: Factory[T] = _
+  var container: Container = _
 
-  var objectType: Class[T] = _
-
-  override def getObject: T = target.getObject
-
-  override def isSingleton: Boolean = target.singleton
-
-  override def getObjectType: Class[T] = objectType
+  override def init(): Unit = {
+    container.getBeans(classOf[CdiEventListener[_]]) foreach { e => addListener(e._2) }
+  }
 }

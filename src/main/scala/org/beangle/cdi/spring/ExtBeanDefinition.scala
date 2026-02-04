@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.config
+package org.beangle.cdi.spring
 
 import org.beangle.commons.cdi.Binder.{Definition, Reference}
 import org.beangle.commons.collection.Collections
@@ -88,7 +88,7 @@ object ExtBeanDefinition {
 
 }
 
-import org.beangle.cdi.spring.config.ExtBeanDefinition.convert
+import ExtBeanDefinition.convert
 
 class ExtBeanDefinition extends GenericBeanDefinition {
 

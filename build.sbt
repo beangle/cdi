@@ -4,7 +4,7 @@ import sbt.Keys.libraryDependencies
 import sbt.url
 
 ThisBuild / organization := "org.beangle.cdi"
-ThisBuild / version := "0.9.4-SNAPSHOT"
+ThisBuild / version := "0.10.0-SNAPSHOT"
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -25,15 +25,15 @@ ThisBuild / developers := List(
 ThisBuild / description := "The Beangle CDI Library"
 ThisBuild / homepage := Some(url("https://beangle.github.io/cdi/index.html"))
 
-val beangle_commons = "org.beangle.commons" % "beangle-commons" % "5.8.3-SNAPSHOT"
+val beangle_commons = "org.beangle.commons" % "beangle-commons" % "6.0.0-SNAPSHOT"
 
 lazy val root = (project in file("."))
   .settings(
     name := "beangle-cdi",
     common,
-    libraryDependencies ++= Seq(beangle_commons, scalaxml),
-    libraryDependencies ++= Seq(slf4j, logback_classic % "test", scalatest),
-    libraryDependencies ++= Seq(spring_beans, spring_context % "optional")
+    libraryDependencies ++= Seq(beangle_commons, slf4j),
+    libraryDependencies ++= Seq(logback_classic % "test", scalatest),
+    libraryDependencies ++= Seq(spring_beans)
   )
 
 Test / parallelExecution := false

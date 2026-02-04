@@ -24,14 +24,12 @@ import org.beangle.commons.cdi.Reconfig
 import org.beangle.commons.cdi.Reconfig.{Definition, ReconfigType}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.conversion.impl.DefaultConversion
+import org.beangle.commons.io.IOs
 import org.beangle.commons.lang.{ClassLoaders, Strings}
-import org.w3c.dom.{CharacterData, Comment, Element, Node}
-import org.xml.sax.InputSource
+import org.beangle.commons.xml.{Document, Element, Node}
 
-import java.io.FileNotFoundException
 import java.net.URL
 import java.util.Properties
-import javax.xml.parsers.DocumentBuilderFactory
 import scala.collection.mutable
 
 /** Reconfig BeanDefinition Parser
@@ -46,22 +44,22 @@ class ReconfigParser {
   /** Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
    * were errors during parse.
    */
-  def parseBeanDefinitionElement(ele: Element): Reconfig.Definition = {
-    parseBeanDefinitionElement(ele, null)
+  def parseBeanDefinition(ele: Node): Reconfig.Definition = {
+    parseBeanDefinition(ele, null)
   }
 
   /** Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
    * were errors during parse.
    */
-  private def parseBeanDefinitionElement(ele: Element, containingBean: Definition): Reconfig.Definition = {
-    val id = ele.getAttribute("id")
+  private def parseBeanDefinition(ele: Node, containingBean: Definition): Reconfig.Definition = {
+    val id = ele.getAttribute("id").orNull
     if (null == id) error("missing id", ele)
     if (containingBean == null) checkNameUniqueness(id, ele)
-    parseBeanDefinitionElement(ele, id, containingBean)
+    parseBeanDefinition(ele, id, containingBean)
   }
 
   /** Validate that the specified bean name and aliases have not been used already. */
-  private def checkNameUniqueness(beanName: String, beanElement: Element): Unit = {
+  private def checkNameUniqueness(beanName: String, beanElement: Node): Unit = {
     if (this.usedNames.contains(beanName)) error("Bean name '" + beanName + "' is already used in this file", beanElement)
     this.usedNames += beanName
   }
@@ -70,19 +68,17 @@ class ReconfigParser {
    * return <code>null</code> if problems occured during the parse of the bean
    * definition.
    */
-  private def parseBeanDefinitionElement(ele: Element, beanName: String, containingBean: Definition): Definition = {
-    val className = if (ele.hasAttribute("class")) ele.getAttribute("class").trim() else null
+  private def parseBeanDefinition(ele: Node, beanName: String, containingBean: Definition): Definition = {
+    val className = ele.getAttribute("class").orNull
     try {
-      val ovr = ele.getAttribute("override")
-      val configType = if (null != ovr && ovr == "remove") ReconfigType.Remove else ReconfigType.Update
+      val configType = if ele.getAttribute("override").contains("remove") then ReconfigType.Remove else ReconfigType.Update
       val bd = new Definition(beanName, configType)
       bd.clazz = Option(if (null == className) null else ClassLoaders.load(className))
-      val primary = ele.getAttribute("primary-of")
-      if (Strings.isNotEmpty(primary)) {
-        bd.primaryOf(Strings.split(primary).map(ClassLoaders.load(_)): _*)
+      ele.getAttribute("primary-of") foreach { p =>
+        bd.primaryOf(Strings.split(p).map(ClassLoaders.load(_)): _*)
       }
-      parseConstructorArgElements(ele, bd)
-      parsePropertyElements(ele, bd)
+      parseConstructorArgs(ele, bd)
+      parseProperties(ele, bd)
       return bd
     } catch {
       case ex: ClassNotFoundException => error("Bean class [" + className + "] not found", ele, ex)
@@ -92,25 +88,18 @@ class ReconfigParser {
   }
 
   /** Parse constructor-arg sub-elements of the given bean element. */
-  private def parseConstructorArgElements(beanEle: Element, bd: Definition): Unit = {
-    childrenOf(beanEle, "constructor-arg") foreach { node =>
-      parseConstructorArgElement(node, bd)
-    }
+  private def parseConstructorArgs(beanEle: Node, bd: Definition): Unit = {
+    (beanEle \ "constructor-arg") foreach { node => parseConstructorArg(node, bd) }
   }
 
   /** Parse property sub-elements of the given bean element. */
-  private def parsePropertyElements(beanEle: Element, bd: Definition): Unit = {
-    childrenOf(beanEle, PROPERTY) foreach { node =>
-      parsePropertyElement(node, bd)
-    }
+  private def parseProperties(beanEle: Node, bd: Definition): Unit = {
+    (beanEle \ "property") foreach { node => parseProperty(node, bd) }
   }
 
   /** Parse a constructor-arg element. */
-  private def parseConstructorArgElement(ele: Element, bd: Definition): Unit = {
-    val indexAttr = ele.getAttribute(INDEX)
-    if (bd.constructorArgs == null) {
-      bd.constructorArgs = new mutable.ArrayBuffer[Any]
-    }
+  private def parseConstructorArg(ele: Node, bd: Definition): Unit = {
+    val indexAttr = ele.getAttribute("index", null)
     if (Strings.isNotEmpty(indexAttr)) {
       val index = Integer.parseInt(indexAttr)
       bd.constructorArgs(index) = parsePropertyValue(ele, bd, null)
@@ -120,22 +109,21 @@ class ReconfigParser {
   }
 
   /** Parse a property element. */
-  private def parsePropertyElement(ele: Element, bd: Definition): Unit = {
-    val propertyName = ele.getAttribute("name")
+  private def parseProperty(ele: Node, bd: Definition): Unit = {
+    val propertyName = ele.getAttribute("name", null)
     bd.properties.put(propertyName, parsePropertyValue(ele, bd, propertyName))
   }
 
   /** Get the value of a property element. May be a list etc. Also used for
    * constructor arguments, "propertyName" being null in this case.
    */
-  private def parsePropertyValue(ele: Element, bd: Definition, propertyName: String): Object = {
+  private def parsePropertyValue(ele: Node, bd: Definition, propertyName: String): Object = {
     val elementName = if (propertyName != null) "<property> element for property '" + propertyName + "'"
     else "<constructor-arg> element"
 
-    val subElement = childOf(ele)
-
-    val hasRefAttribute = ele.hasAttribute(REF)
-    val hasValueAttribute = ele.hasAttribute(VALUE)
+    val subElement = ele.childNodes.headOption.orNull
+    val hasRefAttribute = ele.hasAttribute("ref")
+    val hasValueAttribute = ele.hasAttribute("value")
     if ((hasRefAttribute && hasValueAttribute)
       || ((hasRefAttribute || hasValueAttribute) && subElement != null)) {
       error(elementName
@@ -143,11 +131,11 @@ class ReconfigParser {
     }
 
     if (hasRefAttribute) {
-      val refName = ele.getAttribute(REF)
+      val refName = ele.getAttribute("ref").orNull
       if (!Strings.isNotBlank(refName)) error(elementName + " contains empty 'ref' attribute", ele)
       Reference(refName)
     } else if (hasValueAttribute) {
-      val v = ele.getAttribute(VALUE)
+      val v = ele.getAttribute("value").orNull
       if (null == propertyName && v == "?") {
         InjectPlaceHolder
       } else {
@@ -164,65 +152,62 @@ class ReconfigParser {
 
   /** Parse a value, ref or collection sub-element of a property or constructor-arg element.
    */
-  private def parsePropertySubElement(ele: Element, bd: Definition): Object = {
-    if (nodeNameEquals(ele, BEAN)) {
-      parseBeanDefinitionElement(ele, bd)
-    } else if (nodeNameEquals(ele, REF)) {
-      Reference(ele.getAttribute(BEAN_REF))
-    } else if (nodeNameEquals(ele, VALUE)) {
-      getTextValue(ele)
-    } else if (nodeNameEquals(ele, "null")) {
+  private def parsePropertySubElement(ele: Node, bd: Definition): Object = {
+    if (ele.name == "bean") {
+      parseBeanDefinition(ele, bd)
+    } else if (ele.name == "bean") {
+      Reference(ele("bean"))
+    } else if (ele.name == "value") {
+      ele.textContent
+    } else if (ele.name == "null") {
       null
-    } else if (nodeNameEquals(ele, LIST)) {
-      parseListElement(ele, bd)
-    } else if (nodeNameEquals(ele, SET)) {
-      parseSetElement(ele, bd)
-    } else if (nodeNameEquals(ele, MAP)) {
-      parseMapElement(ele, bd)
-    } else if (nodeNameEquals(ele, "props")) {
-      parsePropsElement(ele)
+    } else if (ele.name == "list") {
+      parseList(ele, bd)
+    } else if (ele.name == "set") {
+      parseSet(ele, bd)
+    } else if (ele.name == "map") {
+      parseMap(ele, bd)
+    } else if (ele.name == "props") {
+      parseProps(ele)
     } else {
-      error("Unknown property sub-element: [" + ele.getNodeName + "]", ele)
-      null
+      error("Unknown property sub-element: [" + ele.name + "]", ele)
     }
   }
 
   /** Parse a list element. */
-  private def parseListElement(collectionEle: Element, bd: Definition): mutable.Buffer[Object] = {
-    val defaultElementType = collectionEle.getAttribute("value-type")
+  private def parseList(collectionEle: Node, bd: Definition): mutable.Buffer[Object] = {
+    val defaultElementType = collectionEle.getAttribute("value-type", null)
     val target = new mutable.ArrayBuffer[Object]
-    parseCollectionElements(collectionEle, target, bd, defaultElementType)
+    parseCollection(collectionEle, target, bd, defaultElementType)
     target
   }
 
   /** Parse a set element. */
-  private def parseSetElement(collectionEle: Element, bd: Definition): mutable.Set[Object] = {
-    val defaultElementType = collectionEle.getAttribute("value-type")
+  private def parseSet(collectionEle: Node, bd: Definition): mutable.Set[Object] = {
+    val defaultElementType = collectionEle.getAttribute("value-type", null)
     val target = new mutable.HashSet[Object]
-    parseCollectionElements(collectionEle, target, bd, defaultElementType)
+    parseCollection(collectionEle, target, bd, defaultElementType)
     target
   }
 
-  /** parseCollectionElements. */
-  private def parseCollectionElements(collectionEle: Element, target: mutable.Growable[Object], bd: Definition,
-                                      defaultElementType: String): Unit = {
-    childrenOf(collectionEle) foreach { e =>
-      target.addOne(parsePropertySubElement(e, bd))
-    }
+  /** parseCollection. */
+  private def parseCollection(collectionEle: Node, target: mutable.Growable[Object], bd: Definition,
+                              defaultElementType: String): Unit = {
+    collectionEle.childNodes foreach { e => target.addOne(parsePropertySubElement(e, bd)) }
   }
 
   /** Parse a map element. */
-  private def parseMapElement(mapEle: Element, bd: Definition): collection.Map[Any, Any] = {
-    val defaultKeyType = mapEle.getAttribute("key-type")
-    val defaultValueType = mapEle.getAttribute("value-type")
+  private def parseMap(mapEle: Node, bd: Definition): collection.Map[Any, Any] = {
+    val defaultKeyType = mapEle.getAttribute("key-type", null)
+    val defaultValueType = mapEle.getAttribute("value-type", null)
 
     val map = Collections.newMap[Any, Any]
-    childrenOf(mapEle, "entry") foreach { entryEle =>
-      val keyEle = childOf(entryEle, KEY)
-      val valueEle = childOf(entryEle, VALUE)
+    (mapEle \ "entry") foreach { entryEle =>
+      val keyEle = (entryEle \ "key").headOption.orNull
+      val valueEle = (entryEle \ "value").headOption.orNull
 
       var key: Any = null
-      val hasKeyAttribute = entryEle.hasAttribute(KEY)
+      val hasKeyAttribute = entryEle.hasAttribute("key")
       val hasKeyRefAttribute = entryEle.hasAttribute("key-ref")
       if ((hasKeyAttribute && hasKeyRefAttribute) || ((hasKeyAttribute || hasKeyRefAttribute))
         && keyEle != null) {
@@ -230,17 +215,17 @@ class ReconfigParser {
           + "a 'key' attribute OR a 'key-ref' attribute OR a <key> sub-element", entryEle)
       }
       if (hasKeyAttribute) {
-        key = convertTo(entryEle.getAttribute(KEY), defaultKeyType)
+        key = convertTo(entryEle("key"), defaultKeyType)
       } else if (hasKeyRefAttribute) {
-        key = Reference(entryEle.getAttribute("key-ref"))
+        key = Reference(entryEle("key-ref"))
       } else if (keyEle != null) {
-        key = parseKeyElement(keyEle, bd, defaultKeyType)
+        key = parseKey(keyEle, bd, defaultKeyType)
       } else {
         error("<entry> element must specify a key", entryEle)
       }
       // Extract value from attribute or sub-element.
       var value: Any = null
-      val hasValueAttribute = entryEle.hasAttribute(VALUE)
+      val hasValueAttribute = entryEle.hasAttribute("value")
       val hasValueRefAttribute = entryEle.hasAttribute("value-ref")
       if ((hasValueAttribute && hasValueRefAttribute) || (hasValueAttribute || hasValueRefAttribute)
         && valueEle != null) {
@@ -248,9 +233,9 @@ class ReconfigParser {
           + "'value' attribute OR 'value-ref' attribute OR <value> sub-element", entryEle)
       }
       if (hasValueAttribute) {
-        value = convertTo(entryEle.getAttribute(VALUE), defaultValueType)
+        value = convertTo(entryEle("value"), defaultValueType)
       } else if (hasValueRefAttribute) {
-        Reference(entryEle.getAttribute("value-ref"))
+        Reference(entryEle("value-ref"))
       } else if (valueEle != null) {
         value = parsePropertySubElement(valueEle, bd)
       } else {
@@ -258,26 +243,19 @@ class ReconfigParser {
       }
       map.put(key, value)
     }
-
     map
   }
 
   /** Parse a key sub-element of a map element. */
-  private def parseKeyElement(keyEle: Element, bd: Definition, defaultKeyTypeName: String): Object = {
-    parsePropertySubElement(childOf(keyEle), bd)
+  private def parseKey(keyEle: Node, bd: Definition, defaultKeyTypeName: String): Object = {
+    parsePropertySubElement(keyEle.childNodes.head, bd)
   }
 
   /** Parse a props element. */
-  private def parsePropsElement(propsEle: Element): java.util.Properties = {
+  private def parseProps(propsEle: Node): java.util.Properties = {
     val props = new Properties()
-    childrenOf(propsEle, "prop") foreach { propEle =>
-      props.put(propEle.getAttribute(KEY), getTextValue(propEle))
-    }
+    (propsEle \ "prop") foreach { propEle => props.put(propEle("key"), propEle.textContent) }
     props
-  }
-
-  private def nodeNameEquals(node: Node, desiredName: String): Boolean = {
-    desiredName.equals(node.getNodeName) || desiredName.equals(node.getLocalName)
   }
 
   private def convertTo(v: Any, clazz: String): Any = {
@@ -299,87 +277,21 @@ object ReconfigParser {
   /** load bean reconfig.xml */
   def load(url: URL): List[Reconfig.Definition] = {
     val holders = new collection.mutable.ListBuffer[Reconfig.Definition]
-    try {
-      val inputStream = url.openStream
-      try {
-        val inputSource = new InputSource(inputStream)
-        val factory = DocumentBuilderFactory.newInstance()
-        factory.setNamespaceAware(false)
-        val docBuilder = factory.newDocumentBuilder()
-        val doc = docBuilder.parse(inputSource)
-        val parser = new ReconfigParser()
-        val root = doc.getDocumentElement
-        childrenOf(root, BEAN) foreach { ele =>
-          val holder = parser.parseBeanDefinitionElement(ele)
-          if (null != holder) {
-            holders += holder
-          }
-        }
-      } finally {
-        if (null != inputStream) inputStream.close()
+    val doc = Document.parse(IOs.readString(url.openStream()))
+    val parser = new ReconfigParser()
+    doc.childNodes foreach { node =>
+      val holder = parser.parseBeanDefinition(node)
+      if (null != holder) {
+        holders += holder
       }
-    } catch {
-      case _: FileNotFoundException => //ignore
-      case ex: Exception => throw new RuntimeException("IOException parsing XML document from " + url, ex)
     }
     holders.toList
   }
 
-  private def childrenOf(ele: Element, tagName: String = null): Iterable[Element] = {
-    val nl = ele.getChildNodes
-    val elems = Collections.newBuffer[Element]
-    for (i <- 0 until nl.getLength) {
-      nl.item(i) match {
-        case e: Element =>
-          if "description" != e.getNodeName && (tagName == null || e.getNodeName == tagName) then elems.addOne(e)
-        case _ =>
-      }
-    }
-    elems
-  }
-
-  private def childOf(ele: Element, tagName: String = null): Element = {
-    val nl = ele.getChildNodes
-    var childEle: Element = null
-    for (i <- 0 until nl.getLength) {
-      val node = nl.item(i)
-      nl.item(i) match {
-        case e: Element =>
-          if (tagName == null && node.getNodeName != "description"
-            && node.getNodeName != "meta" || node.getNodeName == tagName) {
-            if (childEle != null) error(s"<${ele.getNodeName}> only one <${tagName}> sub-element needed", ele)
-            else childEle = e
-          }
-        case _ =>
-      }
-    }
-    childEle
-  }
-
   /** Report an error with the given message for the given source element. */
-  private def error(message: String, source: Any, cause: Throwable = null): Any = {
-    CDILogger.error(message)
+  private def error(message: String, source: Node, cause: Throwable = null): AnyRef = {
+    CDILogger.error(message, cause)
+    CDILogger.error(source.asInstanceOf[Element].toXml)
     null
   }
-
-  private def getTextValue(valueEle: Element): String = {
-    val sb = new StringBuilder
-    val nl = valueEle.getChildNodes
-    for (i <- 0 until nl.getLength) {
-      val item = nl.item(i)
-      if (item.isInstanceOf[CharacterData] && !item.isInstanceOf[Comment]) sb.append(item.getNodeValue)
-    }
-    sb.toString.trim()
-  }
-
-  val PROPERTY = "property"
-  val INDEX = "index"
-  val REF = "ref"
-  val VALUE = "value"
-  val BEAN = "bean"
-  val LIST = "list"
-  val SET = "set"
-  val MAP = "map"
-  val KEY = "key"
-  val BEAN_REF = "bean"
 }

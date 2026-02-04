@@ -15,9 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.config
+package org.beangle.cdi.spring
 
-import org.beangle.cdi.spring.beans.FactoryBeanProxy
 import org.beangle.commons.bean.Factory
 import org.beangle.commons.cdi.Binder
 import org.beangle.commons.cdi.Binder.Definition
@@ -121,6 +120,7 @@ object SpringBeanRegistry {
     val name = defn.beanName
     val factory = new GenericBeanDefinition()
     factory.setBeanClass(classOf[FactoryBeanProxy[_]])
+    //禁用自动注入
     factory.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO)
     factory.setScope(defn.scope)
     factory.setPrimary(defn.primaryOf.nonEmpty)

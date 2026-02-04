@@ -15,10 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.beans
+package org.beangle.cdi.spring
 
-import java.beans._
 import org.beangle.commons.lang.reflect.BeanInfos
+
+import java.beans.*
 
 class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
 

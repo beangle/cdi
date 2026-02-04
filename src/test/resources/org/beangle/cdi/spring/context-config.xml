@@ -3,20 +3,8 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-  <bean id="BeanContainer" class="org.beangle.cdi.spring.context.SpringContainer" >
+  <bean id="BeanContainer" class="org.beangle.cdi.spring.SpringContainer" >
     <property name="moduleLocations" value="classpath*:beangle.xml" />
-  </bean>
-
-  <bean id="userDaoProvider" class="org.beangle.cdi.spring.bean.UserDaoProvider" autowire="byType"/>
-
-  <bean id="userLdapService" class="org.beangle.cdi.spring.bean.UserService">
-    <property name="provider" ref="userLdapProvider"/>
-  </bean>
-
-  <bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">
-    <property name="propertyEditorRegistrars">
-      <bean class="org.beangle.cdi.spring.beans.ScalaEditorRegistrar"/>
-    </property>
   </bean>
 
 </beans>

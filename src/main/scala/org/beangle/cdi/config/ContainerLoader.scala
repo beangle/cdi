@@ -15,20 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.spring.config
+package org.beangle.cdi.config
 
-import org.beangle.cdi.spring.bean.RedisService
-import org.beangle.cdi.spring.context.ContextLoader
-import org.scalatest.funspec.AnyFunSpec
-import org.scalatest.matchers.should.Matchers
+import org.beangle.commons.cdi.Container
 
-class PropertyTest extends AnyFunSpec, Matchers {
+trait ContainerLoader {
 
-  describe("PropertyResolver") {
-    it("resolve env") {
-      val factory = ContextLoader.defaultLoader.load("root", null, "classpath:org/beangle/cdi/spring/context-config.xml")
-      val service = factory.getBean("redisService", classOf[RedisService])
-      assert(service.config.url == "host2:1234")
-    }
-  }
+  def load(id: String, configLocation: String): Container
 }
