@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.spring
 
-import org.beangle.cdi.CDILogger
+import org.beangle.cdi.Logger
 import org.beangle.cdi.config.{BindingLoader, BindingRegistry, ContainerEventMulticaster}
 import org.beangle.commons.cdi.{Binder, Condition}
 import org.beangle.commons.lang.time.Stopwatch
@@ -41,7 +41,7 @@ abstract class BindModuleProcessor(private val configLocation: String) extends B
     val (modules, reconfigs) = BindingLoader.loadModules(configLocation)
     val items = BindingLoader.loadRegistryItems(modules)
     val existed = SpringBeanRegistry.findBeans(springRegistry)
-    CDILogger.info(s"Load ${items.size} beans in $watch")
+    Logger.info(s"Load ${items.size} beans in $watch")
 
     //reconfig autowire and register
     val registry = new BindingRegistry(existed)

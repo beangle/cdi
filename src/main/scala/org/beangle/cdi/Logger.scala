@@ -17,8 +17,8 @@
 
 package org.beangle.cdi
 
-import org.beangle.commons.logging.{Logger, slf4j}
+import org.beangle.commons.logging.{slf4j, Logger as CLogger}
 
-object CDILogger extends Logger(slf4j("org.beangle.cdi")) {
+object Logger extends CLogger(slf4j("org.beangle.cdi")) {
 
 }

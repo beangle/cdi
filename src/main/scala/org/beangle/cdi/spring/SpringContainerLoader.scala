@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.spring
 
-import org.beangle.cdi.CDILogger
+import org.beangle.cdi.Logger
 import org.beangle.cdi.config.{ContainerHooks, ContainerLoader}
 import org.beangle.commons.cdi.Container
 import org.beangle.commons.lang.time.Stopwatch
@@ -43,14 +43,14 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
   override def load(id: String, configLocation: String): Container = {
     require(Strings.isNotBlank(id), "Container needs a non empty id")
     val watch = new Stopwatch(true)
-    CDILogger.info(s"$id starting")
+    Logger.info(s"$id starting")
     factory = DefaultListableBeanFactory()
     factory.setAllowBeanDefinitionOverriding(false)
     factory.setSerializationId(id)
     val container = prepareContainer(configLocation)
     refresh(container)
     Container.register(container)
-    CDILogger.info(s"$id started in $watch")
+    Logger.info(s"$id started in $watch")
     container
   }
 

@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.config
 
-import org.beangle.cdi.CDILogger
+import org.beangle.cdi.Logger
 import org.beangle.commons.cdi.Binder.{InjectPlaceHolder, Reference}
 import org.beangle.commons.cdi.Reconfig
 import org.beangle.commons.cdi.Reconfig.{Definition, ReconfigType}
@@ -245,7 +245,7 @@ class ReconfigParser {
 
   /** Report an error with the given message for the given source element. */
   private def error(message: String, source: Node, cause: Throwable = null): AnyRef = {
-    CDILogger.error(message, cause)
+    Logger.error(message, cause)
     null
   }
 }

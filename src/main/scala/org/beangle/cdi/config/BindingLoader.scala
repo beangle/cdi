@@ -36,10 +36,6 @@ object BindingLoader {
    * @param path classpath*:beangle.xml/classpath:beangle.xml/file://
    */
   def loadModules(path: String): (Iterable[BindModule], Iterable[Reconfig]) = {
-    var profile = System.getProperty(Enviroment.ProfileKey, "")
-    if (JVM.isDebugMode) profile += ",dev"
-    val profiles = Strings.split(profile, ",").map(s => s.trim).toSet
-
     //collect bind modules and read reconfig properties
     val modules = new collection.mutable.HashSet[BindModule]
     val reconfigs = Collections.newBuffer[Reconfig]
@@ -51,6 +47,7 @@ object BindingLoader {
       if Strings.isNotBlank(clazzName) then moduleNames += clazzName
     }
 
+    val profiles = Enviroment.profiles
     moduleNames foreach { name =>
       Module.load(name, profiles) foreach {
         case bm: BindModule => modules += bm

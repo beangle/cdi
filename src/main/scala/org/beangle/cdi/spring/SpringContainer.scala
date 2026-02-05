@@ -78,4 +78,8 @@ class SpringContainer(private val factory: DefaultListableBeanFactory, configLoc
   override def close(): Unit = {
     factory.destroySingletons()
   }
+
+  override def underlying: Any = {
+    factory
+  }
 }

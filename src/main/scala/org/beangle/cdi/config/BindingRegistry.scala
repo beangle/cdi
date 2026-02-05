@@ -17,7 +17,7 @@
 
 package org.beangle.cdi.config
 
-import org.beangle.cdi.CDILogger
+import org.beangle.cdi.Logger
 import org.beangle.commons.cdi.Binder.*
 import org.beangle.commons.cdi.Reconfig.ReconfigType
 import org.beangle.commons.cdi.{Binder, Condition, Reconfig, nowire}
@@ -37,18 +37,23 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
 
   override def register(items: Iterable[Binder.RegistryItem]): Unit = {
     val watch = new Stopwatch(true)
-    rebuildCache()
     val defns = items.toBuffer
     val mandatories = defns.filter(_.condition == Condition.None)
     defns.subtractAll(mandatories)
     addBeans(mandatories)
-    var meeted = defns.filter(i => i.condition.meet(this))
+    var meeted = defns.filter { i =>
+      val m = i.condition.meet(this)
+      if (!m) {
+        Logger.debug(s"Dosent register ${i.beanName} for ${i.condition}")
+      }
+      m
+    }
     while (meeted.nonEmpty) {
       addBeans(meeted)
       defns.subtractAll(meeted)
       meeted = defns.filter(i => i.condition.meet(this))
     }
-    CDILogger.info(s"Auto register ${items.size} beans in $watch")
+    Logger.info(s"Auto register ${items.size} beans in $watch")
   }
 
   def allBeans: Iterable[Binder.RegistryItem] = {
@@ -72,7 +77,7 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
             beans.remove(beanName) match {
               case Some(old) => removed.addOne(beanName)
               case None =>
-                if reconfig.ignoreMissing then CDILogger.warn(s"No bean $beanName to remove")
+                if reconfig.ignoreMissing then Logger.warn(s"No bean $beanName to remove")
                 else throw new RuntimeException(s"Without bean $beanName to remove")
             }
           case ReconfigType.Update =>
@@ -87,15 +92,15 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
                 }
                 defn.merge(rd)
               case None =>
-                if reconfig.ignoreMissing then CDILogger.warn(s"No bean $beanName to reconfig")
+                if reconfig.ignoreMissing then Logger.warn(s"No bean $beanName to reconfig")
                 else throw new RuntimeException(s"Without bean $beanName to reconfig")
             }
         }
       }
     }
     if (updated.nonEmpty || removed.nonEmpty) {
-      CDILogger.debug(s"Reconfig details update $updated and remove $removed")
-      CDILogger.info(s"Reconfig complete. update ${updated.size} and remove ${removed.size} in $watch")
+      Logger.debug(s"Reconfig details update $updated and remove $removed")
+      Logger.info(s"Reconfig complete. update ${updated.size} and remove ${removed.size} in $watch")
     }
   }
 
@@ -116,7 +121,7 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
         }
       case _ =>
     }
-    CDILogger.info(s"Autowire ${wired} beans using $watch")
+    Logger.info(s"Autowire ${wired} beans using $watch")
   }
 
   /** Autowire single bean. */
@@ -192,11 +197,15 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
           case Some(n) => dfn.properties.put(propertyName, Reference(n))
           case None =>
             if (dfn.optionals.contains(propertyName)) {
-              if (beanNames.isEmpty) CDILogger.debug(s"$beanName's $propertyName cannot found candidate beans.")
-              else CDILogger.warn(s"$beanName's $propertyName expected single bean but found ${beanNames.size}:$beanNames")
+              if (beanNames.isEmpty) Logger.debug(s"$beanName's $propertyName cannot found candidate beans.")
+              else Logger.warn(s"$beanName's $propertyName expected single bean but found ${beanNames.size}:$beanNames")
             } else {
-              if (!propertyType.isOptional && dfn.wiredEagerly && !propertyType.clazz.isPrimitive) {
-                wireError(dfn, s"cannot find suitable bean for $propertyName(${beanNames.size}:$beanNames)")
+              if (!propertyType.isOptional) {
+                if (beanNames.isEmpty) {
+                  wireError(dfn, s"missing candidates for $propertyName")
+                } else {
+                  wireError(dfn, s"multiple bean for $propertyName(${beanNames.size}:$beanNames)")
+                }
               }
             }
         }
@@ -249,25 +258,29 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
    * Unsatisfied property is empty value and not primary type and not starts with java.
    */
   private def unsatisfiedProperties(bd: Binder.Definition, beanInfo: BeanInfo): collection.Map[String, TypeInfo] = {
-    val clazz = bd.clazz
-    val defined = bd.properties
     val nowires = bd.nowires
-    val properties = new collection.mutable.HashMap[String, TypeInfo]
-    for ((name, m) <- beanInfo.properties) {
-      if (m.writable && !nowires.contains(name) && !defined.contains(name)) {
-        val method = m.setter.get
-        val typeinfo = m.typeinfo
-        if (null == method.getAnnotation(classOf[nowire])) {
-          if (typeinfo.isIterable) { //多值类型
-            properties.put(name, typeinfo)
-          } else { //单值类型
-            val propertyClazz = if typeinfo.isOptional then typeinfo.args.head.clazz else typeinfo.clazz
-            if autowireable(propertyClazz) then properties.put(name, typeinfo)
+    if (nowires.contains("*")) {
+      Map.empty
+    } else {
+      val clazz = bd.clazz
+      val defined = bd.properties
+      val properties = new collection.mutable.HashMap[String, TypeInfo]
+      for ((name, m) <- beanInfo.properties) {
+        if (m.writable && !nowires.contains(name) && !defined.contains(name)) {
+          val method = m.setter.get
+          val typeinfo = m.typeinfo
+          if (null == method.getAnnotation(classOf[nowire])) {
+            if (typeinfo.isIterable) { //多值类型
+              properties.put(name, typeinfo)
+            } else { //单值类型
+              val propertyClazz = if typeinfo.isOptional then typeinfo.args.head.clazz else typeinfo.clazz
+              if autowireable(propertyClazz) then properties.put(name, typeinfo)
+            }
           }
         }
       }
+      properties
     }
-    properties
   }
 
   private def autowireable(clazz: Class[_]): Boolean = {
@@ -301,7 +314,7 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
       if (null == older || (older.profile == null && newer.profile != null)) {
         registeable = true
       } else {
-        CDILogger.warn(s"Ignore exists bean definition ${newer.beanName} in ${newer.module}")
+        Logger.warn(s"Ignore exists bean definition ${newer.beanName} in ${newer.module}")
       }
       if (registeable) {
         newer.primaryOf foreach { clz => setPrimary(newer.beanName, clz) }
@@ -309,6 +322,8 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
         typesByName.put(newer.beanName, newer.beanClass) //按照beanClass注册，这个参数这个定义所能构造出来的类型
       }
     }
+    //添加之后将nameByType清空
+    clearCache()
   }
 
   private def wireError(dfn: Binder.Definition, msg: String): Any = {
@@ -345,7 +360,7 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     }
   }
 
-  private def rebuildCache(): Unit = {
+  private def clearCache(): Unit = {
     namesByType.clear()
   }
 }
