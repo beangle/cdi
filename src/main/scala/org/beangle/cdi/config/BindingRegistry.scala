@@ -27,6 +27,10 @@ import org.beangle.commons.lang.time.Stopwatch
 
 import scala.collection.mutable
 
+/** Registry that manages bean definitions with autowiring and reconfiguration support.
+ *
+ * @param background pre-registered bean names and types from Spring container
+ */
 class BindingRegistry(background: collection.Map[String, Class[_]]) extends Binder.Registry {
   private val beans = new mutable.HashMap[String, Binder.RegistryItem]
   private val namesByType = new collection.mutable.HashMap[Class[_], List[String]]
@@ -35,6 +39,10 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
 
   typesByName.addAll(background)
 
+  /** Register bean definition items, resolving conditions iteratively.
+   *
+   * @param items registry items (definitions and singletons) to register
+   */
   override def register(items: Iterable[Binder.RegistryItem]): Unit = {
     val watch = new Stopwatch(true)
     val defns = items.toBuffer
@@ -60,10 +68,9 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     beans.values
   }
 
-  /** Apply reconfig to bean definitions
+  /** Apply reconfigurations to bean definitions (remove or update beans).
    *
-   * @param registry
-   * @param bindRegistry
+   * @param reconfigs iterable of reconfig definitions to apply
    */
   def reconfig(reconfigs: Iterable[Reconfig]): Unit = {
     val watch = Stopwatch.start()
@@ -104,11 +111,9 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     }
   }
 
-  /** Autowire bean by constructor and properties.
-   * <ul>policy
-   * <li>find unique dependency
-   * <li>find primary type of dependency
-   * </ul>
+  /** Autowire beans by constructor and properties.
+   *
+   * Resolution policy: find unique dependency, or find primary type of dependency.
    */
   def autowire(): Unit = {
     val watch = new Stopwatch(true)
@@ -124,7 +129,7 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     Logger.info(s"Autowire ${wired} beans using $watch")
   }
 
-  /** Autowire single bean. */
+  /** Autowire a single bean by injecting constructor arguments and properties. */
   private def autowireBean(dfn: Binder.Definition): Unit = {
     val beanName = dfn.beanName
     val clazz = dfn.clazz
@@ -213,6 +218,12 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     }
   }
 
+  /** Create a bean reference for the given dependency class.
+   *
+   * @param dfn   bean definition context for error reporting
+   * @param clazz dependency class to resolve
+   * @return reference to the resolved bean
+   */
   private def createReference(dfn: Definition, clazz: Class[_]): Reference = {
     val beanNames = getBeanNames(clazz)
     if (beanNames.size == 1) {
@@ -227,7 +238,12 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     }
   }
 
-  /** Create reference(s) by typeinfo */
+  /** Create bean reference(s) for the given type information.
+   *
+   * @param dfn      bean definition context for error reporting
+   * @param typeinfo type information for the dependency
+   * @return reference or collection of references
+   */
   private def createReference(dfn: Definition, typeinfo: TypeInfo): Any = {
     typeinfo match {
       case TypeInfo.GeneralType(clazz, args) => createReference(dfn, if typeinfo.isOptional then args.head.clazz else clazz)
@@ -254,8 +270,13 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     }
   }
 
-  /** Find unsatisfied properties
-   * Unsatisfied property is empty value and not primary type and not starts with java.
+  /** Find unsatisfied properties that require autowiring.
+   *
+   * Unsatisfied property has empty value, is not a primary type, and does not start with java.
+   *
+   * @param bd        bean definition to inspect
+   * @param beanInfo  bean metadata for property discovery
+   * @return map of property names to their type information
    */
   private def unsatisfiedProperties(bd: Binder.Definition, beanInfo: BeanInfo): collection.Map[String, TypeInfo] = {
     val nowires = bd.nowires
@@ -283,16 +304,18 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     }
   }
 
+  /** Check if the class is autowireable (not primitive, not java or scala package types). */
   private def autowireable(clazz: Class[_]): Boolean = {
     !clazz.isPrimitive && !clazz.getName.startsWith("java.") && !clazz.getName.startsWith("scala.")
   }
 
-  /** 查找一个和定义匹配的构造函数
-   * find only one constructor or constructor with same parameters count
+  /** Find a constructor that matches the bean definition.
    *
-   * @param manifest
-   * @param dfn
-   * @return
+   * Matches the single constructor with parameters, or a constructor with the same parameter count.
+   *
+   * @param manifest bean metadata containing constructor information
+   * @param dfn      bean definition with constructor args
+   * @return matched constructor info if found
    */
   private def findMatchedConstructor(manifest: BeanInfo, dfn: Binder.Definition): Option[BeanInfo.ConstructorInfo] = {
     val ctors = manifest.ctors
@@ -304,6 +327,7 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     }
   }
 
+  /** Add new bean items to registry, respecting profile and existing definitions. */
   private def addBeans(newers: Iterable[Binder.RegistryItem]): Unit = {
     newers foreach { newer =>
       if (typesByName.contains(newer.beanName)) {
@@ -319,17 +343,18 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
       if (registeable) {
         newer.primaryOf foreach { clz => setPrimary(newer.beanName, clz) }
         beans.put(newer.beanName, newer)
-        typesByName.put(newer.beanName, newer.beanClass) //按照beanClass注册，这个参数这个定义所能构造出来的类型
+        typesByName.put(newer.beanName, newer.beanClass)
       }
     }
-    //添加之后将nameByType清空
     clearCache()
   }
 
+  /** Throw runtime exception for wiring failure. */
   private def wireError(dfn: Binder.Definition, msg: String): Any = {
     throw new RuntimeException(s"Cannot wired bean ${dfn.beanName} for $msg")
   }
 
+  /** Set primary bean for the given type. */
   private def setPrimary(name: String, clazz: Class[_]): Unit = {
     primaries.put(clazz, name)
   }
@@ -346,8 +371,10 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     typesByName.contains(beanName)
   }
 
-  /**
-   * Get bean name list according given type
+  /** Get bean names assignable to the given type.
+   *
+   * @param clazz target type to match
+   * @return list of bean names matching the type
    */
   override def getBeanNames(clazz: Class[_]): List[String] = {
     if (namesByType.contains(clazz)) {
@@ -360,6 +387,7 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
     }
   }
 
+  /** Clear type-to-names cache after registry changes. */
   private def clearCache(): Unit = {
     namesByType.clear()
   }

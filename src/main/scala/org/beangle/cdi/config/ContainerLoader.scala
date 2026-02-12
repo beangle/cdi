@@ -19,7 +19,17 @@ package org.beangle.cdi.config
 
 import org.beangle.commons.cdi.Container
 
+/** Loader for CDI containers.
+ *
+ * Creates and initializes a container from the given configuration location.
+ */
 trait ContainerLoader {
 
+  /** Load a container by id and configuration path.
+   *
+   * @param id             container identifier
+   * @param configLocation path to configuration (e.g. classpath*:beangle.xml)
+   * @return initialized container
+   */
   def load(id: String, configLocation: String): Container
 }

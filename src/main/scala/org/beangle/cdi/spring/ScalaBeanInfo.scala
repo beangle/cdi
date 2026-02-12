@@ -21,6 +21,10 @@ import org.beangle.commons.lang.reflect.BeanInfos
 
 import java.beans.*
 
+/** BeanInfo implementation for Scala classes using BeanInfos reflection.
+ *
+ * @param beanClass Scala class to introspect
+ */
 class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
 
   def delegate: java.beans.BeanInfo = {

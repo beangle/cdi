@@ -30,10 +30,15 @@ import org.springframework.beans.factory.support.{AbstractBeanDefinition, BeanDe
 
 import scala.collection.mutable
 
-/** 查找spring注册表中的bean的名称和类型
+/** Discovers bean names and types from Spring registry and registers bind definitions.
  */
 object SpringBeanRegistry {
 
+  /** Register bean definitions or singletons to the Spring registry.
+   *
+   * @param dfns     registry items (definitions or singletons) to register
+   * @param registry Spring bean definition registry
+   */
   def register(dfns: Iterable[Binder.RegistryItem], registry: BeanDefinitionRegistry): Unit = {
     val singletonRegistry = registry.asInstanceOf[SingletonBeanRegistry]
     dfns foreach {
@@ -42,15 +47,18 @@ object SpringBeanRegistry {
     }
   }
 
+  /** Find all bean names and their resolved types from the registry.
+   *
+   * @param registry Spring bean definition registry
+   * @return map of bean name to bean class
+   */
   def findBeans(registry: BeanDefinitionRegistry): mutable.Map[String, Class[_]] = {
     val nameTypes = Collections.newMap[String, Class[_]]
-    //register singletons
     val singletonRegistry = registry.asInstanceOf[SingletonBeanRegistry]
     singletonRegistry.getSingletonNames foreach { singtonName =>
       nameTypes.put(singtonName, singletonRegistry.getSingleton(singtonName).getClass)
     }
 
-    //register definitions
     for (name <- registry.getBeanDefinitionNames) {
       val bd = registry.getBeanDefinition(name)
       val beanClass = if (bd.isAbstract) null else getBeanClass(registry, name)
@@ -93,7 +101,11 @@ object SpringBeanRegistry {
     nameTypes
   }
 
-  /** 将bean定义注册到spring中，并且桥接Factory到FactoryBean */
+  /** Register a bean definition to Spring, bridging Factory to FactoryBean when needed.
+   *
+   * @param defn     bind definition to register
+   * @param registry Spring bean definition registry
+   */
   private def registerBean(defn: Binder.Definition, registry: BeanDefinitionRegistry): Unit = {
     val bd = new ExtBeanDefinition(defn, Enviroment.Default)
     if (null != defn.targetClass && !defn.isAbstract) {
@@ -110,26 +122,31 @@ object SpringBeanRegistry {
     }
   }
 
-  /** 为了Factory[_]创建一个符合spring的FactoryBean的定义
+  /** Create a Spring FactoryBean definition that wraps Factory[_].
    *
-   * @param defn
-   * @return
+   * @param defn bind definition for the factory
+   * @return generic bean definition for FactoryBean proxy
    */
   private def createFactoryDefinition(defn: Definition): GenericBeanDefinition = {
     assert(defn.targetClass.nonEmpty)
     val name = defn.beanName
     val factory = new GenericBeanDefinition()
     factory.setBeanClass(classOf[FactoryBeanProxy[_]])
-    //禁用自动注入
     factory.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO)
     factory.setScope(defn.scope)
     factory.setPrimary(defn.primaryOf.nonEmpty)
     factory.getPropertyValues.add("target", new RuntimeBeanReference(name + "#proxy"))
     factory.getPropertyValues.add("objectType", defn.targetClass.get)
-    defn.description foreach { d => factory.setDescription(d + "的Spring代理") }
+    defn.description foreach { d => factory.setDescription(d + " (Spring proxy)") }
     factory
   }
 
+  /** Resolve bean class from registry, following parent definition chain.
+   *
+   * @param registry bean definition registry
+   * @param name     bean name
+   * @return resolved bean class or null
+   */
   private def getBeanClass(registry: BeanDefinitionRegistry, name: String): Class[_] = {
     val bd = registry.getBeanDefinition(name)
     var clazz: Class[_] = getBeanClass(bd)
@@ -144,6 +161,7 @@ object SpringBeanRegistry {
     clazz
   }
 
+  /** Extract bean class from bean definition. */
   private def getBeanClass(bd: BeanDefinition): Class[_] = {
     var clazz: Class[_] = null
     bd match {

@@ -21,7 +21,14 @@ import org.springframework.beans.BeanInfoFactory
 
 import java.beans.BeanInfo
 
+/** BeanInfoFactory that provides ScalaBeanInfo for non-Java/Scala standard library classes. */
 class ScalaBeanInfoFactory extends BeanInfoFactory {
+
+  /** Return ScalaBeanInfo for custom classes, null for java.* and scala.* types.
+   *
+   * @param beanClass class to introspect
+   * @return BeanInfo or null
+   */
   def getBeanInfo(beanClass: Class[_]): BeanInfo = {
     val className = beanClass.getName
     if (className.startsWith("java.") || className.startsWith("scala.")) {

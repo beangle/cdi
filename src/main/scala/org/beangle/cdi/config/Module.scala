@@ -26,13 +26,20 @@ import org.beangle.commons.lang.{ClassLoaders, Strings}
 
 import java.io.InputStream
 
-/** Module definition
+/** Module definition loaded from configuration.
  *
- * @param className className
+ * @param className fully qualified class name of the module
  */
 case class Module(className: String)
 
 object Module {
+
+  /** Load a module instance by class name, matching against active profiles.
+   *
+   * @param className module class name (BindModule or ReconfigModule)
+   * @param profiles  active profile names for filtering
+   * @return module instance or object if profile matches, None otherwise
+   */
   def load(className: String, profiles: Set[String]): Option[Any] = {
     var moduleClass = ClassLoaders.load(className)
     if (!classOf[BindModule].isAssignableFrom(moduleClass) && !classOf[ReconfigModule].isAssignableFrom(moduleClass)) {
@@ -52,6 +59,7 @@ object Module {
     }
   }
 
+  /** Check if module class matches active profiles (no annotation or profile in set). */
   private def matches(clazz: Class[_], profiles: Set[String]): Boolean = {
     val anno = clazz.getAnnotation(classOf[profile])
     null == anno || null != anno && profiles.contains(anno.value)

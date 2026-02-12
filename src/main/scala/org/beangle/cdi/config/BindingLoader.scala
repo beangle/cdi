@@ -31,12 +31,11 @@ import scala.collection.mutable
 
 object BindingLoader {
 
-  /** Load definition from modules and reconfig modules
+  /** Load definition from modules and reconfig modules.
    *
-   * @param path classpath*:beangle.xml/classpath:beangle.xml/file://
+   * @param path path to configuration file, supports classpath*:beangle.xml, classpath:beangle.xml, or file://
    */
   def loadModules(path: String): (Iterable[BindModule], Iterable[Reconfig]) = {
-    //collect bind modules and read reconfig properties
     val modules = new collection.mutable.HashSet[BindModule]
     val reconfigs = Collections.newBuffer[Reconfig]
 
@@ -61,10 +60,13 @@ object BindingLoader {
     (modules, reconfigs)
   }
 
-  /** 从模块中加载bean定义 */
+  /** Load bean definition registry items from bind modules.
+   *
+   * @param modules iterable of bind modules to load
+   * @return buffer of registry items collected from all modules
+   */
   def loadRegistryItems(modules: Iterable[BindModule]): mutable.Buffer[Binder.RegistryItem] = {
     val items = Collections.newBuffer[Binder.RegistryItem]
-    //搜集所有模块的注册条目
     modules foreach { module =>
       val moduleName = module.getClass.getName
       val binder = new Binder(moduleName)
@@ -77,10 +79,10 @@ object BindingLoader {
     items
   }
 
-  /** Read spring style config.xml
+  /** Read Spring-style reconfiguration XML and populate reconfig definitions.
    *
-   * @param configUrl http or file or classpath
-   * @param reconfig  reconfig module
+   * @param configUrl URL scheme: http, file://, or classpath:
+   * @param reconfig  target reconfig instance to populate with bean definitions
    */
   private def readReconfig(configUrl: String, reconfig: Reconfig): Unit = {
     var url: URL = null

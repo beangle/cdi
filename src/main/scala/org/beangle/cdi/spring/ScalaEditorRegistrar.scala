@@ -23,11 +23,13 @@ import java.beans.PropertyEditor
 import scala.collection.{immutable, mutable}
 import scala.util.matching.Regex
 
-/** Property editor registrar for Scala property editors.
- *
- */
+/** Property editor registrar that registers Scala type editors (Option, Regex, collections). */
 class ScalaEditorRegistrar extends PropertyEditorRegistrar {
 
+  /** Register Scala property editors (Option, Regex, Seq, Set, Map, etc.) with the registry.
+   *
+   * @param registry property editor registry to populate
+   */
   def registerCustomEditors(registry: PropertyEditorRegistry): Unit = {
     given PropertyEditorRegistry = registry
 
@@ -69,6 +71,7 @@ class ScalaEditorRegistrar extends PropertyEditorRegistrar {
     register(classOf[mutable.HashMap[Any, Any]], new ScalaCollectionEditor(() => mutable.HashMap.newBuilder[Any, Any]))
   }
 
+  /** Register a custom editor for the given class. */
   @inline
   private def register(clazz: Class[_], editor: PropertyEditor)(implicit registry: PropertyEditorRegistry): Unit = {
     registry.registerCustomEditor(clazz, editor)

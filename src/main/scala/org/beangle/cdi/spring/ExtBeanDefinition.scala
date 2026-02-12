@@ -28,6 +28,13 @@ import java.util as ju
 
 object ExtBeanDefinition {
 
+  /** Convert bind values to Spring-managed types for bean definition.
+   *
+   * @param v         value to convert (seq, set, map, properties, reference, etc.)
+   * @param env       environment for placeholder resolution
+   * @param mergeable whether collections should allow merge
+   * @return Spring-managed value
+   */
   def convert(v: Any, env: Enviroment, mergeable: Boolean = true): Any = {
     v match {
       case value: collection.Seq[_] => toList(value, mergeable)
@@ -41,6 +48,7 @@ object ExtBeanDefinition {
     }
   }
 
+  /** Convert Java Properties to Spring ManagedProperties. */
   private def toProperties(value: ju.Properties, mergeable: Boolean): ManagedProperties = {
     val props = new ManagedProperties()
     val propertyNames = value.propertyNames()
@@ -52,6 +60,7 @@ object ExtBeanDefinition {
     props
   }
 
+  /** Convert Scala Map to Spring ManagedMap, resolving references. */
   private def toMap(value: collection.Map[_, _], env: Enviroment, mergeable: Boolean): ManagedMap[Any, Any] = {
     val maps = new ManagedMap[Any, Any]
     value foreach { case (itemk, itemv) =>
@@ -64,6 +73,7 @@ object ExtBeanDefinition {
     maps
   }
 
+  /** Convert Scala Seq to Spring ManagedList, resolving references. */
   private def toList(value: collection.Seq[_], mergeable: Boolean): ManagedList[Any] = {
     val list = new ManagedList[Any]
     value foreach {
@@ -74,6 +84,7 @@ object ExtBeanDefinition {
     list
   }
 
+  /** Convert Scala Set to Spring ManagedSet, resolving references. */
   private def toSet(value: collection.Set[_], mergeable: Boolean): ManagedSet[Any] = {
     val set = new ManagedSet[Any]
     value foreach { item =>
@@ -90,6 +101,10 @@ object ExtBeanDefinition {
 
 import ExtBeanDefinition.convert
 
+/** Extended bean definition that maps bind Definition to Spring GenericBeanDefinition.
+ *
+ * Supports Scala collections, optional types, and placeholder resolution.
+ */
 class ExtBeanDefinition extends GenericBeanDefinition {
 
   var beanName: String = _
@@ -100,6 +115,11 @@ class ExtBeanDefinition extends GenericBeanDefinition {
 
   var wiredEagerly: Boolean = _
 
+  /** Construct from bind Definition and environment.
+   *
+   * @param d   bind definition to convert
+   * @param env environment for placeholder and reference conversion
+   */
   def this(d: Definition, env: Enviroment) = {
     this()
     this.setBeanClass(d.clazz)

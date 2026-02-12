@@ -25,12 +25,15 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory
 
 import scala.jdk.javaapi.CollectionConverters.asScala
 
-/** Spring based IOC Container
+/** Spring-based IoC container implementation.
+ *
+ * @param factory         Spring bean factory
+ * @param configLocation  path to bind module configuration (default: classpath*:beangle.xml)
  *
  * @author chaostone
  * @since 3.1.0
  */
-@description("Spring提供的Bean容器")
+@description("Spring-based Bean container")
 class SpringContainer(private val factory: DefaultListableBeanFactory, configLocation: String = "classpath*:beangle.xml")
   extends BindModuleProcessor(configLocation), Container {
 

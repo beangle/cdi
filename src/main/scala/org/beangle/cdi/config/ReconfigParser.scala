@@ -31,7 +31,7 @@ import java.net.URL
 import java.util.Properties
 import scala.collection.mutable
 
-/** Reconfig BeanDefinition Parser
+/** Parser for reconfiguring bean definitions from XML.
  *
  * @author chaostone
  */
@@ -39,15 +39,22 @@ class ReconfigParser {
 
   private val usedNames = new mutable.HashSet[String]
 
-  /** Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
-   * were errors during parse.
+  /** Parse the supplied {{{ <bean> }}} XML element.
+   *
+   * May return null if errors occur during parsing.
+   *
+   * @param ele XML node of bean element
+   * @return parsed reconfig definition or null
    */
   def parseBeanDefinition(ele: Node): Reconfig.Definition = {
     parseBeanDefinition(ele, null)
   }
 
-  /** Parses the supplied <code>&ltbean&gt</code> element. May return <code>null</code> if there
-   * were errors during parse.
+  /** Parse the supplied {{{ <bean> }}} element with optional containing bean.
+   *
+   * @param ele             XML node of bean element
+   * @param containingBean parent bean definition if nested, null otherwise
+   * @return parsed reconfig definition or null
    */
   private def parseBeanDefinition(ele: Node, containingBean: Definition): Reconfig.Definition = {
     val id = ele.get("id").orNull
@@ -56,15 +63,22 @@ class ReconfigParser {
     parseBeanDefinition(ele, id, containingBean)
   }
 
-  /** Validate that the specified bean name and aliases have not been used already. */
+  /** Validate that the specified bean name has not been used already.
+   *
+   * @param beanName    bean name to check
+   * @param beanElement XML element for error reporting
+   */
   private def checkNameUniqueness(beanName: String, beanElement: Node): Unit = {
     if (this.usedNames.contains(beanName)) error("Bean name '" + beanName + "' is already used in this file", beanElement)
     this.usedNames += beanName
   }
 
-  /** Parse the bean definition itself, without regard to name or aliases. May
-   * return <code>null</code> if problems occured during the parse of the bean
-   * definition.
+  /** Parse the bean definition content, disregarding name or aliases.
+   *
+   * @param ele              bean XML element
+   * @param beanName         bean name from id attribute
+   * @param containingBean  parent bean if nested, null otherwise
+   * @return parsed definition or null on parse error
    */
   private def parseBeanDefinition(ele: Node, beanName: String, containingBean: Definition): Definition = {
     val className = ele.get("class").orNull
@@ -85,17 +99,29 @@ class ReconfigParser {
     null
   }
 
-  /** Parse constructor-arg sub-elements of the given bean element. */
+  /** Parse constructor-arg sub-elements of the given bean element.
+   *
+   * @param beanEle bean XML element
+   * @param bd      definition to populate
+   */
   private def parseConstructorArgs(beanEle: Node, bd: Definition): Unit = {
     (beanEle \ "constructor-arg") foreach { node => parseConstructorArg(node, bd) }
   }
 
-  /** Parse property sub-elements of the given bean element. */
+  /** Parse property sub-elements of the given bean element.
+   *
+   * @param beanEle bean XML element
+   * @param bd      definition to populate
+   */
   private def parseProperties(beanEle: Node, bd: Definition): Unit = {
     (beanEle \ "property") foreach { node => parseProperty(node, bd) }
   }
 
-  /** Parse a constructor-arg element. */
+  /** Parse a single constructor-arg element.
+   *
+   * @param ele constructor-arg XML element
+   * @param bd  definition to populate
+   */
   private def parseConstructorArg(ele: Node, bd: Definition): Unit = {
     val indexAttr = ele.get("index", null)
     if (Strings.isNotEmpty(indexAttr)) {
@@ -106,14 +132,24 @@ class ReconfigParser {
     }
   }
 
-  /** Parse a property element. */
+  /** Parse a single property element.
+   *
+   * @param ele property XML element
+   * @param bd  definition to populate
+   */
   private def parseProperty(ele: Node, bd: Definition): Unit = {
     val propertyName = ele("name")
     bd.properties.put(propertyName, parsePropertyValue(ele, bd, propertyName))
   }
 
-  /** Get the value of a property element. May be a list etc. Also used for
-   * constructor arguments, "propertyName" being null in this case.
+  /** Get the value of a property or constructor-arg element.
+   *
+   * May return list, ref, value, etc. For constructor arguments, propertyName is null.
+   *
+   * @param ele          value/ref/collection element
+   * @param bd           definition context
+   * @param propertyName property name, or null for constructor-arg
+   * @return parsed value
    */
   private def parsePropertyValue(ele: Node, bd: Definition, propertyName: String): Object = {
     val elementName = if (propertyName != null) "<property> element for property '" + propertyName + "'"
@@ -138,13 +174,16 @@ class ReconfigParser {
     } else if (subElement != null) {
       parsePropertySubElement(subElement, bd)
     } else {
-      // Neither child element nor "ref" or "value" attribute found.
       error(elementName + " must specify a ref or value", ele)
       null
     }
   }
 
-  /** Parse a value, ref or collection sub-element of a property or constructor-arg element.
+  /** Parse a value, ref, or collection sub-element of property or constructor-arg.
+   *
+   * @param ele sub-element (bean, ref, value, null, list, set, map, props)
+   * @param bd  definition context
+   * @return parsed object
    */
   private def parsePropertySubElement(ele: Node, bd: Definition): Object = {
     ele.label match {
@@ -160,22 +199,26 @@ class ReconfigParser {
     }
   }
 
+  /** Parse list collection element. */
   private def parseList(collectionEle: Node, bd: Definition): mutable.Buffer[Object] = {
     val target = new mutable.ArrayBuffer[Object]
     parseCollection(collectionEle, target, bd)
     target
   }
 
+  /** Parse set collection element. */
   private def parseSet(collectionEle: Node, bd: Definition): mutable.Set[Object] = {
     val target = new mutable.HashSet[Object]
     parseCollection(collectionEle, target, bd)
     target
   }
 
+  /** Parse collection element and add parsed children to target. */
   private def parseCollection(collectionEle: Node, target: mutable.Growable[Object], bd: Definition): Unit = {
     collectionEle.children foreach { e => target.addOne(parsePropertySubElement(e, bd)) }
   }
 
+  /** Parse map element with entry sub-elements. */
   private def parseMap(mapEle: Node, bd: Definition): collection.Map[Any, Any] = {
     val defaultKeyType = mapEle.get("key-type", null)
     val defaultValueType = mapEle.get("value-type", null)
@@ -201,7 +244,6 @@ class ReconfigParser {
       } else {
         error("<entry> element must specify a key", entryEle)
       }
-      // Extract value from attribute or sub-element.
       var value: Any = null
       val hasValueAttribute = entryEle.has("value")
       val hasValueRefAttribute = entryEle.has("value-ref")
@@ -223,17 +265,25 @@ class ReconfigParser {
     map
   }
 
-  /** Parse a key sub-element of a map element. */
+  /** Parse a key sub-element of a map entry element.
+   *
+   * @param keyEle            key XML element
+   * @param bd                definition context
+   * @param defaultKeyTypeName default key type for conversion
+   * @return parsed key value
+   */
   private def parseKey(keyEle: Node, bd: Definition, defaultKeyTypeName: String): Object = {
     parsePropertySubElement(keyEle.children.head, bd)
   }
 
+  /** Parse props element with prop sub-elements. */
   private def parseProps(propsEle: Node): java.util.Properties = {
     val props = new Properties()
     (propsEle \ "prop") foreach { propEle => props.put(propEle("key"), propEle.text) }
     props
   }
 
+  /** Convert string value to target type by class name. */
   private def convertTo(v: Any, clazz: String): Any = {
     v match {
       case s: String =>
@@ -243,20 +293,30 @@ class ReconfigParser {
     }
   }
 
-  /** Report an error with the given message for the given source element. */
+  /** Report an error with the given message for the given source element.
+   *
+   * @param message error message
+   * @param source  source XML element
+   * @param cause   optional exception cause
+   * @return always null (for assignment compatibility)
+   */
   private def error(message: String, source: Node, cause: Throwable = null): AnyRef = {
     Logger.error(message, cause)
     null
   }
 }
 
-/** BeanDefinitionReader
+/** Loader for bean reconfiguration definitions from XML.
  *
  * @author chaostone
  */
 object ReconfigParser {
 
-  /** load bean reconfig.xml */
+  /** Load bean reconfig definitions from the given URL.
+   *
+   * @param url URL to reconfig XML (file, classpath, or http)
+   * @return list of parsed reconfig definitions
+   */
   def load(url: URL): List[Reconfig.Definition] = {
     val doc = Document.parse(IOs.readString(url.openStream()))
     val parser = new ReconfigParser()

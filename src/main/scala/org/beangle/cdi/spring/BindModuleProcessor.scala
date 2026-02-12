@@ -25,18 +25,16 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.*
 import org.springframework.util.ClassUtils
 
-/** BindModuleProcessor完成bean的自动注册和再配置
- * 他是BeanFactoryPostProcessor的子接口，会执行的更早一些
+/** Processor for automatic bean registration and reconfiguration.
+ *
+ * Extends BeanDefinitionRegistryPostProcessor and executes early in the container lifecycle.
  *
  * @author chaostone
  */
 abstract class BindModuleProcessor(private val configLocation: String) extends BeanDefinitionRegistryPostProcessor {
 
-  /** Automate register and wire bean
-   * Reconfig beans
-   */
+  /** Automatically register, wire, and reconfig beans from bind modules. */
   override def postProcessBeanDefinitionRegistry(springRegistry: BeanDefinitionRegistry): Unit = {
-    //load bind and reconfig module
     val watch = Stopwatch.start()
     val (modules, reconfigs) = BindingLoader.loadModules(configLocation)
     val items = BindingLoader.loadRegistryItems(modules)
@@ -51,19 +49,21 @@ abstract class BindModuleProcessor(private val configLocation: String) extends B
     registry.reconfig(reconfigs)
     registry.autowire()
 
-    // register to spring container
     SpringBeanRegistry.register(registry.allBeans, springRegistry)
   }
 
-  /** 这里注册的editor有助于spring将bean定义中的jucl转换成scala集合类型的参数，
+  /** Register property editors to convert JUC to Scala collection types in bean definitions.
    *
-   * @param factory
+   * @param factory bean factory to configure
    */
   override def postProcessBeanFactory(factory: ConfigurableListableBeanFactory): Unit = {
     factory.addPropertyEditorRegistrar(new ScalaEditorRegistrar)
   }
 
-  /** register last buildin beans. */
+  /** Register last built-in beans such as EventMulticaster.
+   *
+   * @return iterable of additional registry items to register
+   */
   private def additional(): Iterable[Binder.RegistryItem] = {
     val clazz = classOf[ContainerEventMulticaster]
     val multicaster = new Binder.Definition("EventMulticaster.default", clazz, null).on(Condition.missing(clazz))

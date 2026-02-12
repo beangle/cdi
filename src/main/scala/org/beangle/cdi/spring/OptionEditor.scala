@@ -19,6 +19,10 @@ package org.beangle.cdi.spring
 
 import java.beans.PropertyEditorSupport
 
+/** Property editor for Scala Option types.
+ *
+ * Converts string or arbitrary values to Option for Spring property injection.
+ */
 class OptionEditor extends PropertyEditorSupport {
 
   override def setAsText(text: String): Unit = {

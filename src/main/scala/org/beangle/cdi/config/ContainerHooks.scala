@@ -21,8 +21,10 @@ import org.beangle.commons.cdi.{Container, ContainerListener}
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
 
 object ContainerHooks {
-  /**
-   * 通知ContainerListener
+
+  /** Notify all ContainerListener beans that the container has started.
+   *
+   * @param container the started container
    */
   def notify(container: Container): Unit = {
     container.getBeans(classOf[ContainerListener]) foreach { lns =>

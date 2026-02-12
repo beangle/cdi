@@ -20,8 +20,9 @@ package org.beangle.cdi.spring
 import java.beans.PropertyEditorSupport
 import scala.util.matching.Regex
 
-/**
- * Editor for [[scala.util.matching.Regex]], to directly populate a `Regex` property.
+/** Property editor for scala.util.matching.Regex.
+ *
+ * Converts string to Regex for direct property population.
  */
 class RegexEditor extends PropertyEditorSupport {
 

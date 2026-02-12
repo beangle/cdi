@@ -20,6 +20,10 @@ package org.beangle.cdi.spring
 import org.beangle.commons.bean.Factory
 import org.springframework.beans.factory.FactoryBean
 
+/** Spring FactoryBean adapter for beangle Factory[T].
+ *
+ * Bridges the beangle Factory interface to Spring's FactoryBean for bean creation.
+ */
 class FactoryBeanProxy[T] extends FactoryBean[T] {
 
   var target: Factory[T] = _

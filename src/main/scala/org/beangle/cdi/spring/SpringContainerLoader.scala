@@ -31,8 +31,9 @@ import org.springframework.core.io.support.{PathMatchingResourcePatternResolver,
 import org.springframework.core.io.{DefaultResourceLoader, Resource}
 import org.springframework.util.ClassUtils
 
-/**
- * Simple BeanFactory loader
+/** Simple BeanFactory loader for Spring-based containers.
+ *
+ * Loads bean definitions, invokes post-processors, and notifies lifecycle listeners.
  */
 class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolver, ContainerLoader {
   private val environment = new StandardEnvironment()
@@ -40,6 +41,12 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
   private val classLoader = ClassUtils.getDefaultClassLoader
   private var factory: DefaultListableBeanFactory = _
 
+  /** Load and initialize the container.
+   *
+   * @param id             container identifier
+   * @param configLocation path to configuration (e.g. classpath*:beangle.xml)
+   * @return initialized container
+   */
   override def load(id: String, configLocation: String): Container = {
     require(Strings.isNotBlank(id), "Container needs a non empty id")
     val watch = new Stopwatch(true)
@@ -60,8 +67,10 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
     ContainerHooks.notify(container)
   }
 
-  /** Configure the factory's standard context characteristics,
-   * such as register builtins
+  /** Configure the factory's standard context characteristics and register built-ins.
+   *
+   * @param configLocation path to configuration, or blank for default
+   * @return prepared Spring container
    */
   protected def prepareContainer(configLocation: String): Container = {
     factory.setBeanClassLoader(classLoader)
@@ -74,10 +83,9 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
     container
   }
 
-  /**
-   * Instantiate and invoke all registered BeanFactoryPostProcessor beans,
-   * respecting explicit order if given.
-   * <p>Must be called before singleton instantiation.
+  /** Instantiate and invoke all registered BeanFactoryPostProcessor beans.
+   *
+   * Respects explicit order if given. Must be called before singleton instantiation.
    */
   protected def invokeBeanFactoryPostProcessors(): Unit = {
     val postProcessorNames = factory.getBeanNamesForType(classOf[BeanDefinitionRegistryPostProcessor], true, false)
@@ -88,9 +96,9 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
     }
   }
 
-  /**
-   * Finish the initialization of this context's bean factory,
-   * initializing all remaining singleton beans.
+  /** Finish the initialization of this context's bean factory.
+   *
+   * Initializes all remaining singleton beans.
    */
   protected def finishBeanFactoryInitialization(): Unit = {
     val conversionServiceBeanName = "conversionService"
@@ -103,16 +111,29 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
     factory.preInstantiateSingletons()
   }
 
+  /** Resolve resources by location pattern (e.g. classpath*:config/xxx.xml).
+   *
+   * @param locationPattern Ant-style resource location pattern
+   * @return array of resolved resources
+   */
   override def getResources(locationPattern: String): Array[Resource] = {
     this.resourcePatternResolver.getResources(locationPattern)
   }
 }
 
 object SpringContainerLoader {
+
+  /** Load container with default id "ROOT" and no config location. */
   def load(): Container = {
     new SpringContainerLoader().load("ROOT", null)
   }
 
+  /** Load container with given id and config location.
+   *
+   * @param id             container id, defaults to "ROOT" if null
+   * @param configLocation config path, may be null
+   * @return initialized container
+   */
   def load(id: String, configLocation: String): Container = {
     new SpringContainerLoader().load(Objects.nvl(id, "ROOT"), null)
   }

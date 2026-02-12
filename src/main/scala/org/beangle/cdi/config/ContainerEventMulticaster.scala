@@ -21,7 +21,7 @@ import org.beangle.commons.bean.Initializing
 import org.beangle.commons.cdi.{CdiEventListener, Container}
 import org.beangle.commons.event.DefaultEventMulticaster
 
-/** 将容器中的监听器搜集起来，集中注册到时间广播中
+/** Collects listeners from the container and registers them to the event multicaster.
  *
  * @author chaostone
  */
@@ -29,6 +29,7 @@ class ContainerEventMulticaster extends DefaultEventMulticaster, Initializing {
 
   var container: Container = _
 
+  /** Initialize by collecting CdiEventListener beans from container and adding to multicaster. */
   override def init(): Unit = {
     container.getBeans(classOf[CdiEventListener[_]]) foreach { e => addListener(e._2) }
   }

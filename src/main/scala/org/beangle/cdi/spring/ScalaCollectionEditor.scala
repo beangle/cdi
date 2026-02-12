@@ -22,9 +22,12 @@ import scala.annotation.nowarn
 import scala.collection.mutable
 import scala.jdk.javaapi.CollectionConverters
 
-/**
- * Property editor for Scala collections, converting any source collection to a given
- * target collection type.
+/** Property editor for Scala collections.
+ *
+ * Converts any source collection to the target collection type via builder.
+ *
+ * @param builderFunc  function to create a mutable builder for the target type
+ * @param nullAsEmpty  when true, null input produces empty collection
  */
 class ScalaCollectionEditor[T, U](val builderFunc: () => mutable.Builder[T, _], val nullAsEmpty: Boolean = false)
   extends PropertyEditorSupport {
