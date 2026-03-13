@@ -39,7 +39,7 @@ object BindingLoader {
     val modules = new collection.mutable.HashSet[BindModule]
     val reconfigs = Collections.newBuffer[Reconfig]
 
-    val moduleNames = Collections.newBuffer[String]
+    val moduleNames = Collections.newSet[String]
     val doc = XmlConfigs.load(path)
     (doc \ "cdi" \ "module") foreach { m =>
       val clazzName = (m \ "@class").text
