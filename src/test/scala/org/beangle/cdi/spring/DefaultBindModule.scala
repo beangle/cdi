@@ -52,5 +52,9 @@ object DefaultBindModule extends BindModule {
       .property("url", $("${redis.host}:${redis.port}"))
 
     bind("redisService", classOf[RedisService])
+
+    //test constructor binding with null default value
+    //and contain union OrType
+    bind(classOf[NullUserService])
   }
 }

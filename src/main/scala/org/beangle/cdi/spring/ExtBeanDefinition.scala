@@ -37,6 +37,7 @@ object ExtBeanDefinition {
    */
   def convert(v: Any, env: Enviroment, mergeable: Boolean = true): Any = {
     v match {
+      case null => null //null是不属于any的
       case value: collection.Seq[_] => toList(value, mergeable)
       case value: collection.Set[_] => toSet(value, mergeable)
       case value: ju.Properties => toProperties(value, mergeable)
@@ -99,7 +100,7 @@ object ExtBeanDefinition {
 
 }
 
-import ExtBeanDefinition.convert
+import org.beangle.cdi.spring.ExtBeanDefinition.convert
 
 /** Extended bean definition that maps bind Definition to Spring GenericBeanDefinition.
  *

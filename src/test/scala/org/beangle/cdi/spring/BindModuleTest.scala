@@ -112,5 +112,4 @@ class BindModuleTest extends AnyFunSpec, Matchers {
     beans.size should equal(1)
   }
 
-
 }
