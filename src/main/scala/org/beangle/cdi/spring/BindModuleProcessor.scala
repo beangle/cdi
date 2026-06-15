@@ -20,10 +20,11 @@ package org.beangle.cdi.spring
 import org.beangle.cdi.Logger
 import org.beangle.cdi.config.{BindingLoader, BindingRegistry, ContainerEventMulticaster}
 import org.beangle.commons.cdi.{Binder, Condition}
+import org.beangle.commons.config.Enviroment
 import org.beangle.commons.lang.time.Stopwatch
+import org.beangle.commons.xml.Document
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.*
-import org.springframework.util.ClassUtils
 
 /** Processor for automatic bean registration and reconfiguration.
  *
@@ -31,25 +32,25 @@ import org.springframework.util.ClassUtils
  *
  * @author chaostone
  */
-abstract class BindModuleProcessor(private val configLocation: String) extends BeanDefinitionRegistryPostProcessor {
+abstract class BindModuleProcessor(private val env: Enviroment, config: Document) extends BeanDefinitionRegistryPostProcessor {
 
   /** Automatically register, wire, and reconfig beans from bind modules. */
   override def postProcessBeanDefinitionRegistry(springRegistry: BeanDefinitionRegistry): Unit = {
     val watch = Stopwatch.start()
-    val (modules, reconfigs) = BindingLoader.loadModules(configLocation)
+    val (modules, reconfigs) = BindingLoader.loadModules(config)
     val items = BindingLoader.loadRegistryItems(modules)
     val existed = SpringBeanRegistry.findBeans(springRegistry)
     Logger.info(s"Load ${items.size} beans in $watch")
 
     //reconfig autowire and register
-    val registry = new BindingRegistry(existed)
+    val registry = new BindingRegistry(env, existed)
     items.addAll(additional())
     registry.register(items)
 
     registry.reconfig(reconfigs)
     registry.autowire()
 
-    SpringBeanRegistry.register(registry.allBeans, springRegistry)
+    SpringBeanRegistry.register(env, registry.allBeans, springRegistry)
   }
 
   /** Register property editors to convert JUC to Scala collection types in bean definitions.

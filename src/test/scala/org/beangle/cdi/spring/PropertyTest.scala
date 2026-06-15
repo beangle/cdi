@@ -18,6 +18,7 @@
 package org.beangle.cdi.spring
 
 import org.beangle.cdi.spring.bean.RedisService
+import org.beangle.commons.config.{MutableEnviroment, XmlConfigs}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -25,7 +26,9 @@ class PropertyTest extends AnyFunSpec, Matchers {
 
   describe("PropertyResolver") {
     it("resolve env") {
-      val factory = SpringContainerLoader.load()
+      val env = MutableEnviroment.system
+      val configs = new XmlConfigs
+      val factory = SpringContainerLoader.load("ROOT", env, configs.load("classpath*:beangle.xml"))
       val service = factory.getBean[RedisService]("redisService")
       assert(service.nonEmpty)
       assert(service.get.config.url == "host2:1234")

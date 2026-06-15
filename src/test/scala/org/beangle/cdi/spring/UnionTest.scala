@@ -15,23 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.config
+package org.beangle.cdi.spring
 
-import org.beangle.commons.cdi.Container
-import org.beangle.commons.xml.Document
+import org.beangle.cdi.spring.bean.NullUserService
+import org.beangle.commons.lang.reflect.BeanInfos
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-/** Loader for CDI containers.
- *
- * Creates and initializes a container from the given configuration location.
- */
-trait ContainerLoader {
+class UnionTest extends AnyFunSpec, Matchers {
 
-  /** Load a container by id and configuration path.
-   *
-   * @param id         container identifier
-   * @param config     config Document
-   * @param singletons singleton beans
-   * @return initialized container
-   */
-  def load(id: String, config: Document, singletons: Map[String, Object]): Container
+  describe("BeanInfo") {
+    it("get bean info") {
+      val info = BeanInfos.of(classOf[NullUserService])
+      assert(info.methods("getUser").head.getReturnType == classOf[String])
+    }
+  }
 }

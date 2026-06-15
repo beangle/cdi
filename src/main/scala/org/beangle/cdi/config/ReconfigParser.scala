@@ -254,7 +254,7 @@ class ReconfigParser {
       if (hasValueAttribute) {
         value = convertTo(entryEle("value"), defaultValueType)
       } else if (hasValueRefAttribute) {
-        Reference(entryEle("value-ref"))
+        value = Reference(entryEle("value-ref"))
       } else if (valueEle != null) {
         value = parsePropertySubElement(valueEle, bd)
       } else {

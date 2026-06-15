@@ -19,7 +19,9 @@ package org.beangle.cdi.spring
 
 import org.beangle.commons.cdi.Container
 import org.beangle.commons.collection.Collections
+import org.beangle.commons.config.Enviroment
 import org.beangle.commons.lang.annotation.description
+import org.beangle.commons.xml.Document
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
 
@@ -27,15 +29,14 @@ import scala.jdk.javaapi.CollectionConverters.asScala
 
 /** Spring-based IoC container implementation.
  *
- * @param factory         Spring bean factory
- * @param configLocation  path to bind module configuration (default: classpath*:beangle.xml)
- *
+ * @param factory Spring bean factory
+ * @param config  config document
  * @author chaostone
  * @since 3.1.0
  */
 @description("Spring-based Bean container")
-class SpringContainer(private val factory: DefaultListableBeanFactory, configLocation: String = "classpath*:beangle.xml")
-  extends BindModuleProcessor(configLocation), Container {
+class SpringContainer(private val factory: DefaultListableBeanFactory, env: Enviroment, config: Document)
+  extends BindModuleProcessor(env, config), Container {
 
   override def id: String = factory.getSerializationId
 

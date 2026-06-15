@@ -22,6 +22,7 @@ import org.beangle.commons.cdi.Binder.*
 import org.beangle.commons.cdi.Reconfig.ReconfigType
 import org.beangle.commons.cdi.{Binder, Condition, Reconfig, nowire}
 import org.beangle.commons.collection.Collections
+import org.beangle.commons.config.Enviroment
 import org.beangle.commons.lang.reflect.{BeanInfo, BeanInfos, TypeInfo}
 import org.beangle.commons.lang.time.Stopwatch
 
@@ -31,7 +32,7 @@ import scala.collection.mutable
  *
  * @param background pre-registered bean names and types from Spring container
  */
-class BindingRegistry(background: collection.Map[String, Class[_]]) extends Binder.Registry {
+class BindingRegistry(val env: Enviroment,background: collection.Map[String, Class[_]]) extends Binder.Registry {
   private val beans = new mutable.HashMap[String, Binder.RegistryItem]
   private val namesByType = new collection.mutable.HashMap[Class[_], List[String]]
   private val typesByName = new mutable.HashMap[String, Class[_]]
@@ -82,7 +83,10 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
         rd.configType match {
           case ReconfigType.Remove =>
             beans.remove(beanName) match {
-              case Some(old) => removed.addOne(beanName)
+              case Some(old) =>
+                removed.addOne(beanName)
+                typesByName.remove(beanName)
+                //FIXME 没有处理 namesByType primaries
               case None =>
                 if reconfig.ignoreMissing then Logger.warn(s"No bean $beanName to remove")
                 else throw new RuntimeException(s"Without bean $beanName to remove")
@@ -98,6 +102,7 @@ class BindingRegistry(background: collection.Map[String, Class[_]]) extends Bind
                   case d: Definition => d
                 }
                 defn.merge(rd)
+                updated.addOne(beanName)
               case None =>
                 if reconfig.ignoreMissing then Logger.warn(s"No bean $beanName to reconfig")
                 else throw new RuntimeException(s"Without bean $beanName to reconfig")

@@ -39,11 +39,11 @@ object SpringBeanRegistry {
    * @param dfns     registry items (definitions or singletons) to register
    * @param registry Spring bean definition registry
    */
-  def register(dfns: Iterable[Binder.RegistryItem], registry: BeanDefinitionRegistry): Unit = {
+  def register(env: Enviroment, dfns: Iterable[Binder.RegistryItem], registry: BeanDefinitionRegistry): Unit = {
     val singletonRegistry = registry.asInstanceOf[SingletonBeanRegistry]
     dfns foreach {
       case stn: Binder.Singleton => singletonRegistry.registerSingleton(stn.beanName, stn.singleton)
-      case dfn: Binder.Definition => registerBean(dfn, registry)
+      case dfn: Binder.Definition => registerBean(env, dfn, registry)
     }
   }
 
@@ -106,8 +106,8 @@ object SpringBeanRegistry {
    * @param defn     bind definition to register
    * @param registry Spring bean definition registry
    */
-  private def registerBean(defn: Binder.Definition, registry: BeanDefinitionRegistry): Unit = {
-    val bd = new ExtBeanDefinition(defn, Enviroment.Default)
+  private def registerBean(env: Enviroment, defn: Definition, registry: BeanDefinitionRegistry): Unit = {
+    val bd = new ExtBeanDefinition(defn, env)
     if (null != defn.targetClass && !defn.isAbstract) {
       val targetClass = defn.targetClass
       if (classOf[Factory[_]].isAssignableFrom(defn.clazz) && !classOf[FactoryBean[_]].isAssignableFrom(defn.clazz)) {
@@ -153,7 +153,7 @@ object SpringBeanRegistry {
     if (null == clazz) {
       var currDef = bd
       while (null == clazz && null != currDef && null != currDef.getParentName) {
-        val parentDef = registry.getBeanDefinition(bd.getParentName)
+        val parentDef = registry.getBeanDefinition(currDef.getParentName)
         clazz = getBeanClass(parentDef)
         currDef = parentDef
       }

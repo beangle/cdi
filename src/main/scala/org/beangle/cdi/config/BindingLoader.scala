@@ -21,9 +21,10 @@ import org.beangle.commons.cdi.{BindModule, Binder, Reconfig, ReconfigModule}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.config.{Enviroment, XmlConfigs, profile}
 import org.beangle.commons.lang.time.Stopwatch
-import org.beangle.commons.lang.{ClassLoaders, JVM, Strings}
+import org.beangle.commons.lang.{ClassLoaders, Strings}
 import org.beangle.commons.net.Networks
 import org.beangle.commons.net.http.HttpUtils
+import org.beangle.commons.xml.Document
 
 import java.io.File
 import java.net.URL
@@ -33,14 +34,13 @@ object BindingLoader {
 
   /** Load definition from modules and reconfig modules.
    *
-   * @param path path to configuration file, supports classpath*:beangle.xml, classpath:beangle.xml, or file://
+   * @param doc config document
    */
-  def loadModules(path: String): (Iterable[BindModule], Iterable[Reconfig]) = {
+  def loadModules(doc: Document): (Iterable[BindModule], Iterable[Reconfig]) = {
     val modules = new collection.mutable.HashSet[BindModule]
     val reconfigs = Collections.newBuffer[Reconfig]
 
     val moduleNames = Collections.newSet[String]
-    val doc = XmlConfigs.load(path)
     (doc \ "cdi" \ "module") foreach { m =>
       val clazzName = (m \ "@class").text
       if Strings.isNotBlank(clazzName) then moduleNames += clazzName

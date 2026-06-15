@@ -15,23 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.beangle.cdi.config
+package org.beangle.cdi.spring.bean
 
-import org.beangle.commons.cdi.Container
-import org.beangle.commons.xml.Document
+class NullUserService(var provider: UserDaoProvider = null) {
 
-/** Loader for CDI containers.
- *
- * Creates and initializes a container from the given configuration location.
- */
-trait ContainerLoader {
-
-  /** Load a container by id and configuration path.
-   *
-   * @param id         container identifier
-   * @param config     config Document
-   * @param singletons singleton beans
-   * @return initialized container
-   */
-  def load(id: String, config: Document, singletons: Map[String, Object]): Container
+  def getUser(code: String): String | Null={
+    null
+  }
 }

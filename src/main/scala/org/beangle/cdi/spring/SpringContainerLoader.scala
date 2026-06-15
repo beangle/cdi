@@ -20,8 +20,10 @@ package org.beangle.cdi.spring
 import org.beangle.cdi.Logger
 import org.beangle.cdi.config.{ContainerHooks, ContainerLoader}
 import org.beangle.commons.cdi.Container
+import org.beangle.commons.config.{Enviroment, XmlConfigs}
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.lang.{Objects, Strings}
+import org.beangle.commons.xml.Document
 import org.springframework.beans.factory.BeanFactory
 import org.springframework.beans.factory.support.{BeanDefinitionRegistryPostProcessor, DefaultListableBeanFactory}
 import org.springframework.beans.support.ResourceEditorRegistrar
@@ -35,7 +37,7 @@ import org.springframework.util.ClassUtils
  *
  * Loads bean definitions, invokes post-processors, and notifies lifecycle listeners.
  */
-class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolver, ContainerLoader {
+class SpringContainerLoader(env: Enviroment) extends DefaultResourceLoader, ResourcePatternResolver, ContainerLoader {
   private val environment = new StandardEnvironment()
   private val resourcePatternResolver = new PathMatchingResourcePatternResolver
   private val classLoader = ClassUtils.getDefaultClassLoader
@@ -47,16 +49,15 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
    * @param configLocation path to configuration (e.g. classpath*:beangle.xml)
    * @return initialized container
    */
-  override def load(id: String, configLocation: String): Container = {
+  override def load(id: String, config: Document, singletons: Map[String, Object]): Container = {
     require(Strings.isNotBlank(id), "Container needs a non empty id")
     val watch = new Stopwatch(true)
     Logger.info(s"$id starting")
     factory = DefaultListableBeanFactory()
     factory.setAllowBeanDefinitionOverriding(false)
     factory.setSerializationId(id)
-    val container = prepareContainer(configLocation)
+    val container = prepareContainer(config, singletons)
     refresh(container)
-    Container.register(container)
     Logger.info(s"$id started in $watch")
     container
   }
@@ -69,17 +70,18 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
 
   /** Configure the factory's standard context characteristics and register built-ins.
    *
-   * @param configLocation path to configuration, or blank for default
+   * @param config configuration, or blank for default
    * @return prepared Spring container
    */
-  protected def prepareContainer(configLocation: String): Container = {
+  protected def prepareContainer(config: Document, singletons: Map[String, Object]): Container = {
     factory.setBeanClassLoader(classLoader)
     factory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, environment))
     factory.registerResolvableDependency(classOf[BeanFactory], factory)
-    val container =
-      if (Strings.isNotBlank(configLocation)) new SpringContainer(factory, configLocation)
-      else new SpringContainer(factory)
-    factory.registerSingleton("BeanContainer", container)
+
+    val container = new SpringContainer(factory, env, config)
+    singletons.foreach { case (name, b) => factory.registerSingleton(name, b) }
+    factory.registerSingleton("BeangleContainer", container)
+    factory.registerSingleton("BeangleEnviroment", env)
     container
   }
 
@@ -123,18 +125,13 @@ class SpringContainerLoader extends DefaultResourceLoader, ResourcePatternResolv
 
 object SpringContainerLoader {
 
-  /** Load container with default id "ROOT" and no config location. */
-  def load(): Container = {
-    new SpringContainerLoader().load("ROOT", null)
-  }
-
   /** Load container with given id and config location.
    *
-   * @param id             container id, defaults to "ROOT" if null
-   * @param configLocation config path, may be null
+   * @param id     container id, defaults to "ROOT" if null
+   * @param config config path, may be null
    * @return initialized container
    */
-  def load(id: String, configLocation: String): Container = {
-    new SpringContainerLoader().load(Objects.nvl(id, "ROOT"), null)
+  def load(id: String, env: Enviroment, config: Document, singletons: Map[String, Object] = Map.empty): Container = {
+    new SpringContainerLoader(env).load(Objects.nvl(id, "ROOT"), config, singletons)
   }
 }
