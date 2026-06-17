@@ -22,7 +22,7 @@ import org.beangle.commons.cdi.Binder.*
 import org.beangle.commons.cdi.Reconfig.ReconfigType
 import org.beangle.commons.cdi.{Binder, Condition, Reconfig, nowire}
 import org.beangle.commons.collection.Collections
-import org.beangle.commons.config.Enviroment
+import org.beangle.commons.config.Environment
 import org.beangle.commons.lang.reflect.{BeanInfo, BeanInfos, TypeInfo}
 import org.beangle.commons.lang.time.Stopwatch
 
@@ -32,7 +32,7 @@ import scala.collection.mutable
  *
  * @param background pre-registered bean names and types from Spring container
  */
-class BindingRegistry(val env: Enviroment,background: collection.Map[String, Class[_]]) extends Binder.Registry {
+class BindingRegistry(val env: Environment,background: collection.Map[String, Class[_]]) extends Binder.Registry {
   private val beans = new mutable.HashMap[String, Binder.RegistryItem]
   private val namesByType = new collection.mutable.HashMap[Class[_], List[String]]
   private val typesByName = new mutable.HashMap[String, Class[_]]

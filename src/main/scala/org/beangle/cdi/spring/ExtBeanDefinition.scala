@@ -19,7 +19,7 @@ package org.beangle.cdi.spring
 
 import org.beangle.commons.cdi.Binder.{Definition, Reference}
 import org.beangle.commons.collection.Collections
-import org.beangle.commons.config.{Enviroment, PlaceHolder}
+import org.beangle.commons.config.{Environment, PlaceHolder}
 import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.config.{RuntimeBeanReference, TypedStringValue}
 import org.springframework.beans.factory.support.*
@@ -35,7 +35,7 @@ object ExtBeanDefinition {
    * @param mergeable whether collections should allow merge
    * @return Spring-managed value
    */
-  def convert(v: Any, env: Enviroment, mergeable: Boolean = true): Any = {
+  def convert(v: Any, env: Environment, mergeable: Boolean = true): Any = {
     v match {
       case null => null //null是不属于any的
       case value: collection.Seq[_] => toList(value, mergeable)
@@ -62,7 +62,7 @@ object ExtBeanDefinition {
   }
 
   /** Convert Scala Map to Spring ManagedMap, resolving references. */
-  private def toMap(value: collection.Map[_, _], env: Enviroment, mergeable: Boolean): ManagedMap[Any, Any] = {
+  private def toMap(value: collection.Map[_, _], env: Environment, mergeable: Boolean): ManagedMap[Any, Any] = {
     val maps = new ManagedMap[Any, Any]
     value foreach { case (itemk, itemv) =>
       itemv match {
@@ -121,7 +121,7 @@ class ExtBeanDefinition extends GenericBeanDefinition {
    * @param d   bind definition to convert
    * @param env environment for placeholder and reference conversion
    */
-  def this(d: Definition, env: Enviroment) = {
+  def this(d: Definition, env: Environment) = {
     this()
     this.setBeanClass(d.clazz)
     this.setScope(d.scope)

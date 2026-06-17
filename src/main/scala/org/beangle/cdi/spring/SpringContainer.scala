@@ -19,7 +19,7 @@ package org.beangle.cdi.spring
 
 import org.beangle.commons.cdi.Container
 import org.beangle.commons.collection.Collections
-import org.beangle.commons.config.Enviroment
+import org.beangle.commons.config.Environment
 import org.beangle.commons.lang.annotation.description
 import org.beangle.commons.xml.Document
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
@@ -35,7 +35,7 @@ import scala.jdk.javaapi.CollectionConverters.asScala
  * @since 3.1.0
  */
 @description("Spring-based Bean container")
-class SpringContainer(private val factory: DefaultListableBeanFactory, env: Enviroment, config: Document)
+class SpringContainer(private val factory: DefaultListableBeanFactory, env: Environment, config: Document)
   extends BindModuleProcessor(env, config), Container {
 
   override def id: String = factory.getSerializationId

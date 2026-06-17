@@ -19,7 +19,7 @@ package org.beangle.cdi.spring
 
 import org.beangle.cdi.spring.bean.*
 import org.beangle.commons.cdi.Container
-import org.beangle.commons.config.{MutableEnviroment, XmlConfigs}
+import org.beangle.commons.config.{MutableEnvironment, XmlConfigs}
 import org.beangle.commons.event.EventMulticaster
 import org.beangle.commons.lang.time.Stopwatch
 import org.scalatest.funspec.AnyFunSpec
@@ -28,7 +28,7 @@ import org.scalatest.matchers.should.Matchers
 class BindModuleTest extends AnyFunSpec, Matchers {
 
   describe("ReconfigProcessor") {
-    val env = MutableEnviroment.system
+    val env = MutableEnvironment.system
     val configs = new XmlConfigs
     val factory = SpringContainerLoader.load("ROOT", env, configs.load("classpath*:beangle.xml"))
     it("Override") {

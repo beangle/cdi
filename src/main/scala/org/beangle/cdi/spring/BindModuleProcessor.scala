@@ -20,7 +20,7 @@ package org.beangle.cdi.spring
 import org.beangle.cdi.Logger
 import org.beangle.cdi.config.{BindingLoader, BindingRegistry, ContainerEventMulticaster}
 import org.beangle.commons.cdi.{Binder, Condition}
-import org.beangle.commons.config.Enviroment
+import org.beangle.commons.config.Environment
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.xml.Document
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
@@ -32,7 +32,7 @@ import org.springframework.beans.factory.support.*
  *
  * @author chaostone
  */
-abstract class BindModuleProcessor(private val env: Enviroment, config: Document) extends BeanDefinitionRegistryPostProcessor {
+abstract class BindModuleProcessor(private val env: Environment, config: Document) extends BeanDefinitionRegistryPostProcessor {
 
   /** Automatically register, wire, and reconfig beans from bind modules. */
   override def postProcessBeanDefinitionRegistry(springRegistry: BeanDefinitionRegistry): Unit = {

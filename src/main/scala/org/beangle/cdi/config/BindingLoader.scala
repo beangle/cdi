@@ -19,7 +19,7 @@ package org.beangle.cdi.config
 
 import org.beangle.commons.cdi.{BindModule, Binder, Reconfig, ReconfigModule}
 import org.beangle.commons.collection.Collections
-import org.beangle.commons.config.{Enviroment, XmlConfigs, profile}
+import org.beangle.commons.config.{Environment, XmlConfigs, profile}
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.lang.{ClassLoaders, Strings}
 import org.beangle.commons.net.Networks
@@ -46,7 +46,7 @@ object BindingLoader {
       if Strings.isNotBlank(clazzName) then moduleNames += clazzName
     }
 
-    val profiles = Enviroment.profiles
+    val profiles = Environment.profiles
     moduleNames foreach { name =>
       Module.load(name, profiles) foreach {
         case bm: BindModule => modules += bm

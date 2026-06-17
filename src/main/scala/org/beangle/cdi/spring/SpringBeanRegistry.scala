@@ -21,7 +21,7 @@ import org.beangle.commons.bean.Factory
 import org.beangle.commons.cdi.Binder
 import org.beangle.commons.cdi.Binder.Definition
 import org.beangle.commons.collection.Collections
-import org.beangle.commons.config.Enviroment
+import org.beangle.commons.config.Environment
 import org.beangle.commons.lang.ClassLoaders
 import org.beangle.commons.lang.reflect.Reflections.*
 import org.springframework.beans.factory.FactoryBean
@@ -39,7 +39,7 @@ object SpringBeanRegistry {
    * @param dfns     registry items (definitions or singletons) to register
    * @param registry Spring bean definition registry
    */
-  def register(env: Enviroment, dfns: Iterable[Binder.RegistryItem], registry: BeanDefinitionRegistry): Unit = {
+  def register(env: Environment, dfns: Iterable[Binder.RegistryItem], registry: BeanDefinitionRegistry): Unit = {
     val singletonRegistry = registry.asInstanceOf[SingletonBeanRegistry]
     dfns foreach {
       case stn: Binder.Singleton => singletonRegistry.registerSingleton(stn.beanName, stn.singleton)
@@ -106,7 +106,7 @@ object SpringBeanRegistry {
    * @param defn     bind definition to register
    * @param registry Spring bean definition registry
    */
-  private def registerBean(env: Enviroment, defn: Definition, registry: BeanDefinitionRegistry): Unit = {
+  private def registerBean(env: Environment, defn: Definition, registry: BeanDefinitionRegistry): Unit = {
     val bd = new ExtBeanDefinition(defn, env)
     if (null != defn.targetClass && !defn.isAbstract) {
       val targetClass = defn.targetClass

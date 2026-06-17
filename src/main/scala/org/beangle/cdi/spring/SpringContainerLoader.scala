@@ -20,7 +20,7 @@ package org.beangle.cdi.spring
 import org.beangle.cdi.Logger
 import org.beangle.cdi.config.{ContainerHooks, ContainerLoader}
 import org.beangle.commons.cdi.Container
-import org.beangle.commons.config.{Enviroment, XmlConfigs}
+import org.beangle.commons.config.{Environment, XmlConfigs}
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.lang.{Objects, Strings}
 import org.beangle.commons.xml.Document
@@ -37,7 +37,7 @@ import org.springframework.util.ClassUtils
  *
  * Loads bean definitions, invokes post-processors, and notifies lifecycle listeners.
  */
-class SpringContainerLoader(env: Enviroment) extends DefaultResourceLoader, ResourcePatternResolver, ContainerLoader {
+class SpringContainerLoader(env: Environment) extends DefaultResourceLoader, ResourcePatternResolver, ContainerLoader {
   private val environment = new StandardEnvironment()
   private val resourcePatternResolver = new PathMatchingResourcePatternResolver
   private val classLoader = ClassUtils.getDefaultClassLoader
@@ -81,7 +81,7 @@ class SpringContainerLoader(env: Enviroment) extends DefaultResourceLoader, Reso
     val container = new SpringContainer(factory, env, config)
     singletons.foreach { case (name, b) => factory.registerSingleton(name, b) }
     factory.registerSingleton("BeangleContainer", container)
-    factory.registerSingleton("BeangleEnviroment", env)
+    factory.registerSingleton("BeangleEnvironment", env)
     container
   }
 
@@ -131,7 +131,7 @@ object SpringContainerLoader {
    * @param config config path, may be null
    * @return initialized container
    */
-  def load(id: String, env: Enviroment, config: Document, singletons: Map[String, Object] = Map.empty): Container = {
+  def load(id: String, env: Environment, config: Document, singletons: Map[String, Object] = Map.empty): Container = {
     new SpringContainerLoader(env).load(Objects.nvl(id, "ROOT"), config, singletons)
   }
 }
