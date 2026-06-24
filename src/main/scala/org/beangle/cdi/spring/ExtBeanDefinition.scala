@@ -21,6 +21,7 @@ import org.beangle.commons.cdi.Binder.{Definition, Reference}
 import org.beangle.commons.collection.Collections
 import org.beangle.commons.config.{Environment, PlaceHolder}
 import org.springframework.beans.MutablePropertyValues
+import org.springframework.beans.factory.FactoryBean
 import org.springframework.beans.factory.config.{RuntimeBeanReference, TypedStringValue}
 import org.springframework.beans.factory.support.*
 
@@ -145,6 +146,14 @@ class ExtBeanDefinition extends GenericBeanDefinition {
     this.nowires ++= d.nowires
     this.optionals ++= d.optionals
     this.wiredEagerly = d.wiredEagerly
+
+    if (classOf[FactoryBean[_]].isAssignableFrom(d.clazz)) {
+      d.properties.get("proxyInterfaces") foreach {
+        case array: Array[_] =>
+          this.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, array(0)) //可以降低factory为了获取对象类型，提前实例化对象
+        case _ =>
+      }
+    }
   }
 
 }

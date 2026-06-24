@@ -133,6 +133,7 @@ object SpringBeanRegistry {
     val factory = new GenericBeanDefinition()
     factory.setBeanClass(classOf[FactoryBeanProxy[_]])
     factory.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO)
+    factory.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, defn.targetClass.get) //可以降低factory为了获取对象类型，提前实例化对象
     factory.setScope(defn.scope)
     factory.setPrimary(defn.primaryOf.nonEmpty)
     factory.getPropertyValues.add("target", new RuntimeBeanReference(name + "#proxy"))
