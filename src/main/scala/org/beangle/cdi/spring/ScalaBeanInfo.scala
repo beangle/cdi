@@ -37,7 +37,7 @@ class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
     val descriptors = new collection.mutable.HashMap[String, PropertyDescriptor]
     val manifest = BeanInfos.get(beanClass)
     for ((name, mi) <- manifest.properties) {
-      descriptors.put(name, new PropertyDescriptor(name, mi.getter.orNull, mi.setter.orNull))
+      descriptors.put(name, new PropertyDescriptor(name, manifest.getGetterMethod(name).orNull, manifest.getSetterMethod(name).orNull))
     }
     descriptors.values.toArray
   }

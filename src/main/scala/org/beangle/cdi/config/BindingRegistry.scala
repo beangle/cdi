@@ -18,6 +18,7 @@
 package org.beangle.cdi.config
 
 import org.beangle.cdi.Logger
+import org.beangle.commons.bean.meta.MetaModel
 import org.beangle.commons.cdi.Binder.*
 import org.beangle.commons.cdi.Reconfig.ReconfigType
 import org.beangle.commons.cdi.{Binder, Condition, Reconfig, nowire}
@@ -293,7 +294,7 @@ class BindingRegistry(val env: Environment,background: collection.Map[String, Cl
       val properties = new collection.mutable.HashMap[String, TypeInfo]
       for ((name, m) <- beanInfo.properties) {
         if (m.writable && !nowires.contains(name) && !defined.contains(name)) {
-          val method = m.setter.get
+          val method = beanInfo.getSetterMethod(name).get
           val typeinfo = m.typeinfo
           if (null == method.getAnnotation(classOf[nowire])) {
             if (typeinfo.isIterable) { //多值类型
@@ -322,7 +323,7 @@ class BindingRegistry(val env: Environment,background: collection.Map[String, Cl
    * @param dfn      bean definition with constructor args
    * @return matched constructor info if found
    */
-  private def findMatchedConstructor(manifest: BeanInfo, dfn: Binder.Definition): Option[BeanInfo.ConstructorInfo] = {
+  private def findMatchedConstructor(manifest: BeanInfo, dfn: Binder.Definition): Option[MetaModel.Ctor] = {
     val ctors = manifest.ctors
     if (dfn.constructorArgs.isEmpty) {
       if (ctors.length == 1 && ctors.head.parameters.nonEmpty) ctors.headOption else None

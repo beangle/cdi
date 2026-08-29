@@ -1,31 +1,29 @@
 import org.beangle.parent.Dependencies.*
 import org.beangle.parent.Settings.*
-import sbt.Keys.libraryDependencies
-import sbt.url
 
-ThisBuild / organization := "org.beangle.cdi"
-ThisBuild / version := "0.10.7-SNAPSHOT"
+organization := "org.beangle.cdi"
+version := "0.10.7-SNAPSHOT"
 
-ThisBuild / scmInfo := Some(
+scmInfo := Some(
   ScmInfo(
-    url("https://github.com/beangle/cdi"),
+    uri("https://github.com/beangle/cdi"),
     "scm:git@github.com:beangle/cdi.git"
   )
 )
 
-ThisBuild / developers := List(
+developers := List(
   Developer(
     id = "chaostone",
     name = "Tihua Duan",
     email = "duantihua@gmail.com",
-    url = url("http://github.com/duantihua")
+    url = uri("http://github.com/duantihua")
   )
 )
 
-ThisBuild / description := "The Beangle CDI Library"
-ThisBuild / homepage := Some(url("https://beangle.github.io/cdi/index.html"))
+description := "The Beangle CDI Library"
+homepage := Some(uri("https://beangle.github.io/cdi/index.html"))
 
-val beangle_commons = "org.beangle.commons" % "beangle-commons" % "6.2.1"
+val beangle_commons = "org.beangle.commons" % "beangle-commons" % "6.3.0-SNAPSHOT"
 
 lazy val root = (project in file("."))
   .settings(

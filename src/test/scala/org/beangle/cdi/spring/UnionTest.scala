@@ -19,6 +19,7 @@ package org.beangle.cdi.spring
 
 import org.beangle.cdi.spring.bean.NullUserService
 import org.beangle.commons.lang.reflect.BeanInfos
+import org.beangle.commons.bean.meta.MetaModels
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -26,7 +27,7 @@ class UnionTest extends AnyFunSpec, Matchers {
 
   describe("BeanInfo") {
     it("get bean info") {
-      val info = BeanInfos.of(classOf[NullUserService])
+      val info = BeanInfos.register(MetaModels.of(classOf[NullUserService]))
       assert(info.methods("getUser").head.getReturnType == classOf[String])
     }
   }
