@@ -20,10 +20,11 @@ package org.beangle.cdi.spring
 import org.beangle.cdi.Logger
 import org.beangle.cdi.config.{ContainerHooks, ContainerLoader}
 import org.beangle.commons.cdi.Container
-import org.beangle.commons.config.{Environment, XmlConfigs}
+import org.beangle.commons.config.Environment
 import org.beangle.commons.lang.time.Stopwatch
 import org.beangle.commons.lang.{Objects, Strings}
 import org.beangle.commons.xml.Document
+import org.springframework.beans.CachedIntrospectionResults
 import org.springframework.beans.factory.BeanFactory
 import org.springframework.beans.factory.support.{BeanDefinitionRegistryPostProcessor, DefaultListableBeanFactory}
 import org.springframework.beans.support.ResourceEditorRegistrar
@@ -32,6 +33,8 @@ import org.springframework.core.env.StandardEnvironment
 import org.springframework.core.io.support.{PathMatchingResourcePatternResolver, ResourcePatternResolver}
 import org.springframework.core.io.{DefaultResourceLoader, Resource}
 import org.springframework.util.ClassUtils
+
+import java.beans.Introspector
 
 /** Simple BeanFactory loader for Spring-based containers.
  *
@@ -133,5 +136,17 @@ object SpringContainerLoader {
    */
   def load(id: String, env: Environment, config: Document, singletons: Map[String, Object] = Map.empty): Container = {
     new SpringContainerLoader(env).load(Objects.nvl(id, "ROOT"), config, singletons)
+  }
+
+  /** Clear Spring CachedIntrospectionResults and JDK Introspector caches.
+   *
+   * Should be called during application shutdown to prevent classloader leaks
+   * in OSGi / hot-redeploy scenarios.
+   */
+  def clearCache(): Unit = {
+    // 1. 清理 Spring 内省缓存（Class -> CachedIntrospectionResults 弱引用 Map）
+    CachedIntrospectionResults.clearClassLoader(Thread.currentThread().getContextClassLoader)
+    // 2. 刷新 JDK 全局 Introspector 缓存（BeanInfo → BeanDescriptor 弱引用 Map）
+    Introspector.flushCaches()
   }
 }

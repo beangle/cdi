@@ -21,26 +21,17 @@ import org.beangle.commons.lang.reflect.BeanInfos
 
 import java.beans.*
 
-/** BeanInfo implementation for Scala classes using BeanInfos reflection.
+/** Lightweight BeanInfo for Scala classes that bypasses JDK Introspector.
  *
- * @param beanClass Scala class to introspect
+ * Instead of triggering the expensive full-class JDK introspection cycle,
+ * this implementation receives pre-built property descriptors from
+ * [[ScalaBeanInfoFactory.buildProperties]], keeping the Spring
+ * CachedIntrospectionResults cache lightweight and allocation-free.
+ *
+ * @param beanClass           Scala class to introspect
+ * @param propertyDescriptors pre-built property descriptors (may be empty for interfaces / JDK types)
  */
-class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
-
-  def delegate: java.beans.BeanInfo = {
-    Introspector.getBeanInfo(beanClass)
-  }
-
-  private val propertyDescriptors = buildProperties(beanClass)
-
-  private def buildProperties(beanClass: Class[_]): Array[PropertyDescriptor] = {
-    val descriptors = new collection.mutable.HashMap[String, PropertyDescriptor]
-    val manifest = BeanInfos.get(beanClass)
-    for ((name, mi) <- manifest.properties) {
-      descriptors.put(name, new PropertyDescriptor(name, manifest.getGetterMethod(name).orNull, manifest.getSetterMethod(name).orNull))
-    }
-    descriptors.values.toArray
-  }
+class ScalaBeanInfo(beanClass: Class[_], propertyDescriptors: Array[PropertyDescriptor]) extends java.beans.BeanInfo {
 
   override def getPropertyDescriptors: Array[PropertyDescriptor] = propertyDescriptors
 
@@ -49,7 +40,9 @@ class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
   }
 
   override def getBeanDescriptor: BeanDescriptor = {
-    delegate.getBeanDescriptor
+    // Spring CachedIntrospectionResults.getBeanClass() 依赖非空的 BeanDescriptor；
+    // 用 new BeanDescriptor(beanClass) 替代 Introspector.getBeanInfo，避免整棵类的 JDK 内省。
+    new BeanDescriptor(beanClass)
   }
 
   override def getDefaultEventIndex: Int = {
@@ -69,7 +62,9 @@ class ScalaBeanInfo(beanClass: Class[_]) extends java.beans.BeanInfo {
   }
 
   override def getMethodDescriptors: Array[MethodDescriptor] = {
-    delegate.getMethodDescriptors
+    // Spring 不使用 MethodDescriptor（仅 getPropertyDescriptors/getBeanDescriptor）；
+    // 空数组比 null 更防御，JDK SimpleBeanInfo 则默认返回 null。
+    Array.empty
   }
 
 }
