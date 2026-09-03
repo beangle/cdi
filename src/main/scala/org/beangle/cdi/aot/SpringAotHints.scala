@@ -37,11 +37,6 @@ import org.beangle.commons.aot.{AotHintRegistrar, AotPolicy}
   */
 class SpringAotHints extends AotHintRegistrar {
 
-  private val declared = AotPolicy(Set(
-    AotPolicy.Category.PublicConstructors,
-    AotPolicy.Category.DeclaredMethods,
-    AotPolicy.Category.DeclaredFields))
-
   /** Register GraalVM native-image reflection and resource hints. */
   override def registering(): Unit = {
     // Spring 7 通过 SpringFactoriesLoader 发现 BeanInfoFactory 实现，
@@ -51,8 +46,8 @@ class SpringAotHints extends AotHintRegistrar {
     hints.registerType(classOf[ScalaBeanInfoFactory], classOf[ScalaBeanInfo])
     // FactoryBeanProxy / ContainerEventMulticaster：Spring 通过反射实例化并设置属性，
     // BeanInfo 内省依赖 getDeclaredFields/getDeclaredMethods，因此按 declared 成员注册
-    hints.registerType(classOf[FactoryBeanProxy[_]], declared)
-    hints.registerType(classOf[ContainerEventMulticaster], declared)
+    hints.registerType(classOf[FactoryBeanProxy[_]])
+    hints.registerType(classOf[ContainerEventMulticaster])
     // Spring 核心 ResolvableType 缓存经 SerializableTypeWrapper 对
     // GenericArrayType/ParameterizedType/TypeVariable 创建 JDK 动态代理。
     // SerializableTypeWrapper 为 private[core]，无法直接引用，

@@ -145,7 +145,7 @@ object SpringContainerLoader {
    */
   def clearCache(): Unit = {
     // 1. 清理 Spring 内省缓存（Class -> CachedIntrospectionResults 弱引用 Map）
-    CachedIntrospectionResults.clearClassLoader(Thread.currentThread().getContextClassLoader)
+    CachedIntrospectionResults.clearClassLoader(SpringContainerLoader.getClass.getClassLoader)
     // 2. 刷新 JDK 全局 Introspector 缓存（BeanInfo → BeanDescriptor 弱引用 Map）
     Introspector.flushCaches()
   }
