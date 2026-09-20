@@ -18,8 +18,9 @@
 package org.beangle.cdi.spring.bean
 
 import org.beangle.commons.cdi.Container
+import scala.compiletime.uninitialized
 
 class UserDaoProvider extends UserProvider {
 
-  var container: Container = _
+  var container: Container = uninitialized
 }

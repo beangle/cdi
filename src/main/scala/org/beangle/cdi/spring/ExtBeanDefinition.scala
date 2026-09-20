@@ -26,6 +26,7 @@ import org.springframework.beans.factory.config.{RuntimeBeanReference, TypedStri
 import org.springframework.beans.factory.support.*
 
 import java.util as ju
+import scala.compiletime.uninitialized
 
 object ExtBeanDefinition {
 
@@ -63,7 +64,7 @@ object ExtBeanDefinition {
   }
 
   /** Convert Scala Map to Spring ManagedMap, resolving references. */
-  private def toMap(value: collection.Map[_, _], env: Environment, mergeable: Boolean): ManagedMap[Any, Any] = {
+  private def toMap(value: collection.Map[?, ?], env: Environment, mergeable: Boolean): ManagedMap[Any, Any] = {
     val maps = new ManagedMap[Any, Any]
     value foreach { case (itemk, itemv) =>
       itemv match {
@@ -76,7 +77,7 @@ object ExtBeanDefinition {
   }
 
   /** Convert Scala Seq to Spring ManagedList, resolving references. */
-  private def toList(value: collection.Seq[_], mergeable: Boolean): ManagedList[Any] = {
+  private def toList(value: collection.Seq[?], mergeable: Boolean): ManagedList[Any] = {
     val list = new ManagedList[Any]
     value foreach {
       case rv: Reference => list.add(new RuntimeBeanReference(rv.ref))
@@ -87,7 +88,7 @@ object ExtBeanDefinition {
   }
 
   /** Convert Scala Set to Spring ManagedSet, resolving references. */
-  private def toSet(value: collection.Set[_], mergeable: Boolean): ManagedSet[Any] = {
+  private def toSet(value: collection.Set[?], mergeable: Boolean): ManagedSet[Any] = {
     val set = new ManagedSet[Any]
     value foreach { item =>
       set.add(item match {
@@ -109,13 +110,13 @@ import org.beangle.cdi.spring.ExtBeanDefinition.convert
  */
 class ExtBeanDefinition extends GenericBeanDefinition {
 
-  var beanName: String = _
+  var beanName: String = uninitialized
 
   val nowires: collection.mutable.Set[String] = Collections.newSet[String]
 
   val optionals: collection.mutable.Set[String] = Collections.newSet[String]
 
-  var wiredEagerly: Boolean = _
+  var wiredEagerly: Boolean = uninitialized
 
   /** Construct from bind Definition and environment.
    *
@@ -147,7 +148,7 @@ class ExtBeanDefinition extends GenericBeanDefinition {
     this.optionals ++= d.optionals
     this.wiredEagerly = d.wiredEagerly
 
-    if (classOf[FactoryBean[_]].isAssignableFrom(d.clazz)) {
+    if (classOf[FactoryBean[?]].isAssignableFrom(d.clazz)) {
       d.properties.get("proxyInterfaces") foreach {
         case array: Array[_] =>
           this.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, array(0)) //可以降低factory为了获取对象类型，提前实例化对象

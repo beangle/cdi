@@ -46,7 +46,7 @@ class SpringAotHints extends AotHintRegistrar {
     hints.registerType(classOf[ScalaBeanInfoFactory], classOf[ScalaBeanInfo])
     // FactoryBeanProxy / ContainerEventMulticaster：Spring 通过反射实例化并设置属性，
     // BeanInfo 内省依赖 getDeclaredFields/getDeclaredMethods，因此按 declared 成员注册
-    hints.registerType(classOf[FactoryBeanProxy[_]])
+    hints.registerType(classOf[FactoryBeanProxy[?]])
     hints.registerType(classOf[ContainerEventMulticaster])
     // Spring 核心 ResolvableType 缓存经 SerializableTypeWrapper 对
     // GenericArrayType/ParameterizedType/TypeVariable 创建 JDK 动态代理。

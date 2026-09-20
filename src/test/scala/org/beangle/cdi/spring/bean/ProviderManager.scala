@@ -17,9 +17,11 @@
 
 package org.beangle.cdi.spring.bean
 
+import scala.compiletime.uninitialized
+
 class ProviderManager {
 
   var providers = new collection.mutable.ListBuffer[UserProvider]
 
-  var providerMap: Map[String, UserProvider] = _
+  var providerMap: Map[String, UserProvider] = uninitialized
 }

@@ -17,13 +17,15 @@
 
 package org.beangle.cdi.spring.bean
 
+import scala.compiletime.uninitialized
+
 class RedisConfig {
 
-  var host: String = _
+  var host: String = uninitialized
 
-  var secret: String = _
+  var secret: String = uninitialized
 
-  var url: String = _
+  var url: String = uninitialized
 
-  var port: Int = _
+  var port: Int = uninitialized
 }

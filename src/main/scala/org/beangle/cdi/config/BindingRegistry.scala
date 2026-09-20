@@ -33,11 +33,11 @@ import scala.collection.mutable
  *
  * @param background pre-registered bean names and types from Spring container
  */
-class BindingRegistry(val env: Environment,background: collection.Map[String, Class[_]]) extends Binder.Registry {
+class BindingRegistry(val env: Environment,background: collection.Map[String, Class[?]]) extends Binder.Registry {
   private val beans = new mutable.HashMap[String, Binder.RegistryItem]
-  private val namesByType = new collection.mutable.HashMap[Class[_], List[String]]
-  private val typesByName = new mutable.HashMap[String, Class[_]]
-  private val primaries = new mutable.HashMap[Class[_], String]
+  private val namesByType = new collection.mutable.HashMap[Class[?], List[String]]
+  private val typesByName = new mutable.HashMap[String, Class[?]]
+  private val primaries = new mutable.HashMap[Class[?], String]
 
   typesByName.addAll(background)
 
@@ -188,7 +188,7 @@ class BindingRegistry(val env: Environment,background: collection.Map[String, Cl
     for ((propertyName, propertyType) <- properties) {
       //多值类型
       if (propertyType.isIterable) {
-        val v = createReference(dfn, propertyType).asInstanceOf[Iterable[_]]
+        val v = createReference(dfn, propertyType).asInstanceOf[Iterable[?]]
         if (v.nonEmpty) dfn.properties.put(propertyName, v)
       } else {
         val propertyClazz = if propertyType.isOptional then propertyType.args.head.clazz else propertyType.clazz
@@ -230,7 +230,7 @@ class BindingRegistry(val env: Environment,background: collection.Map[String, Cl
    * @param clazz dependency class to resolve
    * @return reference to the resolved bean
    */
-  private def createReference(dfn: Definition, clazz: Class[_]): Reference = {
+  private def createReference(dfn: Definition, clazz: Class[?]): Reference = {
     val beanNames = getBeanNames(clazz)
     if (beanNames.size == 1) {
       Reference(beanNames.head)
@@ -311,7 +311,7 @@ class BindingRegistry(val env: Environment,background: collection.Map[String, Cl
   }
 
   /** Check if the class is autowireable (not primitive, not java or scala package types). */
-  private def autowireable(clazz: Class[_]): Boolean = {
+  private def autowireable(clazz: Class[?]): Boolean = {
     !clazz.isPrimitive && !clazz.getName.startsWith("java.") && !clazz.getName.startsWith("scala.")
   }
 
@@ -361,15 +361,15 @@ class BindingRegistry(val env: Environment,background: collection.Map[String, Cl
   }
 
   /** Set primary bean for the given type. */
-  private def setPrimary(name: String, clazz: Class[_]): Unit = {
+  private def setPrimary(name: String, clazz: Class[?]): Unit = {
     primaries.put(clazz, name)
   }
 
-  override def isPrimary(name: String, clazz: Class[_]): Boolean = {
+  override def isPrimary(name: String, clazz: Class[?]): Boolean = {
     primaries.get(clazz).contains(name)
   }
 
-  override def contains(clazz: Class[_]): Boolean = {
+  override def contains(clazz: Class[?]): Boolean = {
     getBeanNames(clazz).nonEmpty
   }
 
@@ -382,7 +382,7 @@ class BindingRegistry(val env: Environment,background: collection.Map[String, Cl
    * @param clazz target type to match
    * @return list of bean names matching the type
    */
-  override def getBeanNames(clazz: Class[_]): List[String] = {
+  override def getBeanNames(clazz: Class[?]): List[String] = {
     if (namesByType.contains(clazz)) {
       namesByType(clazz)
     } else {

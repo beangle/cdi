@@ -20,6 +20,7 @@ package org.beangle.cdi.config
 import org.beangle.commons.bean.Initializing
 import org.beangle.commons.cdi.{CdiEventListener, Container}
 import org.beangle.commons.event.DefaultEventMulticaster
+import scala.compiletime.uninitialized
 
 /** Collects listeners from the container and registers them to the event multicaster.
  *
@@ -27,10 +28,10 @@ import org.beangle.commons.event.DefaultEventMulticaster
  */
 class ContainerEventMulticaster extends DefaultEventMulticaster, Initializing {
 
-  var container: Container = _
+  var container: Container = uninitialized
 
   /** Initialize by collecting CdiEventListener beans from container and adding to multicaster. */
   override def init(): Unit = {
-    container.getBeans(classOf[CdiEventListener[_]]) foreach { e => addListener(e._2) }
+    container.getBeans(classOf[CdiEventListener[?]]) foreach { e => addListener(e._2) }
   }
 }

@@ -40,7 +40,7 @@ class ScalaBeanInfoFactory extends BeanInfoFactory {
    * @param beanClass class to introspect
    * @return BeanInfo (never null)
    */
-  def getBeanInfo(beanClass: Class[_]): BeanInfo = {
+  def getBeanInfo(beanClass: Class[?]): BeanInfo = {
     val className = beanClass.getName
     // JDK / Scala 标准库类型以及接口无需构建属性描述符，直接返回空 BeanInfo
     if (className.startsWith("java.") || className.startsWith("scala.") || beanClass.isInterface) {
@@ -51,7 +51,7 @@ class ScalaBeanInfoFactory extends BeanInfoFactory {
   }
 
   /** Build PropertyDescriptor array from beangle-commons BeanInfos manifest. */
-  private def buildProperties(beanClass: Class[_]): Array[PropertyDescriptor] = {
+  private def buildProperties(beanClass: Class[?]): Array[PropertyDescriptor] = {
     val descriptors = new collection.mutable.HashMap[String, PropertyDescriptor]
     val manifest = BeanInfos.get(beanClass)
     for ((name, mi) <- manifest.properties) {

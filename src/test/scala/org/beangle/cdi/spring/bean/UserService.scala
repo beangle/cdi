@@ -17,12 +17,14 @@
 
 package org.beangle.cdi.spring.bean
 
+import scala.compiletime.uninitialized
+
 class UserService {
 
-  var provider: UserProvider = _
+  var provider: UserProvider = uninitialized
 
-  var someMap: Map[String, Object] = _
+  var someMap: Map[String, Object] = uninitialized
 
-  var someList: List[Object] = _
+  var someList: List[Object] = uninitialized
 
 }

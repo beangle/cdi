@@ -31,7 +31,7 @@ import java.beans.*
  * @param beanClass           Scala class to introspect
  * @param propertyDescriptors pre-built property descriptors (may be empty for interfaces / JDK types)
  */
-class ScalaBeanInfo(beanClass: Class[_], propertyDescriptors: Array[PropertyDescriptor]) extends java.beans.BeanInfo {
+class ScalaBeanInfo(beanClass: Class[?], propertyDescriptors: Array[PropertyDescriptor]) extends java.beans.BeanInfo {
 
   override def getPropertyDescriptors: Array[PropertyDescriptor] = propertyDescriptors
 

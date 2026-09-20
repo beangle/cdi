@@ -60,7 +60,7 @@ object Module {
   }
 
   /** Check if module class matches active profiles (no annotation or profile in set). */
-  private def matches(clazz: Class[_], profiles: Set[String]): Boolean = {
+  private def matches(clazz: Class[?], profiles: Set[String]): Boolean = {
     val anno = clazz.getAnnotation(classOf[profile])
     null == anno || null != anno && profiles.contains(anno.value)
   }

@@ -73,7 +73,7 @@ class ScalaEditorRegistrar extends PropertyEditorRegistrar {
 
   /** Register a custom editor for the given class. */
   @inline
-  private def register(clazz: Class[_], editor: PropertyEditor)(implicit registry: PropertyEditorRegistry): Unit = {
+  private def register(clazz: Class[?], editor: PropertyEditor)(implicit registry: PropertyEditorRegistry): Unit = {
     registry.registerCustomEditor(clazz, editor)
   }
 }

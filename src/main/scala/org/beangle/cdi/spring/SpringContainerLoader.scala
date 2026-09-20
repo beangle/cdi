@@ -35,6 +35,7 @@ import org.springframework.core.io.{DefaultResourceLoader, Resource}
 import org.springframework.util.ClassUtils
 
 import java.beans.Introspector
+import scala.compiletime.uninitialized
 
 /** Simple BeanFactory loader for Spring-based containers.
  *
@@ -44,7 +45,7 @@ class SpringContainerLoader(env: Environment) extends DefaultResourceLoader, Res
   private val environment = new StandardEnvironment()
   private val resourcePatternResolver = new PathMatchingResourcePatternResolver
   private val classLoader = ClassUtils.getDefaultClassLoader
-  private var factory: DefaultListableBeanFactory = _
+  private var factory: DefaultListableBeanFactory = uninitialized
 
   /** Load and initialize the container.
    *

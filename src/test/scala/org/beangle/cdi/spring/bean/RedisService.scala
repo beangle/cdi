@@ -19,10 +19,11 @@ package org.beangle.cdi.spring.bean
 
 import org.beangle.cdi.Logger
 import org.beangle.commons.bean.Initializing
+import scala.compiletime.uninitialized
 
 class RedisService extends Initializing {
 
-  var config: RedisConfig = _
+  var config: RedisConfig = uninitialized
 
   override def init(): Unit = {
     Logger.info("RedisService init," + config.host)

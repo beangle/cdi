@@ -17,13 +17,15 @@
 
 package org.beangle.cdi.spring.bean
 
+import scala.compiletime.uninitialized
+
 class TestService {
 
-  var entityDao: TestDao = _
+  var entityDao: TestDao = uninitialized
 
   var noneDao: TestDao = null
 
   var optionDao: Option[OptionDao] = None
 
-  var enableAdmin: Boolean = _
+  var enableAdmin: Boolean = uninitialized
 }

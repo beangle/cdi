@@ -17,11 +17,13 @@
 
 package org.beangle.cdi.spring.bean
 
+import scala.compiletime.uninitialized
+
 class SomeAction {
 
-  var userDaoProvider: UserProvider = _
+  var userDaoProvider: UserProvider = uninitialized
 
-  var ldapProvider: UserLdapProvider = _
+  var ldapProvider: UserLdapProvider = uninitialized
 
   def hasDaoProvider() = null != userDaoProvider
 

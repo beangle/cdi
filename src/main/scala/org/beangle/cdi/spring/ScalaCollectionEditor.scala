@@ -29,7 +29,7 @@ import scala.jdk.javaapi.CollectionConverters
  * @param builderFunc  function to create a mutable builder for the target type
  * @param nullAsEmpty  when true, null input produces empty collection
  */
-class ScalaCollectionEditor[T, U](val builderFunc: () => mutable.Builder[T, _], val nullAsEmpty: Boolean = false)
+class ScalaCollectionEditor[T, U](val builderFunc: () => mutable.Builder[T, ?], val nullAsEmpty: Boolean = false)
   extends PropertyEditorSupport {
 
   override def setAsText(text: String): Unit = {
@@ -47,7 +47,7 @@ class ScalaCollectionEditor[T, U](val builderFunc: () => mutable.Builder[T, _], 
       case source: IterableOnce[T] => builder ++= source
       case jcl: java.util.Collection[T] => builder ++= CollectionConverters.asScala(jcl)
       case javaMap: java.util.Map[T, U] =>
-        val mapBuilder = builder.asInstanceOf[mutable.Builder[(T, U), _]]
+        val mapBuilder = builder.asInstanceOf[mutable.Builder[(T, U), ?]]
         mapBuilder ++= CollectionConverters.asScala(javaMap)
       case el: Any => builder += el.asInstanceOf[T]
     }

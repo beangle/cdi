@@ -40,7 +40,7 @@ class SpringContainer(private val factory: DefaultListableBeanFactory, env: Envi
 
   override def id: String = factory.getSerializationId
 
-  override def getType(key: String): Option[Class[_]] = {
+  override def getType(key: String): Option[Class[?]] = {
     try {
       Option(factory.getType(key))
     } catch {
@@ -66,8 +66,8 @@ class SpringContainer(private val factory: DefaultListableBeanFactory, env: Envi
     asScala(factory.getBeansOfType(clazz)).toMap
   }
 
-  override def beanTypes: collection.Map[String, Class[_]] = {
-    val types = Collections.newMap[String, Class[_]]
+  override def beanTypes: collection.Map[String, Class[?]] = {
+    val types = Collections.newMap[String, Class[?]]
     val nameIter = factory.getBeanNamesIterator
     while (nameIter.hasNext) {
       val name = nameIter.next()

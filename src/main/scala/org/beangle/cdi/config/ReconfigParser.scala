@@ -87,7 +87,7 @@ class ReconfigParser {
       val bd = new Definition(beanName, configType)
       bd.clazz = Option(if (null == className) null else ClassLoaders.load(className))
       ele.get("primary-of") foreach { p =>
-        bd.primaryOf(Strings.split(p).map(ClassLoaders.load(_)): _*)
+        bd.primaryOf(Strings.split(p).map(ClassLoaders.load(_))*)
       }
       parseConstructorArgs(ele, bd)
       parseProperties(ele, bd)

@@ -52,8 +52,8 @@ object SpringBeanRegistry {
    * @param registry Spring bean definition registry
    * @return map of bean name to bean class
    */
-  def findBeans(registry: BeanDefinitionRegistry): mutable.Map[String, Class[_]] = {
-    val nameTypes = Collections.newMap[String, Class[_]]
+  def findBeans(registry: BeanDefinitionRegistry): mutable.Map[String, Class[?]] = {
+    val nameTypes = Collections.newMap[String, Class[?]]
     val singletonRegistry = registry.asInstanceOf[SingletonBeanRegistry]
     singletonRegistry.getSingletonNames foreach { singtonName =>
       nameTypes.put(singtonName, singletonRegistry.getSingleton(singtonName).getClass)
@@ -64,8 +64,8 @@ object SpringBeanRegistry {
       val beanClass = if (bd.isAbstract) null else getBeanClass(registry, name)
       if (null != beanClass) {
         try {
-          if (classOf[FactoryBean[_]].isAssignableFrom(beanClass)) {
-            var objectClass: Class[_] = null
+          if (classOf[FactoryBean[?]].isAssignableFrom(beanClass)) {
+            var objectClass: Class[?] = null
             val objectTypePV = bd.getPropertyValues.getPropertyValue("objectType")
             if (null != objectTypePV) {
               objectClass = objectTypePV.getValue match {
@@ -76,7 +76,7 @@ object SpringBeanRegistry {
               objectClass = bd.getPropertyValues.getPropertyValue("target") match {
                 case null =>
                   try {
-                    newInstance(beanClass.asInstanceOf[Class[FactoryBean[_]]]).getObjectType
+                    newInstance(beanClass.asInstanceOf[Class[FactoryBean[?]]]).getObjectType
                   } catch {
                     case e: Throwable => null
                   }
@@ -88,7 +88,7 @@ object SpringBeanRegistry {
               }
             }
             if (null != objectClass) nameTypes.put(name, objectClass)
-          } else if (classOf[Factory[_]].isAssignableFrom(beanClass)) {
+          } else if (classOf[Factory[?]].isAssignableFrom(beanClass)) {
             nameTypes.put(name, Factory.getObjectType(beanClass))
           } else {
             nameTypes.put(name, beanClass)
@@ -110,7 +110,7 @@ object SpringBeanRegistry {
     val bd = new ExtBeanDefinition(defn, env)
     if (null != defn.targetClass && !defn.isAbstract) {
       val targetClass = defn.targetClass
-      if (classOf[Factory[_]].isAssignableFrom(defn.clazz) && !classOf[FactoryBean[_]].isAssignableFrom(defn.clazz)) {
+      if (classOf[Factory[?]].isAssignableFrom(defn.clazz) && !classOf[FactoryBean[?]].isAssignableFrom(defn.clazz)) {
         val name = defn.beanName
         registry.registerBeanDefinition(defn.beanName + "#proxy", bd)
         registry.registerBeanDefinition(name, createFactoryDefinition(defn))
@@ -131,7 +131,7 @@ object SpringBeanRegistry {
     assert(defn.targetClass.nonEmpty)
     val name = defn.beanName
     val factory = new GenericBeanDefinition()
-    factory.setBeanClass(classOf[FactoryBeanProxy[_]])
+    factory.setBeanClass(classOf[FactoryBeanProxy[?]])
     factory.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_NO)
     factory.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, defn.targetClass.get) //可以降低factory为了获取对象类型，提前实例化对象
     factory.setScope(defn.scope)
@@ -148,9 +148,9 @@ object SpringBeanRegistry {
    * @param name     bean name
    * @return resolved bean class or null
    */
-  private def getBeanClass(registry: BeanDefinitionRegistry, name: String): Class[_] = {
+  private def getBeanClass(registry: BeanDefinitionRegistry, name: String): Class[?] = {
     val bd = registry.getBeanDefinition(name)
-    var clazz: Class[_] = getBeanClass(bd)
+    var clazz: Class[?] = getBeanClass(bd)
     if (null == clazz) {
       var currDef = bd
       while (null == clazz && null != currDef && null != currDef.getParentName) {
@@ -163,8 +163,8 @@ object SpringBeanRegistry {
   }
 
   /** Extract bean class from bean definition. */
-  private def getBeanClass(bd: BeanDefinition): Class[_] = {
-    var clazz: Class[_] = null
+  private def getBeanClass(bd: BeanDefinition): Class[?] = {
+    var clazz: Class[?] = null
     bd match {
       case abd: AbstractBeanDefinition => if (abd.hasBeanClass) clazz = abd.getBeanClass
       case _ =>

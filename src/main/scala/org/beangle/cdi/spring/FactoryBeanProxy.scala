@@ -19,6 +19,7 @@ package org.beangle.cdi.spring
 
 import org.beangle.commons.bean.Factory
 import org.springframework.beans.factory.FactoryBean
+import scala.compiletime.uninitialized
 
 /** Spring FactoryBean adapter for beangle Factory[T].
  *
@@ -26,9 +27,9 @@ import org.springframework.beans.factory.FactoryBean
  */
 class FactoryBeanProxy[T] extends FactoryBean[T] {
 
-  var target: Factory[T] = _
+  var target: Factory[T] = uninitialized
 
-  var objectType: Class[T] = _
+  var objectType: Class[T] = uninitialized
 
   override def getObject: T = target.getObject
 

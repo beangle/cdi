@@ -18,10 +18,11 @@
 package org.beangle.cdi.spring.bean
 
 import org.beangle.commons.bean.Factory
+import scala.compiletime.uninitialized
 
 class TestDaoFactory extends Factory[TestDao] {
 
-  var target: TestDao = _
+  var target: TestDao = uninitialized
 
   override def getObject = target
 }
